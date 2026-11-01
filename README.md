@@ -1,6 +1,6 @@
 # Horda da Névoa — Beta 0.6
 
-Repositório planejado: **bblike**, privado. O elenco desta beta é o da versão 2; Salamandra e Sakura não foram incorporadas.
+Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). O elenco desta beta é o da versão 2; Salamandra e Sakura não foram incorporadas.
 
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
