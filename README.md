@@ -1,5 +1,7 @@
 # Horda da Névoa — Beta 0.6
 
+Repositório planejado: **bblike**, privado. O elenco desta beta é o da versão 2; Salamandra e Sakura não foram incorporadas.
+
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
 ## Jogar
@@ -22,7 +24,9 @@ Fontes externas são opcionais; os sprites são desenhados no código. O ranking
 
 ## GitHub Pages
 
-Envie este repositório ao seu GitHub na branch main. Em Settings → Pages → Build and deployment, selecione GitHub Actions como Source. O workflow incluído executa os testes e publica somente index.html. A URL é informada pelo próprio job de deployment.
+Os testes rodam automaticamente nos pushes e pull requests. A publicação na web é opcional e o workflow de Pages só executa manualmente; enviar o código ao repositório privado não dispara a publicação do jogo.
+
+Se decidir publicar no futuro, configure Settings → Pages → Build and deployment → GitHub Actions e execute manualmente o workflow “Testar e publicar jogo”. Ele executa os testes e publica somente index.html. A URL é informada pelo próprio job de deployment. A disponibilidade de Pages em repositórios privados depende do plano da conta.
 
 Documentação oficial: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 

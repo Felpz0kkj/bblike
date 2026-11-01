@@ -14,7 +14,7 @@ Base escolhida pelo autor: **Horda da Névoa (2).html**.
 | Vida | Moldura com coração e preenchimento contínuo | HUD de outra ramificação | Moldura da base |
 | XP/cura | Cristais com cores por valor; cura em cruz verde | Desenhos equivalentes aos antigos | Cristal ciano e coração com folha |
 
-A versão 5 não acrescenta dois IDs independentes: substitui os IDs `fogo` e `planta`, incluindo atributos e habilidades. Copiá-la integralmente removeria Brasito e Folhito e perderia as correções da base. Uma integração como personagens extras deve dar identidades próprias a Salamandra e Sakura, preservando o progresso dos personagens existentes.
+A versão 5 não acrescenta dois IDs independentes: substitui os IDs `fogo` e `planta`, incluindo atributos e habilidades. Copiá-la integralmente removeria Brasito e Folhito e perderia as correções da base. Decisão confirmada pelo autor: manter apenas os personagens da versão 2; Salamandra e Sakura não entram na beta 0.6.
 
 ## Referência de design
 
