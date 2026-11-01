@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prévia da arte · Horda da Névoa</title>
+<style>
+body{margin:0;background:#0b1411;color:#e9f0e6;font:15px system-ui,sans-serif;padding:28px}
+h1{font:700 24px monospace;color:#f2b84b;margin:0 0 8px}p{color:#97ac9f;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;max-width:1000px}
+.card{background:#14211b;border:1px solid #2d4439;padding:16px;border-radius:6px}
+h2{font:700 16px monospace;color:#f2b84b;margin:12px 0 6px}.card p{font-size:12px;margin-bottom:16px}
+.sprites{display:flex;gap:8px;align-items:end;justify-content:space-around}.sprites img{width:64px;height:64px;image-rendering:pixelated}
+.sprites small{display:block;text-align:center;font-size:10px;color:#97ac9f;margin-top:8px}
+.health{margin-top:24px;max-width:1000px}.states{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.health canvas{display:block;image-rendering:pixelated;width:100%;height:28px}.state{background:#14211b;border:1px solid #2d4439;padding:14px}
+.state span{display:block;font-size:12px;color:#97ac9f;margin-bottom:10px}iframe{position:absolute;left:-10000px;width:1040px;height:700px;border:0}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){body{padding:12px}.states{grid-template-columns:1fr}}
+</style>
+<h1>Horda da Névoa · nova arte</h1><p>Sprites no tamanho dos ícones do jogo, com as três evoluções. Prévia isolada do progresso do jogador.</p>
+<div class="grid" id="sprites"></div><section class="health"><h2>Beta 0.6 · XP e cura</h2><p>Cristais ciano por valor de XP e coração vermelho com folha. Comparação sobre o chão real do jogo.</p><canvas id="loot" style="height:auto" width="900" height="150"></canvas></section><section class="health"><h2>Vida contínua · moldura fixa</h2><p>Os estados mudam o coração; o preenchimento vermelho acompanha a porcentagem exata de vida.</p><div class="states" id="states"></div></section>
+<iframe title="Jogo de teste isolado" id="game"></iframe>
+<script>
+(async()=>{
+  let src=await (await fetch('../index.html')).text();
+  // Chave própria: esta página não escreve no progresso do jogo principal.
+  src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-visual-test';");
+  src=src.replace('<script>','<script>window.__NSDEBUG=true;');
+  src=src.replace('applyTheme();resize();showMenu();initDb();',"S.music=S.sfx=0;P.seen=1;applyTheme();resize();showMenu();");
+  const frame=document.getElementById('game');
+  frame.onload=()=>{
+    const g=frame.contentWindow.__NS,d=frame.contentDocument;
+    const designs={planta:['Folhito','Camaleão herbalista'],eletrico:['Fagulhim','Esquilo elétrico'],pedra:['Pedrino','Tatu escavador'],sombra:['Sombrinha','Gato espectral']};
+    for(const [type,[name,desc]]of Object.entries(designs)){
+      const card=document.createElement('article');card.className='card';
+      card.innerHTML=`<h2>${name}</h2><p>${desc}</p><div class="sprites">${[1,2,3].map(st=>`<div><img alt="${name}, evolução ${st}" src="${g.monSprite(type,st,0).toDataURL()}"><small>${st===1?'Inicial':'Evolução '+st}</small></div>`).join('')}</div>`;
+      document.getElementById('sprites').appendChild(card);
+    }
+    g.startRun('planta','normal');g.ACT.team();
+    g.run.fade=0;g.render();const loot=document.getElementById('loot'),lc=loot.getContext('2d');lc.imageSmoothingEnabled=false;
+    lc.drawImage(d.getElementById('cv'),0,0,900,150,0,0,900,150);
+    for(let i=0;i<18;i++){const size=[16,20,24][i%3];lc.drawImage(g.lootSprite('xp'),30+i*32,60-size/2,size,size*1.4);}
+    for(let i=0;i<6;i++)lc.drawImage(g.lootSprite('heal'),660+i*36,55,22,22);
+    for(const r of [1,.751,.5,.25,.07,0]){
+      g.run.pl.hp=g.run.st.maxhp*r;g.updHud();
+      const source=d.getElementById('hp-frame'),w=source.width;
+      const cell=document.createElement('div');cell.className='state';cell.innerHTML=`<span>${(r*100).toLocaleString('pt-BR')}% de vida</span>`;
+      const c=document.createElement('canvas');c.width=w;c.height=14;const ctx=c.getContext('2d');
+      ctx.fillStyle='#080e0d';ctx.fillRect(17,4,w-20,6);
+      const gradient=ctx.createLinearGradient(0,4,0,10);gradient.addColorStop(0,'#ff3c47');gradient.addColorStop(.3,'#f40523');gradient.addColorStop(1,'#bc001b');
+      ctx.fillStyle=gradient;ctx.fillRect(17,4,(w-20)*r,6);ctx.drawImage(source,0,0);
+      cell.appendChild(c);document.getElementById('states').appendChild(cell);
+    }
+  };
+  frame.srcdoc=src;
+})().catch(e=>document.body.append(String(e)));
+</script></html>

@@ -1,0 +1,12 @@
+# Versões recebidas e cópias locais de segurança
+/Horda da Névoa*.html
+/backups/
+/artifacts/
+/dist/
+/.site/
+/releases/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+node_modules/
