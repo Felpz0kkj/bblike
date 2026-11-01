@@ -2,6 +2,8 @@
 
 Base escolhida pelo autor: **Horda da Névoa (2).html**.
 
+**Atualização na beta 0.6.1 (BaubLike):** a pedido do autor, Salamandra passa a substituir Brasito e Sakura passa a substituir Folhito, incluindo sprites, animações e habilidades da versão 5. A tabela abaixo registra a comparação original da beta 0.6; as demais funcionalidades continuam vindo da versão 2 corrigida.
+
 | Área | Versão 2 (base) | Versão 5 (ramificação) | Beta 0.6 |
 | --- | --- | --- | --- |
 | Elenco | 6 personagens | 6 personagens; reutiliza os mesmos IDs | Mantém o elenco da base |
@@ -14,7 +16,7 @@ Base escolhida pelo autor: **Horda da Névoa (2).html**.
 | Vida | Moldura com coração e preenchimento contínuo | HUD de outra ramificação | Moldura da base |
 | XP/cura | Cristais com cores por valor; cura em cruz verde | Desenhos equivalentes aos antigos | Cristal ciano e coração com folha |
 
-A versão 5 não acrescenta dois IDs independentes: substitui os IDs `fogo` e `planta`, incluindo atributos e habilidades. Copiá-la integralmente removeria Brasito e Folhito e perderia as correções da base. Decisão confirmada pelo autor: manter apenas os personagens da versão 2; Salamandra e Sakura não entram na beta 0.6.
+A versão 5 não acrescenta dois IDs independentes: substitui os IDs `fogo` e `planta`, incluindo atributos e habilidades. A beta 0.6.1 incorpora essas duas substituições de forma seletiva, preservando as correções da base e os IDs usados no progresso salvo.
 
 ## Referência de design
 

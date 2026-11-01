@@ -13,6 +13,8 @@ function boot(saved){
   function element(name){
     const attrs={},classes=new Set(),ops=[];
     const context=new Proxy({ops,fillRect(...a){ops.push([this.fillStyle,...a]);},
+      getImageData(x,y,w,h){return {data:new Uint8ClampedArray(w*h*4)};},
+      drawImage(img,...a){ops.push(['image',img.width,...a]);},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
     },{get:(t,k)=>k in t?t[k]:()=>{}});
@@ -95,13 +97,13 @@ test('vida fracionária, cura, zero e renascimento preservam o preenchimento pro
   g.run.pl.hp=10;g.useSpecial();assert.ok(g.run.pl.hp>10);g.updHud();
   assert.ok(parseFloat(node('#hp-i').style.width)>8);
   g.run.pl.hp=-5;g.updHud();assert.equal(node('#hp-i').style.width,'0%');
-  assert.equal(node('#hp-t').textContent,'0 / 125');
+  assert.equal(node('#hp-t').textContent,'0 / 105');
   begin(g);g.updHud();assert.equal(node('#hp-i').style.width,'100%');
 });
 
-test('as quatro criaturas têm arte própria, animações, evoluções e inimigos distintos',()=>{
+test('as criaturas preservadas têm arte própria, animações, evoluções e inimigos distintos',()=>{
   const {game:g}=boot();const all=[];
-  for(const type of ['planta','eletrico','pedra','sombra']){
+  for(const type of ['eletrico','pedra','sombra']){
     const frames=[];
     for(let stage=1;stage<=3;stage++)for(let frame=0;frame<4;frame++){
       const c=g.monSprite(type,stage,frame);assert.equal(c.width,32);assert.equal(c.fy,30);
@@ -111,7 +113,7 @@ test('as quatro criaturas têm arte própria, animações, evoluções e inimigo
     assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);assert.notEqual(frames[4],frames[8]);
     assert.equal(g.monSprite(type+'_e',1,0).width,28);all.push(frames[0]);
   }
-  assert.equal(new Set(all).size,4);
+  assert.equal(new Set(all).size,3);
 });
 
 test('jornada funciona com todos os personagens e a pausa limpa movimento e ataque',()=>{
@@ -147,9 +149,35 @@ test('morte por contato interrompe coletas e cura no mesmo quadro',()=>{
 });
 
 test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
-  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.0-beta');
+  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.1-beta');
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
-  g.run.pl.hp=50;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.equal(g.run.pl.hp,68.75);
+  g.run.pl.hp=50;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.equal(g.run.pl.hp,65.75);
+});
+
+test('Salamandra combina três golpes em dash e ativa berserker temporário',()=>{
+  const {game:g}=boot();begin(g,'fogo');
+  for(let i=0;i<3;i++)g.basicAttack(0,100,0);
+  assert.equal(g.run.pl.dash.fire,true);assert.equal(g.run.combo,0);
+  g.useSpecial();assert.equal(g.run.ber,6);g.update(.02);assert.ok(g.run.ber<6);
+  assert.equal(g.CH.fogo.basic,'Garras de Fogo');
+});
+
+test('Sakura dispara flechas perfurantes e drena vida ao acertar',()=>{
+  const {game:g}=boot();begin(g);g.run.pl.hp=20;g.basicAttack(0,100,0);
+  assert.equal(g.pbul[0].pierce,2);assert.equal(g.pbul[0].vx,760);
+  const e=g.mkEnemy('normal',1,40,0,{});e.spawn=0;e.hp=100;g.enemies.push(e);
+  g.update(.04);assert.ok(g.run.pl.hp>20.1);
+  g.useSpecial();assert.ok(g.run.pl.hp>30);assert.equal(g.CH.planta.basic,'Flecha de Sakura');
+});
+
+test('nomes e sprites novos aparecem em todas as telas mantendo o progresso',()=>{
+  const {game:g,node}=boot({P:{char:'planta',seen:1,ess:88},S:{diff:'normal'}});
+  assert.equal(g.P.ess,88);g.ACT.menu();assert.match(node('#ui').innerHTML,/BaubLike/);
+  g.ACT.how();assert.match(node('#ui').innerHTML,/Como jogar BaubLike/);assert.match(node('#ui').innerHTML,/Salamandra/);assert.match(node('#ui').innerHTML,/Sakura/);
+  assert.doesNotMatch(node('#ui').innerHTML,/Brasito|Folhito|Horda da Névoa/);
+  for(const t of ['fogo','planta'])for(let st=1;st<=3;st++)for(const f of [0,11,20,30,40]){
+    const c=g.monSprite(t,st,f);assert.equal(c.width,56);assert.equal(c.fy,51);assert.equal(g.monSprite(t,st,f),c);
+  }
 });

@@ -1,5 +1,16 @@
 # Histórico
 
+## 0.6.1-beta — 2026-10-31
+
+- Projeto renomeado para BaubLike no título, menu e instruções.
+- Salamandra substitui Brasito: garras, combo de três golpes com dash e Fúria Berserker.
+- Sakura substitui Folhito: flechas perfurantes, drenagem de vida e Flor de Sakura.
+- Sprites, animações, evoluções e habilidades dos dois aliados integrados da versão 5.
+- Tela “Como jogar” atualizada com os novos personagens e suas habilidades.
+- Os IDs de fogo e planta e a chave de armazenamento foram mantidos para carregar o progresso existente.
+- Preservados o fluxo dificuldade → personagem, Equipe, drops e correções de combate da beta 0.6.
+- 14 testes de regressão.
+
 ## 0.6.0-beta — 2026-10-31
 
 - Base: Horda da Névoa (2), preservando seus seis personagens, ataques, evolução e melhorias.

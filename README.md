@@ -1,6 +1,6 @@
-# Horda da Névoa — Beta 0.6
+# BaubLike — Beta 0.6.1
 
-Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). O elenco desta beta é o da versão 2; Salamandra e Sakura não foram incorporadas.
+Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Salamandra substitui Brasito e Sakura substitui Folhito, com suas artes e habilidades da versão 5. Frood, Fagulhim, Pedrino e Sombrinha permanecem no elenco.
 
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
