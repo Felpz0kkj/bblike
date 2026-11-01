@@ -1,6 +1,6 @@
-# BaubLike — Beta 0.6.1
+# BaubLike — Beta 0.6.2
 
-Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Salamandra substitui Brasito e Sakura substitui Folhito, com suas artes e habilidades da versão 5. Frood, Fagulhim, Pedrino e Sombrinha permanecem no elenco.
+Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Zero, Pedrino e Sombrinha. Zero substitui Fagulhim, preservando o desbloqueio e o progresso do elemento elétrico.
 
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
@@ -18,6 +18,7 @@ A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanente
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
+- Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
 - Comparação das versões: [docs/comparacao-versoes.md](docs/comparacao-versoes.md).
 
 Fontes externas são opcionais; os sprites são desenhados no código. O ranking funciona localmente; a integração online antiga depende do ambiente original e não oferece ranking global no GitHub Pages.
@@ -31,3 +32,7 @@ Se decidir publicar no futuro, configure Settings → Pages → Build and deploy
 Documentação oficial: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 
 As versões recebidas, backups, capturas e pacotes de release ficam locais e são ignorados pelo Git. Nenhuma licença de redistribuição é presumida; o autor pode escolher uma licença antes da publicação.
+
+## Comunidade e colaboração
+
+- [loveTheBest](https://github.com/loveTheBest) — colaboração no desenvolvimento de BaubLike.

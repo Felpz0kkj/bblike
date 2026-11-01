@@ -103,7 +103,7 @@ test('vida fracionária, cura, zero e renascimento preservam o preenchimento pro
 
 test('as criaturas preservadas têm arte própria, animações, evoluções e inimigos distintos',()=>{
   const {game:g}=boot();const all=[];
-  for(const type of ['eletrico','pedra','sombra']){
+  for(const type of ['pedra','sombra']){
     const frames=[];
     for(let stage=1;stage<=3;stage++)for(let frame=0;frame<4;frame++){
       const c=g.monSprite(type,stage,frame);assert.equal(c.width,32);assert.equal(c.fy,30);
@@ -113,7 +113,7 @@ test('as criaturas preservadas têm arte própria, animações, evoluções e in
     assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);assert.notEqual(frames[4],frames[8]);
     assert.equal(g.monSprite(type+'_e',1,0).width,28);all.push(frames[0]);
   }
-  assert.equal(new Set(all).size,3);
+  assert.equal(new Set(all).size,2);
 });
 
 test('jornada funciona com todos os personagens e a pausa limpa movimento e ataque',()=>{
@@ -149,19 +149,30 @@ test('morte por contato interrompe coletas e cura no mesmo quadro',()=>{
 });
 
 test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
-  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.1-beta');
+  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.2-beta');
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
   g.run.pl.hp=50;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.equal(g.run.pl.hp,65.75);
 });
 
-test('Salamandra combina três golpes em dash e ativa berserker temporário',()=>{
-  const {game:g}=boot();begin(g,'fogo');
-  for(let i=0;i<3;i++)g.basicAttack(0,100,0);
-  assert.equal(g.run.pl.dash.fire,true);assert.equal(g.run.combo,0);
-  g.useSpecial();assert.equal(g.run.ber,6);g.update(.02);assert.ok(g.run.ber<6);
-  assert.equal(g.CH.fogo.basic,'Garras de Fogo');
+test('Salamandra alterna dois golpes sem dash; Fúria só avança no terceiro',()=>{
+  const {game:g}=boot();begin(g,'fogo');const swings=[];
+  for(let i=0;i<8;i++){g.basicAttack(0,100,0);swings.push(g.run.sw);assert.equal(g.run.pl.dash,null);}
+  assert.equal(swings.join(','),'-1,1,-1,1,-1,1,-1,1');assert.equal(g.run.pl.vx,0);
+  g.useSpecial();assert.equal(g.run.ber,6);assert.ok(g.run.sp>=24);assert.equal(g.run.pl.inv,0);
+  for(let i=0;i<2;i++){g.basicAttack(0,100,0);assert.equal(g.run.pl.dash,null);}
+  g.basicAttack(0,100,0);assert.equal(g.run.pl.dash.fire,true);assert.equal(g.run.combo,0);
+  g.run.ber=.01;g.update(.02);assert.equal(g.run.ber,0);assert.equal(g.run.pl.dash,null);
+});
+
+test('Fúria aumenta DPS com menos dano por golpe, sem explosão ao ativar',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.st.crit=0;
+  const e=g.mkEnemy('normal',1,65,0,{});e.spawn=0;e.hp=10000;g.enemies.push(e);
+  g.basicAttack(0,100,0);const normalHit=10000-e.hp,normalCd=g.run.cd;
+  const before=e.hp;g.useSpecial();assert.equal(e.hp,before);
+  g.basicAttack(0,100,0);const furyHit=before-e.hp,furyCd=g.run.cd;
+  assert.ok(furyHit<normalHit);assert.ok(furyHit/furyCd>normalHit/normalCd);
 });
 
 test('Sakura dispara flechas perfurantes e drena vida ao acertar',()=>{
@@ -170,6 +181,40 @@ test('Sakura dispara flechas perfurantes e drena vida ao acertar',()=>{
   const e=g.mkEnemy('normal',1,40,0,{});e.spawn=0;e.hp=100;g.enemies.push(e);
   g.update(.04);assert.ok(g.run.pl.hp>20.1);
   g.useSpecial();assert.ok(g.run.pl.hp>30);assert.equal(g.CH.planta.basic,'Flecha de Sakura');
+});
+
+test('Zero encadeia em três alvos próximos com dano 100%, 50%, 25%',()=>{
+  const {game:g}=boot();g.P.chars.eletrico=1;begin(g,'eletrico');g.run.st.crit=0;g.run.st.dmg=20;g.run.st.multi=5;
+  const es=[[100,0],[160,65],[220,80],[280,100],[500,0]].map(([x,y])=>{const e=g.mkEnemy('normal',1,x,y,{});e.spawn=0;e.hp=100;g.enemies.push(e);return e;});
+  // Disparos extras aumentam a potência, sem multiplicar os alvos.
+  g.run.st.multi=1;g.basicAttack(0,100,0);
+  assert.deepEqual(es.map(e=>100-e.hp),[20,10,5,0,0]);
+  es.forEach(e=>e.hp=100);g.run.st.multi=5;g.basicAttack(0,100,0);
+  assert.equal(es.filter(e=>e.hp<100).length,3);assert.equal(es[0].hp,72);
+});
+
+test('cadeia continua após matar o primeiro alvo e respeita distância de salto',()=>{
+  const {game:g}=boot();g.P.chars.eletrico=1;begin(g,'eletrico');g.run.st.crit=0;g.run.st.dmg=20;
+  const a=g.mkEnemy('normal',1,100,0,{}),b=g.mkEnemy('normal',1,160,70,{}),c=g.mkEnemy('normal',1,340,70,{});
+  for(const e of [a,b,c]){e.spawn=0;e.hp=100;g.enemies.push(e);}a.hp=1;
+  g.basicAttack(0,100,0);assert.equal(a.hp,0);assert.equal(b.hp,90);assert.equal(c.hp,100);
+});
+
+test('EMP paralisa por um segundo dentro da área, incluindo chefes, sem dash',()=>{
+  const {game:g}=boot();g.P.chars.eletrico=1;begin(g,'eletrico');g.run.st.crit=0;
+  const a=g.mkEnemy('normal',1,150,0,{}),boss=g.mkEnemy('normal',1,200,0,{}),far=g.mkEnemy('normal',1,500,0,{});
+  for(const e of [a,boss,far]){e.spawn=0;e.hp=100;g.enemies.push(e);}boss.boss={name:'Teste'};
+  g.useSpecial();assert.equal(a.stun,1);assert.equal(boss.stun,1);assert.equal(far.hp,100);
+  assert.equal(g.run.sp,18);assert.equal(g.run.pl.dash,null);assert.equal(g.run.pl.inv,0);
+});
+
+test('Zero substitui Fagulhim em telas e salva o desbloqueio anterior',()=>{
+  const {game:g,node}=boot({P:{char:'eletrico',chars:{eletrico:1},coll:{eletrico:1},start:['eletrico'],seen:1}});
+  g.ACT.team();assert.match(node('#ui').innerHTML,/Zero/);assert.doesNotMatch(node('#ui').innerHTML,/Fagulhim|Esquilo elétrico|Corrida Elétrica/);
+  begin(g,'eletrico');assert.equal(g.run.allies[0].type,'eletrico');assert.equal(g.run.ch,'eletrico');
+  for(let stage=1;stage<=3;stage++)for(let frame=0;frame<=4;frame++){
+    const c=g.monSprite('eletrico',stage,frame);assert.equal(c.width,40);assert.equal(c.fy,37);assert.ok(c.getContext('2d').ops.length>100);
+  }
 });
 
 test('nomes e sprites novos aparecem em todas as telas mantendo o progresso',()=>{

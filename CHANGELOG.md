@@ -1,5 +1,17 @@
 # Histórico
 
+## 0.6.2-beta — 2026-10-31
+
+- Salamandra: dois golpes alternados sem avanço ou dash no ataque normal; dano base 13, intervalo 0,4 s.
+- Fúria: 6 s, intervalo 40% menor, dano por golpe 20% menor, +15% de movimento; dash somente a cada três ataques durante a Fúria. Recarga 24 s e menor redução por abate.
+- Retirados o dano em área instantâneo e a limpeza de projéteis ao ativar Fúria.
+- Zero substitui Fagulhim, com sprite pixelado próprio inspirado na referência magenta, preta e verde. Mantidos os IDs de progresso elétrico.
+- Raio encadeado: 3 alvos no máximo, com fatores 1 / 0,5 / 0,25; alcance inicial 340, saltos até 140, intervalo 0,65 s. Disparos extras aumentam dano sem remover o limite de alvos.
+- Onda eletromagnética: raio 300, dano de 1,8 vez o ataque, paralisia de 1 s incluindo chefes e recarga 18 s.
+- Ajustes moderados: Sakura recebe redução no multiplicador da flecha e na drenagem/cura; Frood recebe redução no dano da pescaria. Pedrino e Sombrinha preservados.
+- loveTheBest incluído nos créditos do README.
+- 19 testes de regressão.
+
 ## 0.6.1-beta — 2026-10-31
 
 - Projeto renomeado para BaubLike no título, menu e instruções.

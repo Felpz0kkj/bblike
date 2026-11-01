@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>BaubLike · Beta 0.6.1</title>
+<title>BaubLike · Beta 0.6.2</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -176,7 +176,7 @@ const rf=(a,b)=>a+Math.random()*(b-a);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const TAU=Math.PI*2;
-const VERSION='0.6.1-beta';
+const VERSION='0.6.2-beta';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
 /* ================= dados ================= */
@@ -185,24 +185,25 @@ const TI={
   eletrico:{n:'Elétrico',c:'#ffd23f'}, pedra:{n:'Pedra',c:'#c9a97f'}, sombra:{n:'Sombra',c:'#a58bff'}, normal:{n:'Normal',c:'#b9bfc7'}
 };
 const TYPES=['normal','fogo','agua','planta','eletrico','pedra','sombra'];
-const NM={normal:['Ventinho','Ventania'],fogo:['Salamandra','Salamandra Lendária'],agua:['Frood','Frood Mestre'],planta:['Sakura','Sakura Eterna'],eletrico:['Fagulhim','Trovoraz'],pedra:['Pedrino','Rochedão'],sombra:['Sombrinha','Noturvo']};
+const NM={normal:['Ventinho','Ventania'],fogo:['Salamandra','Salamandra Lendária'],agua:['Frood','Frood Mestre'],planta:['Sakura','Sakura Eterna'],eletrico:['Zero','Zero'],pedra:['Pedrino','Rochedão'],sombra:['Sombrinha','Noturvo']};
 const HUE={normal:195,fogo:14,agua:205,planta:120,eletrico:48,pedra:28,sombra:262};
 const SHAPE={normal:'blob',fogo:'blob',agua:'wide',planta:'tall',eletrico:'tri',pedra:'sq',sombra:'ghost'};
 const CHARS=['fogo','agua','planta','eletrico','pedra','sombra'];
-const DESIGN={fogo:'Guerreira das chamas',planta:'Arqueira de sakura',eletrico:'Esquilo elétrico',pedra:'Tatu escavador',sombra:'Gato espectral'};
+const DESIGN={fogo:'Guerreira das chamas',planta:'Arqueira de sakura',eletrico:'Condutora eletromagnética',pedra:'Tatu escavador',sombra:'Gato espectral'};
+const BAL={furyDuration:6,furyRate:.6,furyHit:.8,furyMove:1.15,chainRange:340,chainJump:140,chainFalloff:[1,.5,.25],empRadius:300,empDamage:1.8,empStun:1};
 const CH={
-  fogo:{hp:90,spd:238,dmg:13,cd:.27,regen:0,crit:.12,armor:0,life:0,area:0,cost:0,bars:[.45,.85,.95],
-    basic:'Garras de Fogo',bd:'Golpes rápidos em arco que queimam. A cada 3 golpes, um dash flamejante.',sp:'Fúria Berserker',sd:'Por 6 segundos: mais dano, golpes muito mais rápidos e dash sem limite.',scd:14,
+  fogo:{hp:90,spd:225,dmg:13,cd:.4,regen:0,crit:.08,armor:0,life:0,area:0,cost:0,bars:[.45,.7,.85],
+    basic:'Garras de Fogo',bd:'Dois golpes alternados em arco que queimam, sem dash.',sp:'Fúria Berserker',sd:'Por 6 s: intervalo entre golpes 40% menor, 20% menos dano por golpe e +15% de movimento. Dash a cada 3 golpes. Recarga base: 24 s.',scd:24,
     pas:'Inimigos queimados explodem ao morrer.',style:'Assassino veloz'},
   agua:{hp:110,spd:210,dmg:12,cd:.85,regen:1,crit:.05,armor:0,life:0,area:.1,cost:0,bars:[.6,.7,.65],
     basic:'Pescaria',bd:'Lança a vara. A poça carrega e um peixe gigante salta e ataca a área, deixando os inimigos lentos.',sp:'Onda Maré',sd:'Uma onda que empurra a horda e a deixa lenta.',scd:9,
     pas:'Recupera 1 de vida por segundo e +10% de área.',style:'Controle de horda'},
-  planta:{hp:105,spd:215,dmg:12,cd:.5,regen:.3,crit:.08,armor:0,life:.05,area:0,cost:0,bars:[.55,.7,.7],
+  planta:{hp:105,spd:215,dmg:12,cd:.5,regen:.3,crit:.08,armor:0,life:.04,area:0,cost:0,bars:[.55,.7,.7],
     basic:'Flecha de Sakura',bd:'Flecha veloz que atravessa inimigos e drena um pouco de vida a cada acerto.',sp:'Flor de Sakura',sd:'Uma flor gigante desabrocha: fere e prende a horda e drena a vida dos inimigos para curar você.',scd:12,
-    pas:'Cada acerto drena 5% do dano em vida.',style:'Arqueira de drenagem'},
-  eletrico:{hp:85,spd:245,dmg:10,cd:.36,regen:0,crit:.13,armor:0,life:0,area:0,cost:120,bars:[.4,.6,1],
-    basic:'Choque',bd:'Raio instantâneo que acerta vários inimigos em linha.',sp:'Corrida Elétrica',sd:'Dá uma arrancada invulnerável, ferindo quem estiver no caminho.',scd:4.5,
-    pas:'+8% de chance de crítico e corre mais rápido.',style:'Veloz e preciso'},
+    pas:'Cada acerto drena 4% do dano em vida.',style:'Arqueira de drenagem'},
+  eletrico:{hp:90,spd:225,dmg:13,cd:.65,regen:0,crit:.08,armor:0,life:0,area:0,cost:120,bars:[.45,.6,.85],
+    basic:'Raio em Cadeia',bd:'Atinge o alvo na mira e salta para até 2 inimigos a até 140 de distância: 100%, 50% e 25% do dano. Máximo de 3 alvos.',sp:'Onda Eletromagnética',sd:'Causa dano a todos os inimigos num raio de 300 e paralisa por 1 s, incluindo chefes. Recarga base: 18 s.',scd:18,
+    pas:'Disparos extras aumentam o dano do raio em 10% por nível, mantendo o limite de 3 alvos.',style:'Controle e dano em cadeia'},
   pedra:{hp:150,spd:172,dmg:20,cd:.95,regen:0,crit:.05,armor:.25,life:0,area:0,cost:150,bars:[1,.95,.3],
     basic:'Pedrada',bd:'Arremessa uma pedra que explode em área onde você mirar.',sp:'Terremoto',sd:'Sacode o chão, causando dano e atordoando os inimigos.',scd:10,
     pas:'Recebe 25% menos dano.',style:'Tanque lento e pesado'},
@@ -214,7 +215,7 @@ const AL={
   fogo:{d:'Ataca com a adaga o inimigo próximo com mais vida e o deixa queimando.',up:'Golpes mais fortes e mais rápidos'},
   agua:{d:'Lança a vara: um peixe gigante salta da poça e ataca a área, deixando inimigos lentos.',up:'Mais poças e mais dano'},
   planta:{d:'Atira flechas nos monstros e, de vez em quando, uma flecha que cura você.',up:'Mais flechas e mais cura'},
-  eletrico:{d:'Chama raios sobre inimigos aleatórios.',up:'Mais raios e mais saltos'},
+  eletrico:{d:'Raio em cadeia em até 3 alvos, com dano de 100%, 50% e 25%.',up:'Mais dano e menor intervalo entre raios'},
   pedra:{d:'Arremessa pedras que explodem em área.',up:'Mais pedras e área maior'},
   sombra:{d:'Solta sombras que perseguem inimigos.',up:'Mais sombras e mais dano'},
   normal:{d:'Libera pulsos de vento que empurram a horda.',up:'Pulso maior e mais forte'}
@@ -542,7 +543,44 @@ function cropIcon(c){
   o.getContext('2d').drawImage(c,x0,y0,w,h,(sz-w)>>1,sz-h-1,w,h);return o;
 }
 const FOE=t=>CHARS.includes(t)?t+'_e':t;
+/* Zero: cabelo magenta em pontas, visor verde e traje escuro da referência. */
+function zeroSprite(stage,frame){
+  const key='zero|'+stage+'|'+frame;if(SC[key])return SC[key];
+  const N=40,FY=37,bob=frame===1||frame===3?-1:0,attack=frame>=4,step=frame===1?2:frame===3?-2:0;
+  const grid=Array.from({length:N},()=>Array(N).fill(null));
+  const put=(x,y,c)=>{x=Math.round(x);y=Math.round(y)+bob;if(x>=0&&y>=0&&x<N&&y<N)grid[y][x]=c;};
+  const rect=(x,y,w,h,c)=>{for(let j=0;j<h;j++)for(let i=0;i<w;i++)put(x+i,y+j,c);};
+  const poly=(ps,c)=>{const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);for(let y=Math.min(...ys);y<=Math.max(...ys);y++)for(let x=Math.min(...xs);x<=Math.max(...xs);x++){let inside=false;for(let i=0,j=ps.length-1;i<ps.length;j=i++){
+    const a=ps[i],b=ps[j];if((a[1]>y+.5)!==(b[1]>y+.5)&&x+.5<(b[0]-a[0])*(y+.5-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+  }if(inside)put(x,y,c);}};
+  const line=(x0,y0,x1,y1,c,w=1)=>{const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let i=0;i<=n;i++)rect(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),w,w,c);};
+  const pink='#f60955',light='#ff5d91',red='#9e123d',black='#0c1521',dark='#27303c',green='#2fe492',mint='#b0ffd3';
+  // Cabeça e silhueta: poucos pontos de luz, sem copiar texto da prancha.
+  poly([[12,15],[6,15],[11,11],[6,9],[13,10],[13,3],[17,8],[20,2],[21,8],[27,3],[25,10],[33,7],[28,13],[33,15],[27,17]],pink);
+  poly([[10,14],[15,10],[18,6],[18,12],[24,8],[23,13],[29,12],[25,17]],red);
+  poly([[14,14],[25,13],[27,17],[24,21],[18,21],[14,18]],black);
+  poly([[15,14],[25,14],[24,17],[17,17]],green);rect(18,15,2,1,black);rect(23,15,2,1,black);put(18,14,mint);put(24,14,mint);
+  line(19,19,21,20,'#f0d4e5');put(22,19,'#f0d4e5');
+  // Tronco estreito com peito magenta e ombro verde.
+  poly([[17,21],[24,20],[27,26],[23,29],[17,28],[14,24]],black);
+  poly([[20,21],[23,22],[21,25],[23,27],[19,27]],pink);rect(16,22,2,3,green);line(23,22,25,25,dark);
+  line(17,28,15-step,34,dark,3);line(22,28,24+step,34,black,3);
+  line(15-step,31,14-step,35,pink);line(24+step,32,26+step,35,red);
+  rect(12-step,36,6,1,pink);rect(24+step,36,6,1,pink);
+  // Um braço metálico verde, outro com a descarga rosa.
+  line(15,23,12,28,dark,2);line(12,27,10,31,green,2);line(10,29,8,31,mint);
+  if(attack){line(25,22,28,20,dark,2);line(29,20,32,18,pink,2);line(33,18,35,15,light);put(35,13,pink);put(37,17,mint);}
+  else{line(26,23,28,27,dark,2);line(28,27,30,30,pink,2);line(30,30,33,29,light);}
+  line(15,24,13,27,green);put(14,28,mint);
+  if(stage>=2){poly([[12,10],[11,4],[16,9]],light);line(20,25,21,26,mint);line(26,32,28,33,green);}
+  if(stage>=3){poly([[26,9],[32,3],[29,12]],pink);put(8,18,light);put(31,23,green);line(12,33,10,34,light);}
+  const c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!grid[y][x]&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>grid[y+dy]&&grid[y+dy][x+dx])){g.fillStyle='#080b16';g.fillRect(x,y,1,1);}
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(grid[y][x]){g.fillStyle=grid[y][x];g.fillRect(x,y,1,1);}
+  c.bw=20;c.fy=FY;SC[key]=c;return c;
+}
 function monSprite(type,stage,frame){
+  if(type==='eletrico')return zeroSprite(stage,frame);
   if(type==='fogo'||type==='planta')return salaSprite(stage,frame,type);
   if(ART[type])return (frame>=4&&type==='agua')?castSprite(type,stage,frame):artSprite(type,stage,frame);
   if(DESIGN[type])return creatureSprite(type,stage,frame);
@@ -823,7 +861,7 @@ function hitEnemy(e,dmg,o){
   if(run.st.life>0)run.pl.hp=Math.min(run.st.maxhp,run.pl.hp+dmg*run.st.life);
   if(o.slow)e.slow=Math.max(e.slow,1.6);
   if(o.burn){e.burn=3;e.burnD=Math.max(e.burnD,dmg*.25*(o.bm||1));}
-  if(o.stun)e.stun=Math.max(e.stun,e.boss?.3:o.stun);
+  if(o.stun)e.stun=Math.max(e.stun,e.boss&&!o.fullStun?.3:o.stun);
   if((o.kx||o.ky)&&!(e.boss)){const k=e.elite?.5:1;e.kx+=(o.kx||0)*k;e.ky+=(o.ky||0)*k;}
   if(o.root)e.root=Math.max(e.root,e.boss?.5:o.root);
   if(o.c)burst(e.x,e.y,o.c,2,110,.25);
@@ -840,7 +878,7 @@ function killEnemy(e,silent){
   burst(e.x,e.y,TI[e.type].c,silent?5:12,190,.5);
   if(silent)return;
   sfx('kill');shk(e.boss?10:1.5);
-  run.kills++;P.st.kills++;run.sp=Math.max(0,run.sp-.35);
+  run.kills++;P.st.kills++;run.sp=Math.max(0,run.sp-(run.ch==='fogo'?.08:run.ch==='eletrico'?.06:.35));
   if(e.burn>0&&run.ch==='fogo'){
     fx.push({k:'ring',x:e.x,y:e.y,r:0,mx:80,life:.3,max:.3,c:'#ff8a3d'});
     enemies.slice().forEach(o=>{if(o!==e&&o.spawn<=0&&dist(o,e)<80+o.r)hitEnemy(o,run.st.dmg*.5,{burn:true,canCrit:false,c:'#ff8a3d'});});
@@ -879,39 +917,49 @@ function aimInfo(){
   return{wx,wy,ang:Math.atan2(wy-p.y,wx-p.x)};
 }
 function pushProj(o){pbul.push(Object.assign({hit:new Set(),pierce:0,life:1,r:9,from:'p'},o));}
+function chainLightning(origin,first,damage){
+  const live=enemies.filter(e=>e.hp>0&&e.spawn<=0),targets=[first];
+  while(targets.length<BAL.chainFalloff.length){
+    const last=targets[targets.length-1],next=nearest(last,live,BAL.chainJump,e=>!targets.includes(e)&&dist(last,e)<=BAL.chainJump);
+    if(!next)break;targets.push(next);
+  }
+  // Um crítico é compartilhado por toda a cadeia, preservando a queda de dano.
+  const power=damage*(Math.random()<run.st.crit?2:1);let from=origin;
+  targets.forEach((e,i)=>{fx.push({k:'bolt',x1:from.x,y1:from.y,x2:e.x,y2:e.y,life:.16,max:.16,c:'#ff2562'});hitEnemy(e,power*BAL.chainFalloff[i],{canCrit:false,c:'#ff2562'});from=e;});
+  return targets;
+}
 function basicAttack(ang,tx,ty){
   const p=run.pl,st=run.st,ch=run.ch,n=st.multi,A=st.area,c=CH[ch];
   run.cd=c.cd*st.cdm*(1-.05*(run.bl-1));
   const dmg=st.dmg;
   if(ch==='fogo'){
-    const ber=run.ber>0,R=(112+(ber?22:0))*A,span=.75+.28*(n-1),dm=ber?1.6:1;
-    if(ber)run.cd*=.55;
+    const ber=run.ber>0,R=112*A,span=.75+.28*(n-1),dm=ber?BAL.furyHit:1;
+    if(ber)run.cd*=BAL.furyRate;
     enemies.slice().forEach(e=>{if(e.spawn>0)return;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d>R+e.r)return;
       let da=Math.atan2(dy,dx)-ang;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;
-      if(Math.abs(da)<=span||d<e.r+34)hitEnemy(e,dmg*dm,{burn:true,bm:2.2,kx:Math.cos(ang)*120,ky:Math.sin(ang)*120,c:'#ff8a3d'});});
+      if(Math.abs(da)<=span||d<e.r+34)hitEnemy(e,dmg*dm,{burn:true,kx:Math.cos(ang)*90,ky:Math.sin(ang)*90,c:'#ff8a3d'});});
     run.sw=-(run.sw||1);
     fx.push({k:'slash',x:p.x+Math.cos(ang)*14,y:p.y+Math.sin(ang)*14,ang,R:R*.85,span,flip:run.sw,life:.2,max:.2});
-    p.swing=.22;p.vx+=Math.cos(ang)*140;p.vy+=Math.sin(ang)*140;
-    run.combo=(run.combo||0)+1;
-    if(ber||run.combo>=3){run.combo=0;fireDash(ang);}
+    p.swing=.22;
+    run.combo=ber?(run.combo||0)+1:0;
+    if(ber&&run.combo>=3){run.combo=0;fireDash(ang);}
   }else if(ch==='agua'){
     const maxd=430,d=clamp(Math.hypot(tx-p.x,ty-p.y),70,maxd);
     for(let i=0;i<n;i++){
       const off=i?rf(-90,90):0,ex=p.x+Math.cos(ang)*d+off,ey=p.y+Math.sin(ang)*d+(i?rf(-90,90):0);
-      const fs=pickFish();lobs.push({kind:'drop',x0:p.x,y0:p.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*2.6*fs.dm,r:84*A*fs.rm,c:'#5aaeff',sp:fs});
+      const fs=pickFish();lobs.push({kind:'drop',x0:p.x,y0:p.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*2.3*fs.dm,r:84*A*fs.rm,c:'#5aaeff',sp:fs});
     }
     p.cast=.42;
   }else if(ch==='planta'){
     const cnt=n;p.swing=.28;
-    for(let i=0;i<cnt;i++){const a=ang+(i-(cnt-1)/2)*.16;pushProj({x:p.x+Math.cos(a)*16,y:p.y-8+Math.sin(a)*16,vx:Math.cos(a)*760,vy:Math.sin(a)*760,dmg:dmg*1.7,r:8,life:.78*A,pierce:2,type:'planta',ang:a});}
+    for(let i=0;i<cnt;i++){const a=ang+(i-(cnt-1)/2)*.16;pushProj({x:p.x+Math.cos(a)*16,y:p.y-8+Math.sin(a)*16,vx:Math.cos(a)*760,vy:Math.sin(a)*760,dmg:dmg*1.5,r:8,life:.78*A,pierce:2,type:'planta',ang:a});}
   }else if(ch==='eletrico'){
-    const L=380*A,dx=Math.cos(ang),dy=Math.sin(ang),hits=[];
-    enemies.slice().forEach(e=>{if(e.spawn>0)return;const rx=e.x-p.x,ry=e.y-p.y,t=rx*dx+ry*dy;if(t<0||t>L)return;const pd=Math.abs(rx*dy-ry*dx);if(pd<e.r+14)hits.push([t,e]);});
+    const L=BAL.chainRange,dx=Math.cos(ang),dy=Math.sin(ang),hits=[];p.swing=.18;
+    enemies.slice().forEach(e=>{if(e.spawn>0||e.hp<=0)return;const rx=e.x-p.x,ry=e.y-p.y,t=rx*dx+ry*dy;if(t<0||t>L)return;const pd=Math.abs(rx*dy-ry*dx);if(pd<e.r+12)hits.push([t,e]);});
     hits.sort((a,b)=>a[0]-b[0]);
-    const mx=3+2*(n-1);let endT=L;
-    hits.slice(0,mx).forEach((h,i)=>{hitEnemy(h[1],dmg*(1.1-i*.05),{c:'#ffd23f'});endT=h[0];});
-    if(hits.length<=mx)endT=hits.length?endT:L;
-    fx.push({k:'bolt',x1:p.x,y1:p.y,x2:p.x+dx*endT,y2:p.y+dy*endT,life:.12,max:.12});sfx('zap');
+    if(hits.length)chainLightning(p,hits[0][1],dmg*(1+.1*(n-1)));
+    else fx.push({k:'bolt',x1:p.x,y1:p.y,x2:p.x+dx*L,y2:p.y+dy*L,life:.12,max:.12,c:'#ff2562'});
+    sfx('zap');
   }else if(ch==='pedra'){
     const maxd=460,d=Math.min(maxd,Math.hypot(tx-p.x,ty-p.y));
     for(let i=0;i<n;i++){
@@ -925,21 +973,20 @@ function basicAttack(ang,tx,ty){
   if(ch!=='eletrico')sfx('shoot');
 }
 function fireDash(ang0){
+  if(run.ber<=0)return;
   const p=run.pl,ber=run.ber>0;let ang=ang0;
   if(ber){const c=enemies.filter(e=>e.spawn<=0&&e!==run.lastDT&&dist(e,p)>60&&dist(e,p)<440);if(c.length){const e=pick(c);run.lastDT=e;ang=Math.atan2(e.y-p.y,e.x-p.x);}}
-  const t=ber?.1:.16;
-  p.dash={t,t0:t,dx:Math.cos(ang),dy:Math.sin(ang),hit:new Set(),spd:ber?1900:1700,dm:ber?2.6:2.2,fire:true};
-  p.inv=Math.max(p.inv,t+.12);p.face=Math.cos(ang)>=0?1:-1;sfx('dash');shk(4);
+  const t=.14;
+  p.dash={t,t0:t,dx:Math.cos(ang),dy:Math.sin(ang),hit:new Set(),spd:1300,dm:.9,fire:true};
+  p.inv=Math.max(p.inv,t+.06);p.face=Math.cos(ang)>=0?1:-1;sfx('dash');shk(4);
 }
 function useSpecial(){
   if(!run||run.over||run.sp>0||uiOpen)return;
   const p=run.pl,st=run.st,ch=run.ch,c=CH[ch],A=st.area;
   run.sp=c.scd*st.cdm;run.spMax=run.sp;sfx('special');shk(6);
   if(ch==='fogo'){
-    run.ber=6;run.combo=0;p.inv=Math.max(p.inv,.4);
+    run.ber=BAL.furyDuration;run.combo=0;
     fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:210*A,life:.5,max:.5,c:'#ff4a1c'});burst(p.x,p.y,'#ff6a2a',40,380,.8);toast('FÚRIA BERSERKER!');
-    enemies.slice().forEach(e=>{if(dist(e,p)<210*A+e.r){const a=Math.atan2(e.y-p.y,e.x-p.x);hitEnemy(e,st.dmg*2,{burn:true,bm:2.2,kx:Math.cos(a)*260,ky:Math.sin(a)*260,c:'#ff8a3d'});}});
-    ebul.length=0;
   }else if(ch==='agua'){
     fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:300*A,life:.5,max:.5,c:'#5aaeff'});
     enemies.slice().forEach(e=>{if(dist(e,p)<300*A+e.r){const a=Math.atan2(e.y-p.y,e.x-p.x);e.slow=3.2;hitEnemy(e,st.dmg*2.4,{kx:Math.cos(a)*560,ky:Math.sin(a)*560,c:'#5aaeff'});}});
@@ -949,12 +996,12 @@ function useSpecial(){
     fx.push({k:'bloom',x:p.x,y:p.y,R,life:.95,max:.95});fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:R,life:.6,max:.6,c:'#ff8fd0'});
     enemies.slice().forEach(e=>{if(dist(e,p)<R+e.r){hits++;hitEnemy(e,st.dmg*2.4,{root:1.8,c:'#ff8fd0'});
       for(let k=0;k<4;k++){const a=Math.atan2(p.y-e.y,p.x-e.x)+rf(-.25,.25);parts.push({x:e.x,y:e.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,life:.5,max:.5,c:pick(['#ff8fd0','#ffd0ea','#d03a8a']),r:rf(5,9)});}}});
-    const h=st.maxhp*(.08+Math.min(10,hits)*.02);p.hp=Math.min(st.maxhp,p.hp+h);floater(p.x,p.y-34,'+'+Math.round(h),'#ffb3dc',true);
+    const h=st.maxhp*(.08+Math.min(10,hits)*.014);p.hp=Math.min(st.maxhp,p.hp+h);floater(p.x,p.y-34,'+'+Math.round(h),'#ffb3dc',true);
     burst(p.x,p.y,'#ffb3dc',36,340,.8);toast('FLOR DE SAKURA!');
   }else if(ch==='eletrico'){
-    let dx=(keys.r?1:0)-(keys.l?1:0)+(joyV.x||0),dy=(keys.d?1:0)-(keys.u?1:0)+(joyV.y||0);
-    if(Math.hypot(dx,dy)<.2){const a=aimInfo();dx=Math.cos(a.ang);dy=Math.sin(a.ang);}
-    const d=Math.hypot(dx,dy)||1;p.dash={t:.18,dx:dx/d,dy:dy/d,hit:new Set()};p.inv=Math.max(p.inv,.55);sfx('dash');
+    p.pulse=.6;const R=BAL.empRadius*A;
+    fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:R,life:.55,max:.55,c:'#ff2562'});
+    enemies.slice().forEach(e=>{if(dist(e,p)<=R+e.r)hitEnemy(e,st.dmg*BAL.empDamage,{stun:BAL.empStun,fullStun:true,c:'#65efac'});});
   }else if(ch==='pedra'){
     fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:300*A,life:.55,max:.55,c:'#c9a97f'});shk(12);
     enemies.slice().forEach(e=>{if(dist(e,p)<300*A+e.r)hitEnemy(e,st.dmg*3,{stun:1.8,c:'#c9a97f'});});
@@ -973,7 +1020,8 @@ function update(dt){
   const p=run.pl,st=run.st;run.time+=dt;timeNow+=dt;p.t+=dt;
   if(run.fade>0)run.fade=Math.max(0,run.fade-dt*2.2);
   if(run.over){run.overT-=dt;if(run.overT<=0)endRun();updFx(dt);return;}
-  p.inv=Math.max(0,p.inv-dt);p.flash=Math.max(0,p.flash-dt);p.cast=Math.max(0,(p.cast||0)-dt);p.swing=Math.max(0,(p.swing||0)-dt);run.ber=Math.max(0,(run.ber||0)-dt);run.sp=Math.max(0,run.sp-dt);
+  p.inv=Math.max(0,p.inv-dt);p.flash=Math.max(0,p.flash-dt);p.cast=Math.max(0,(p.cast||0)-dt);p.swing=Math.max(0,(p.swing||0)-dt);p.pulse=Math.max(0,(p.pulse||0)-dt);run.ber=Math.max(0,(run.ber||0)-dt);run.sp=Math.max(0,run.sp-dt);
+  if(run.ber<=0&&p.dash&&p.dash.fire){p.dash=null;run.combo=0;}
   p.hp=Math.min(st.maxhp,p.hp+st.regen*dt);
   // movimento
   let mx=(keys.r?1:0)-(keys.l?1:0),my=(keys.d?1:0)-(keys.u?1:0);
@@ -983,10 +1031,10 @@ function update(dt){
     const D=p.dash;D.t-=dt;p.x+=D.dx*(D.spd||1500)*dt;p.y+=D.dy*(D.spd||1500)*dt;p.vx=D.dx*400;p.vy=D.dy*400;
     if(D.fire){const fc=['#ffd36b','#ff8a3d','#ff4a1c'];for(let k=0;k<2;k++)parts.push({x:p.x+rf(-8,8),y:p.y+rf(-14,10),vx:rf(-40,40),vy:rf(-70,-10),life:.45,max:.45,c:pick(fc),r:rf(6,11)});}
     else parts.push({x:p.x,y:p.y,vx:0,vy:0,life:.3,max:.3,c:'#ffd23f',r:7});
-    enemies.slice().forEach(e=>{if(e.spawn>0||D.hit.has(e))return;if(dist(e,p)<e.r+30){D.hit.add(e);hitEnemy(e,st.dmg*(D.dm||2),D.fire?{burn:true,bm:2.2,stun:.2,c:'#ff8a3d'}:{c:'#ffd23f',stun:.3});}});
+    enemies.slice().forEach(e=>{if(e.spawn>0||D.hit.has(e))return;if(dist(e,p)<e.r+30){D.hit.add(e);hitEnemy(e,st.dmg*(D.dm||2),D.fire?{burn:true,stun:.2,c:'#ff8a3d'}:{c:'#ffd23f',stun:.3});}});
     if(p.dash.t<=0)p.dash=null;
   }else{
-    const sp=st.spd;
+    const sp=st.spd*(run.ber>0?BAL.furyMove:1);
     p.vx+=(mx*sp-p.vx)*Math.min(1,dt*14);p.vy+=(my*sp-p.vy)*Math.min(1,dt*14);
     p.x+=p.vx*dt;p.y+=p.vy*dt;
   }
@@ -1089,16 +1137,9 @@ function updAllies(dt){
         }
       }
     }else if(t==='eletrico'){
-      if(a.cd<=0){
-        const vis=enemies.filter(e=>e.spawn<=0&&dist(e,p)<520),n=1+Math.floor(lv/2);
-        if(vis.length){
-          for(let k=0;k<n;k++){
-            const e=pick(vis);let from={x:a.x,y:a.y};const hits=[e];let last=e;
-            for(let c=0;c<(lv>=3?3:2);c++){const nx=nearest(last,enemies,170,q=>hits.indexOf(q)<0);if(!nx)break;hits.push(nx);last=nx;}
-            hits.forEach((h,hi)=>{fx.push({k:'bolt',x1:from.x,y1:from.y,x2:h.x,y2:h.y,life:.2,max:.2});hitEnemy(h,dmg*2*(hi?.6:1),{c:'#ffd23f'});from=h;});
-          }
-          a.cd=2.1*cdm;sfx('zap');
-        }else a.cd=.5;
+      if(a.cd<=0){const e=nearest(a,enemies,BAL.chainRange);
+        if(e){chainLightning(a,e,dmg*.8);a.swing=.18;a.cd=(2.2-.12*(lv-1))*cdm;sfx('zap');}
+        else a.cd=.4;
       }
     }else if(t==='pedra'){
       if(a.cd<=0){
@@ -1373,7 +1414,7 @@ function setUI(scr,html,cls){resetInput();uiOpen=true;if(rankUnsub&&scr!=='rank'
 function hideUI(){ui.className='';ui.innerHTML='';ui.dataset.scr='';uiOpen=false;}
 function menuHTML(){
   const done=Object.keys(P.ach).length;
-  return `<div class="pane menu"><div><h1>BaubLike</h1><p class="lvl">BETA 0.6.1</p><p class="mut">Sobreviva à horda, colete cristais de experiência e fique cada vez mais forte.</p></div>
+  return `<div class="pane menu"><div><h1>BaubLike</h1><p class="lvl">BETA 0.6.2</p><p class="mut">Sobreviva à horda, colete cristais de experiência e fique cada vez mais forte.</p></div>
   <button class="pri big" data-a="play">Iniciar partida</button>
   <button class="big" data-a="team">Equipe</button>
   <button class="big" data-a="ach">Conquistas <span class="mut small">${done}/${ACH.length}</span></button>
@@ -1447,7 +1488,7 @@ function howHTML(){
   <p>O mapa é infinito e a horda nunca para. Derrotar monstros deixa cristais ciano no chão: chegue perto para coletar. Ao encher a barra de experiência você sobe de nível e escolhe uma melhoria.</p>
   <p>As melhorias podem ser <b>aliados</b> (até 4, cada um com uma habilidade automática), <b>bônus</b> (até 6) ou o aprimoramento do seu ataque principal. Monstros dourados e chefes deixam baús com mais escolhas.</p>
   <p>Cada nível que você sobe deixa a horda mais forte e mais numerosa. A cada 5 níveis chega uma horda em círculo, e a cada 10 níveis um chefe. Seu personagem evolui nos níveis 15 e 30.</p></div>
-  <h3>Personagens</h3><div class="card small"><p><b>Salamandra:</b> garras em arco, arrancada a cada três golpes e Fúria Berserker.</p><p><b>Sakura:</b> flechas perfurantes que drenam vida e Flor de Sakura para prender inimigos e se curar.</p></div><h3>Aliados</h3><div class="grid">`+TYPES.map(t=>`<div class="card">${ico(t,1)}<b>${NM[t][0]}</b>${chip(t)}<span class="small">${AL[t].d}</span></div>`).join('')+`</div>
+  <h3>Personagens</h3><div class="card small"><p><b>Salamandra:</b> dois golpes alternados, sem dash. A Fúria dura 6 s: ataca mais depressa, reduz o dano por golpe e libera um dash a cada três ataques.</p><p><b>Sakura:</b> flechas perfurantes que drenam vida e Flor de Sakura para prender inimigos e se curar.</p></div><div class="card small"><p><b>Zero:</b> raio em até três alvos próximos, com dano de 100%, 50% e 25%. A onda eletromagnética paralisa inimigos a até 300 de distância por 1 s.</p></div><h3>Aliados</h3><div class="grid">`+TYPES.map(t=>`<div class="card">${ico(t,1)}<b>${NM[t][0]}</b>${chip(t)}<span class="small">${AL[t].d}</span></div>`).join('')+`</div>
   <button class="pri big" data-a="menu">Entendi</button></div>`;
 }
 function pauseHTML(conf){
@@ -1847,6 +1888,7 @@ function drawPlay(list,dark){
       let af=Math.floor(a.t*9)%4;const asc=2.4+a.lvl*.1,ay=a.y+Math.sin(a.bob)*3;let afc=a.x<p.x?1:-1;
       if(a.type==='fogo'){if(a.tgt)afc=a.fc||1;if(a.swing>0)af=30+Math.min(4,Math.floor((1-a.swing/.2)*5));else if(a.mv)af=10+Math.floor(timeNow*12)%6;else af=20+Math.floor(timeNow*5)%5;}
       if(a.type==='planta'){if(a.swing>0){afc=a.fc||afc;af=30+Math.min(3,Math.floor((1-a.swing/.28)*4));}else af=20+Math.floor(timeNow*5)%5;}
+      if(a.type==='eletrico'&&a.swing>0)af=4;
       if(a.type==='agua'&&a.cast>0){const el=.42-a.cast;af=el<.14?4:el<.28?5:6;if(af===5)drawSprite(a.type,allyStage(a),4,a.x,ay,asc,afc,.3,0);}
       drawSprite(a.type,allyStage(a),af,a.x,ay,asc,afc,1,0);
     }});
@@ -1870,6 +1912,7 @@ function drawPlay(list,dark){
       else if(moving)pf=10+Math.floor(p.t*12)%6;
       else pf=20+Math.floor(p.t*6)%5;
     }
+    if(run.ch==='eletrico'&&(p.swing>0||p.pulse>0))pf=4;
     if(run.ch==='agua'&&p.cast>0){const el=.42-p.cast;pf=el<.14?4:el<.28?5:6;if(pf===5)drawSprite(run.ch,run.stage,4,p.x,p.y,3.3+run.stage*.15,p.face,.3,0);}
     drawSprite(run.ch,run.stage,pf,p.x,p.y,psc,p.face,blink?.35:1,p.flash);
     const w=44;ctx.fillStyle='#496257';ctx.fillRect(p.x-w/2,p.y+34,w,6);ctx.fillStyle='#080e0d';ctx.fillRect(p.x-w/2+1,p.y+35,w-2,4);ctx.fillStyle='#ef072a';ctx.fillRect(p.x-w/2+1,p.y+35,(w-2)*clamp(p.hp/run.st.maxhp,0,1),4);
@@ -1945,7 +1988,7 @@ function drawTop(){
       [['#ff3d1a',16],['#ff8a3d',10],['#ffe08a',4]].forEach(L=>{ctx.globalAlpha=clamp(f.life/f.max*1.3,0,1);ctx.strokeStyle=L[0];ctx.lineWidth=L[1]*(1-k*.5);ctx.beginPath();ctx.arc(0,0,R,a0,a1,f.flip<0);ctx.stroke();});
       ctx.restore();ctx.globalAlpha=1;
     }
-    else{ctx.strokeStyle='#fff3a0';ctx.lineWidth=4;ctx.globalAlpha=clamp(f.life/f.max,0,1);ctx.beginPath();ctx.moveTo(f.x1,f.y1);const n=5;for(let i=1;i<n;i++){const t=i/n;ctx.lineTo(f.x1+(f.x2-f.x1)*t+rf(-10,10),f.y1+(f.y2-f.y1)*t+rf(-10,10));}ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.globalAlpha=1;}
+    else{ctx.strokeStyle=f.c||'#fff3a0';ctx.lineWidth=4;ctx.globalAlpha=clamp(f.life/f.max,0,1);ctx.beginPath();ctx.moveTo(f.x1,f.y1);const n=5;for(let i=1;i<n;i++){const t=i/n;ctx.lineTo(f.x1+(f.x2-f.x1)*t+rf(-10,10),f.y1+(f.y2-f.y1)*t+rf(-10,10));}ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.globalAlpha=1;}
   });
   parts.forEach(q=>{ctx.globalAlpha=clamp(q.life/q.max,0,1);ctx.fillStyle=q.c;ctx.fillRect(q.x-q.r/2,q.y-q.r/2,q.r,q.r);});ctx.globalAlpha=1;
   ctx.textAlign='center';
@@ -1997,7 +2040,7 @@ function frame(ts){
 }
 applyTheme();resize();showMenu();initDb();
 requestAnimationFrame(frame);
-if(window.__NSDEBUG)window.__NS={mkAlly,monSprite,iconURL,fishCanvas,FISH,lootSprite,dropGem,hurtPlayer,updPick,VERSION,get picks(){return picks;},get run(){return run;},get enemies(){return enemies;},get gems(){return gems;},P,S,ACT,keys,update:dt=>update(dt),render,CH,makeCards,applyCard,showLevelUp,recompute,spawnBoss,mkEnemy,get cards(){return curCards;},useSpecial,basicAttack,updHud,healthState,startRun,get mouse(){return mouse;},get cam(){return cam;},get pbul(){return pbul;}};
+if(window.__NSDEBUG)window.__NS={mkAlly,monSprite,iconURL,fishCanvas,FISH,BAL,chainLightning,lootSprite,dropGem,hurtPlayer,updPick,VERSION,get picks(){return picks;},get run(){return run;},get enemies(){return enemies;},get gems(){return gems;},P,S,ACT,keys,update:dt=>update(dt),render,CH,makeCards,applyCard,showLevelUp,recompute,spawnBoss,mkEnemy,get cards(){return curCards;},useSpecial,basicAttack,updHud,healthState,startRun,get mouse(){return mouse;},get cam(){return cam;},get pbul(){return pbul;}};
 })();
 </script>
 
