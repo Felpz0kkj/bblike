@@ -1,5 +1,19 @@
 # Histórico
 
+## 0.6.3-beta — 2026-11-02
+
+- Capricorn substitui Zero com a arte, animações, cores de evolução e efeitos da versão 7. Progresso elétrico preservado; custo de desbloqueio continua 120.
+- Corrente em Cadeia: até 3 alvos, dano 100% / 50% / 25%, alcance 320 e saltos de 120; 15% de chance de paralisar por 0,25 s.
+- Tempestade Viva: carga 1,1 s, três pulsos e descarga, movimento a 60%, sem ataque normal durante a carga. Raio 260 (máximo 325), bônus de grupo até 30%, paralisia final de 1 s e recarga 18 s.
+- Sakura: alcance nominal 360 independente de área, flechas com 20% menos dano por passagem, intervalo 0,55 s e cura do especial reduzida.
+- Frood e Pedrino: arremessos limitados a 330 e 320; especiais de raio 260 com recarga 12 s. Sombrinha: percurso dos orbes limitado a 480, teleporte de até 280 e recarga 8 s.
+- Salamandra mantém dois golpes normais sem dash e os seis segundos de Fúria com dash a cada três golpes. Mira automática ajustada ao alcance de cada personagem.
+- Reduzida a recuperação de especiais por abate para evitar repetição quase contínua em hordas.
+- Corrigidos projéteis que pulavam inimigos, dano duplo no teleporte sobreposto e cura por dano excedente à vida restante do alvo.
+- Preservados menus, vida contínua, XP/cura, artes de Pedrino/Sombrinha e correções anteriores; não substituído o index pela ramificação antiga.
+- 33 testes automatizados aprovados, incluindo todos os personagens nas três evoluções; prévias de arte/carga/descarga verificadas no navegador.
+- Comparação completa da integração em docs/comparacao-versao-7.md e cenários de combate reproduzíveis em tests/combat.html.
+
 ## 0.6.2-beta — 2026-10-31
 
 - Salamandra: dois golpes alternados sem avanço ou dash no ataque normal; dano base 13, intervalo 0,4 s.

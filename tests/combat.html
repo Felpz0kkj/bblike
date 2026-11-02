@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BaubLike · Verificação de combate</title>
+<style>body{margin:20px;background:#0b1411;color:#eee;font:15px system-ui}h1{font-size:22px;color:#f2b84b}button,select{padding:9px;margin:4px;background:#243b30;color:#fff;border:1px solid #61765e;border-radius:4px}iframe{display:block;width:min(960px,100%);height:600px;border:1px solid #61765e;margin-top:12px}p{color:#abbcaf}#status{color:#b6e4c4}</style>
+<h1>BaubLike · Beta 0.6.3 · Combate</h1>
+<p>Cenários reproduzíveis usando o código real, com progresso e áudio isolados. O jogo fica parado no quadro escolhido.</p>
+<label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Pedrino</option><option value="sombra">Sombrinha</option></select></label>
+<label>Evolução <select id="stage"><option value="1">Inicial</option><option value="2">Evolução 2</option><option value="3">Evolução 3</option></select></label>
+<button data-scene="normal">Ataque normal</button><button data-scene="charge">Carga do especial</button><button data-scene="special">Especial completo</button><button data-scene="fury">Três golpes na Fúria</button>
+<p id="status">Carregando…</p><iframe id="game" title="Cenário de combate isolado"></iframe>
+<script>
+(async()=>{
+  let src=await(await fetch('../index.html')).text();
+  src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-combat-test';")
+    .replace('<script>','<script>window.__NSDEBUG=true;')
+    .replaceAll('requestAnimationFrame(frame);','/* Avanço manual nesta prévia. */')
+    .replace('applyTheme();resize();showMenu();initDb();','S.music=S.sfx=0;P.seen=1;applyTheme();resize();showMenu();');
+  const frame=document.querySelector('#game'),status=document.querySelector('#status');
+  frame.onload=()=>{
+    const g=frame.contentWindow.__NS;
+    function show(scene){
+      try{
+        const type=document.querySelector('#hero').value;g.P.chars[type]=1;g.P.start=[];g.S.aim='manual';
+        g.startRun(type,'normal');g.run.stage=Number(document.querySelector('#stage').value);g.recompute();
+        g.run.st.crit=0;g.run.fade=0;g.run.allies.length=0;g.run.pl.hp=g.run.st.maxhp;
+        g.cam.x=-400;g.cam.y=-250;g.mouse.x=640;g.mouse.y=250;
+        const es=[[110,0],[190,45],[260,85],[340,-80],[-170,40]].map(([x,y])=>{
+          const e=g.mkEnemy('normal',1,x,y,{});e.hp=e.maxhp=1000;e.spd=0;g.enemies.push(e);return e;
+        });
+        if(scene==='normal'){g.basicAttack(0,240,0);if(type==='planta'||type==='sombra')g.updProj(.16);}
+        else{g.useSpecial();if(type==='eletrico')g.chargeTick(scene==='charge'?.65:1.1);if(scene==='fury'&&type==='fogo')for(let i=0;i<3;i++)g.basicAttack(0,240,0);}
+        g.render();g.updHud();
+        status.textContent='Quadro pronto · '+document.querySelector('#hero').selectedOptions[0].text+' · dano por alvo: '+es.map(e=>Math.round(1000-e.hp)).join(' / ');
+      }catch(e){status.textContent='ERRO: '+e.message;console.error(e);}
+    }
+    document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>show(b.dataset.scene));
+    document.querySelector('#hero').onchange=()=>show('normal');document.querySelector('#stage').onchange=()=>show('normal');show('normal');
+  };frame.srcdoc=src;
+})().catch(e=>document.querySelector('#status').textContent='ERRO: '+e.message);
+</script></html>

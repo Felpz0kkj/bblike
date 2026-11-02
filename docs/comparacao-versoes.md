@@ -1,5 +1,7 @@
 # Comparação das versões recebidas
 
+Comparação mais recente: [versão 7 e beta 0.6.3](comparacao-versao-7.md).
+
 Base escolhida pelo autor: **Horda da Névoa (2).html**.
 
 **Atualização na beta 0.6.1 (BaubLike):** a pedido do autor, Salamandra passa a substituir Brasito e Sakura passa a substituir Folhito, incluindo sprites, animações e habilidades da versão 5. A tabela abaixo registra a comparação original da beta 0.6; as demais funcionalidades continuam vindo da versão 2 corrigida.

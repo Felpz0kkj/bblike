@@ -1,6 +1,6 @@
-# BaubLike — Beta 0.6.2
+# BaubLike — Beta 0.6.3
 
-Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Zero, Pedrino e Sombrinha. Zero substitui Fagulhim, preservando o desbloqueio e o progresso do elemento elétrico.
+Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Pedrino e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
@@ -12,10 +12,13 @@ A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanente
 
 ## Desenvolvimento
 
+Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
+
 - Fonte principal: `index.html`.
 - Versão: `VERSION` e constante VERSION no HTML.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (quadros reproduzíveis, progresso isolado).
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
 - Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
