@@ -35,7 +35,7 @@ function boot(saved){
   const sandbox={window:win,document:{documentElement:root,hidden:false,querySelector:node,
     createElement:element,addEventListener:(k,f)=>events[k]=f},
     localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},
-    console,requestAnimationFrame(){},setTimeout(){},setInterval(){},clearInterval(){},
+    performance:{now:()=>1000},console,requestAnimationFrame(){},setTimeout(){},setInterval(){},clearInterval(){},
     matchMedia:win.matchMedia};
   vm.runInNewContext(script,sandbox,{filename:'index.html'});
   return {game:win.__NS,node,events,store};
@@ -149,7 +149,7 @@ test('morte por contato interrompe coletas e cura no mesmo quadro',()=>{
 });
 
 test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
-  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.3-beta');
+  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.4-beta');
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
@@ -354,4 +354,99 @@ test('paralisia curta não fica mais longa em chefes e morte cancela a carga',()
   const {game:g}=boot();g.P.chars.eletrico=1;begin(g,'eletrico');
   const e=target(g,100);e.boss={name:'Teste'};g.hitEnemy(e,1,{stun:.25,canCrit:false});assert.equal(e.stun,.25);
   g.useSpecial();g.run.pl.hp=1;g.hurtPlayer(100);assert.equal(g.run.over,true);assert.equal(g.run.chg,null);
+});
+
+test('esquiva com Shift é direcional, sem dano e com recarga independente',()=>{
+  const {game:g,events}=boot();begin(g,'fogo');g.run.st.crit=0;
+  const e=target(g,100);g.keys.r=true;events.keydown({key:'Shift',repeat:false,preventDefault(){}});
+  assert.equal(g.run.sp,0);assert.equal(g.run.pl.dash.nodmg,true);assert.equal(g.run.dcd,2.4);
+  const dash=g.run.pl.dash;g.doDash();assert.equal(g.run.pl.dash,dash);
+  g.keys.r=false;g.update(.1);g.update(.1);assert.equal(g.run.pl.dash,null);
+  assert.ok(Math.abs(g.run.pl.x-198)<1e-8);assert.equal(e.hp,1000);
+  g.run.dcd=0;g.keys.l=true;g.keys.u=true;g.doDash();
+  assert.ok(g.run.pl.dash.dx<0&&g.run.pl.dash.dy<0);
+  assert.ok(Math.abs(Math.hypot(g.run.pl.dash.dx,g.run.pl.dash.dy)-1)<1e-9);
+});
+
+test('esquiva não funciona em pausa, durante carga ou por repetição do Shift',()=>{
+  const {game:g,events}=boot();g.P.chars.eletrico=1;begin(g,'eletrico');g.useSpecial();g.doDash();
+  assert.equal(g.run.pl.dash,null);g.run.chg=null;events.blur();g.doDash();assert.equal(g.run.pl.dash,null);
+  g.ACT.resume();events.keydown({key:'Shift',repeat:true,preventDefault(){}});assert.equal(g.run.pl.dash,null);
+  g.doDash();assert.equal(g.run.pl.dash.nodmg,true);
+});
+
+test('derrota congela tempo e recompensa, pode pular após 1,8 s e reinicia limpa',()=>{
+  const {game:g,node,events}=boot();begin(g,'fogo');g.run.time=125.5;g.run.pl.hp=1;g.hurtPlayer(1000);
+  assert.equal(g.run.over,true);assert.match(node('#wasted').innerHTML,/ELIMINADO|2:05/);
+  assert.equal(node('#stage').classList.contains('dead'),true);
+  g.update(1);assert.equal(g.run.time,125.5);assert.equal(g.run.ended,false);assert.equal(g.P.rank.length,0);
+  events.keydown({key:' ',preventDefault(){}});g.update(.9);assert.equal(g.run.ended,true);
+  assert.equal(g.P.rank.length,1);assert.equal(g.P.rank[0].time,125);
+  const ess=g.P.ess;g.update(5);assert.equal(g.P.ess,ess);assert.equal(g.P.rank.length,1);
+  let blocked=false;events.keydown({key:'a',preventDefault(){blocked=true;}});assert.equal(blocked,false);
+  begin(g,'fogo');assert.equal(g.run.over,false);assert.equal(node('#wasted').className,'');
+  assert.equal(node('#stage').classList.contains('dead'),false);
+});
+
+test('todos os personagens renderizam a derrota até o fim sem ganhar vida',()=>{
+  const {game:g}=boot();
+  for(const type of Object.keys(g.CH)){
+    g.P.chars[type]=1;begin(g,type);g.run.pl.hp=1;g.hurtPlayer(10000);
+    for(const dt of [.2,.6,.6,1,2.3]){g.update(dt);g.render();assert.equal(g.run.pl.hp,0);}
+    assert.equal(g.run.ended,true);
+  }
+});
+
+test('podridão respeita armadura, esquiva e renascimento; morte impede coleta',()=>{
+  const {game:g}=boot();g.P.chars.pedra=1;begin(g,'pedra');g.run.pl.hp=100;g.applyRot(5);
+  for(let i=0;i<50;i++)g.tickRot(.1);assert.equal(g.run.pl.hp,80); // 5 ticks de 4 com armadura.
+  g.run.pl.inv=1;assert.equal(g.applyRot(5),false);
+  g.run.pl.inv=0;g.P.up.revive=1;g.run.pl.hp=1;g.applyRot();g.tickRot(1);
+  assert.equal(g.run.revived,true);assert.equal(g.run.pl.rot,0);assert.equal(g.run.over,false);
+  g.run.pl.inv=0;g.run.pl.hp=1;g.applyRot();g.dropGem(0,0,10);g.picks.push({k:'heal',x:0,y:0,t:0});
+  g.update(1);assert.equal(g.run.over,true);assert.equal(g.run.xp,0);assert.equal(g.picks.length,1);
+});
+
+test('Cratos ocupa o primeiro encontro e pausa a horda sem perder chefes pendentes',()=>{
+  const {game:g}=boot();begin(g,'fogo');target(g,100);g.run.lv=10;g.spawnBoss();
+  assert.equal(g.enemies.length,1);const cr=g.enemies[0];assert.equal(cr.boss.id,'cratos');assert.equal(cr.maxhp,2400);
+  g.spawnTick(10);assert.equal(g.enemies.length,1);g.spawnBoss(10);assert.equal(g.run.bossQueue.length,0);
+  g.spawnBoss(20);g.spawnBoss(20);g.spawnBoss(30);assert.equal(g.run.bossQueue.join(','),'20,30');
+  g.run.pl.rot=5;cr.spawn=0;g.hitEnemy(cr,100000,{canCrit:false});assert.equal(g.run.pl.rot,0);assert.equal(g.run.bossKills,1);
+  g.update(.01);assert.equal(g.enemies.filter(e=>e.boss).length,1);assert.equal(g.enemies.find(e=>e.boss).boss.level,20);
+  assert.equal(g.run.bossQueue.join(','),'30');
+});
+
+test('dificuldade do encontro fica fixa e escala vida do chefe pela jornada',()=>{
+  const {game:g}=boot();begin(g,'fogo','calma');g.run.lv=10;g.S.diff='feroz';g.spawnBoss();
+  assert.equal(g.enemies[0].maxhp,1920);begin(g,'fogo','feroz');g.run.lv=10;g.spawnBoss();assert.equal(g.enemies[0].maxhp,3120);
+});
+
+test('Cratos executa ataques das três fases com avisos e sem valores inválidos',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.lv=10;g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=230;e.y=0;
+  for(const ratio of [.9,.5,.2]){
+    e.hp=e.maxhp*ratio;e.act=null;e.pt=0;const attacks=new Set();let warned=false;
+    for(let i=0;i<420;i++){
+      g.run.pl.inv=10;g.run.pl.x=0;g.run.pl.y=0;e.t+=.05;
+      const d=Math.hypot(e.x,e.y)||1;g.updBoss(e,.05,-e.x/d,-e.y/d,d,92);
+      if(e.act)attacks.add(e.act.k);if(e.tele)warned=true;
+      assert.ok(Number.isFinite(e.mvx)&&Number.isFinite(e.mvy));if(i%20===0)g.render();
+    }
+    assert.equal(e.ph,ratio>.66?1:ratio>.33?2:3);assert.equal(attacks.size,3);assert.equal(warned,true);
+  }
+});
+
+test('cauda de Cratos respeita área e sopro não aplica podridão durante esquiva',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.lv=10;g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=0;e.y=0;e.cf=1;
+  function tail(y){g.run.pl.x=0;g.run.pl.y=y;g.run.pl.hp=90;g.run.pl.inv=0;e.act={k:'tail',t:.94,fl:{},acc:0,aim:null,L:0};g.updCratos(e,.02,0,1,y,92,1);return g.run.pl.hp;}
+  assert.equal(tail(340),90);assert.ok(tail(200)<90);
+  g.run.pl.x=-220;g.run.pl.y=83;g.run.pl.inv=1;e.act={k:'breath',t:.8,fl:{},acc:0,aim:Math.PI,L:0};g.updCratos(e,.05,-1,0,220,92,1);
+  assert.ok(!(g.run.pl.rot>0));g.run.pl.inv=0;g.updCratos(e,.05,-1,0,220,92,1);assert.equal(g.run.pl.rot,5);
+});
+
+test('campo de visão muda zoom e persiste sem selecionar personagem',()=>{
+  const {game:g,node,store}=boot();begin(g,'fogo');const ch=g.P.char,normal=g.zoom;
+  g.ACT.set({dataset:{k:'fov',v:'amplo'}});assert.ok(g.zoom<normal);assert.equal(g.P.char,ch);assert.match(node('#ui').innerHTML,/Campo de visão/);
+  const next=JSON.parse(store.get('nevoa-selvagem-v3'));assert.equal(next.S.fov,'amplo');
+  g.ACT.set({dataset:{k:'fov',v:'perto'}});assert.ok(g.zoom>normal);
 });

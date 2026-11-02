@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.6.3
+# Balanceamento — beta 0.6.4
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -43,3 +43,16 @@ Redução de recarga por abate: Salamandra 0,08 s, Capricorn 0,06 s, Sombrinha 0
 ## Validação
 
 Testes cobrem queda de dano, limites com melhorias, alvo morto na cadeia, pulsos independentes da duração do quadro, paralisia de chefes, fim de trajeto, colisão contínua, drenagem sem excesso, aliados, desbloqueios e regressões de menus/vida. `tests/combat.html` mostra quadros do código real sem mudar o progresso principal. Não há telemetria de partidas reais suficiente para declarar equilíbrio definitivo.
+
+
+## Integração da versão 9
+
+Os números dos seis personagens da beta 0.6.3 foram preservados. A nova esquiva é uma ação defensiva independente: duração 0,18 s, velocidade 1.100 (198 de deslocamento durante o dash, mais inércia posterior), invulnerabilidade 0,24 s e recarga 2,4 s. Não causa dano, não pode começar em pausa ou durante a carga de Capricorn e não acrescenta dash aos golpes normais de Salamandra. O avanço de cada quadro é limitado ao tempo restante, evitando que quadros longos alonguem a esquiva.
+
+A versão 9 elevava todos os chefes de 1.200 para 10.000 de vida inicial. A beta 0.6.4 usa `2400 × (nível/10)^1,3 × (1 + 0,15 × volta)` antes da dificuldade: Cratos no nível 10 tem 1.920 / 2.400 / 3.120 de vida em Calma / Normal / Feroz. O dano de contato mantém a base anterior (14, em vez de 17 da ramificação), com os multiplicadores existentes. A calibração de vida não substitui testes de partidas reais.
+
+Chefes entram nas fases 2 e 3 abaixo de 66% e 33% de vida. Mantidos ataques/avisos da versão 9, com pausas maiores: chefes genéricos usam intervalo 2,7 / 2,1 / 1,6 s, Cratos recupera por 1,7 / 1,4 / 1,1 s depois de cada sequência. Cratos pode morder duas vezes (três na fase 3), varrer a cauda num raio de 285 (duas varreduras a partir da fase 2) e soprar em cone de raio 430. O sopro é anunciado por 0,7 s; a cauda, por 0,95 s na primeira varredura.
+
+O sopro aplica até 5 s de podridão, renovados enquanto o jogador permanecer exposto. Uma nova aplicação é evitada durante invulnerabilidade; a podridão já adquirida causa 5 de dano base a cada segundo, mitigado pela armadura, mesmo durante invulnerabilidade posterior. Usa o fluxo de dano/morte/segunda chance, sem curas ou coletas depois de um efeito fatal. Reviver ou derrotar o chefe remove a podridão.
+
+A horda normal e os anéis de cinco níveis ficam suspensos durante encontros. A entrada remove inimigos comuns sem recompensas, mas mantém itens já existentes no chão. Marcos de chefes alcançados durante um encontro entram numa fila, sem substituir o chefe ativo. A animação de derrota não soma tempo nem recompensas à jornada.

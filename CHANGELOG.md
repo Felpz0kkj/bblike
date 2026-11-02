@@ -1,5 +1,18 @@
 # Histórico
 
+## 0.6.4-beta — 2026-11-02
+
+- Integradas as novidades compatíveis de Horda da Névoa (9), preservando o index da beta 0.6.3.
+- Tela de derrota com faixas, dessaturação, queda dos personagens e animação própria de Capricorn. Pular após 1,8 s; duração máxima 4,6 s. Tempo de sobrevivência e recompensa congelados na morte.
+- Cratos, o Corrompido: arte animada, cabeça/cauda articuladas, três fases, mordidas, cauda e sopro com podridão. Substitui a Guardiã no primeiro encontro.
+- Encontros de chefe isolados da horda; fila preserva chefes pendentes quando vários marcos são alcançados. Vida inicial recalibrada de 10.000 da ramificação para 2.400 no Normal, mantendo a dificuldade escolhida na partida.
+- Esquiva defensiva com Shift/botão: sem dano, duração 0,18 s, invulnerabilidade 0,24 s e recarga 2,4 s. Separada do dash flamejante da Fúria.
+- Árvores decorativas por bioma, transparência perto do jogador/chefe, partículas ambientais, efeitos de nível/evolução e animação extra de Frood.
+- Opção de campo de visão Perto/Normal/Amplo, salva no navegador.
+- Podridão usa o fluxo comum de dano, armadura, morte e renascimento. Interrompe a atualização depois de dano fatal e é limpa ao derrotar o chefe ou reviver.
+- Preservados nomes BaubLike, seleção dificuldade → personagem, Equipe, vida contínua, drops, progresso e balanceamento da beta 0.6.3.
+- 43 testes automatizados, incluindo fases do chefe, derrota, esquiva e regressões anteriores.
+
 ## 0.6.3-beta — 2026-11-02
 
 - Capricorn substitui Zero com a arte, animações, cores de evolução e efeitos da versão 7. Progresso elétrico preservado; custo de desbloqueio continua 120.

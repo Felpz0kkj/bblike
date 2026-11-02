@@ -1,4 +1,4 @@
-# BaubLike — Beta 0.6.3
+# BaubLike — Beta 0.6.4
 
 Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Pedrino e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
@@ -6,9 +6,15 @@ Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa
 
 ## Jogar
 
-Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial e Esc pausa.
+Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial, Shift faz uma esquiva e Esc pausa. No celular, especial e esquiva têm botões próprios.
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
+
+## Novidades da beta 0.6.4
+
+Cratos, o Corrompido substitui a Guardiã da Clareira no primeiro encontro de chefe. Tem três fases, mordidas, cauda e sopro que aplica podridão. A horda fica suspensa durante o encontro. O cenário ganhou árvores por bioma, partículas ambientais e efeitos de evolução; as opções incluem três campos de visão. A derrota ganhou animação e pode ser pulada após 1,8 s.
+
+Comparação e decisões: [versão 9](docs/comparacao-versao-9.md). Mantidos os alcances e a queda de dano da beta 0.6.3.
 
 ## Desenvolvimento
 

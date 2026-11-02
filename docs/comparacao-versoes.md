@@ -1,6 +1,6 @@
 # Comparação das versões recebidas
 
-Comparação mais recente: [versão 7 e beta 0.6.3](comparacao-versao-7.md).
+Comparação mais recente: [versão 9 e beta 0.6.4](comparacao-versao-9.md). Histórico anterior: [versão 7](comparacao-versao-7.md).
 
 Base escolhida pelo autor: **Horda da Névoa (2).html**.
 
