@@ -1,6 +1,23 @@
 # Histórico
 
-## 0.7.0-beta — 2026-11-03
+## 0.7.0-beta — revisão dos dois mundos — 2026-11-03
+
+- Progressão substituída por Floresta Sombria → Bioma Dracônico → Floresta Sombria, em ciclos. Colosso da Casca é o primeiro chefe; Cratos é o segundo. Removidos do jogo os antigos chefes de pedra/névoa, seus padrões exclusivos e o mapa inicial de quatro biomas.
+- Cada vitória cria um portal visível com destino e indicador fora da tela. Só o contato, após 0,8 s de abertura, transporta o jogador; pausa e morte impedem a ativação. A etapa fica sem novos inimigos até a passagem.
+- Portais preservam vida, nível, XP, melhorias, aliados e recargas, sem cura ou crédito automático de XP. Coletas restantes continuam acessíveis; projéteis e perigos da etapa anterior são limpos.
+- Floresta procedural com caminhos conectados de bordas irregulares, clareiras, raízes, árvores retorcidas, musgo e vegetação baixa. Árvores sem colisores e transparentes ao encobrir combate, coletas ou o portal. Menu/carregamento inicial usa a mesma nova floresta.
+- Trio de Esporos nasce em grupos completos de três: aproximação em grupo, aviso de 0,65 s e nuvem de raio 48 por 0,85 s; reutiliza podridão de 2 s.
+- Besouro de Casca: aviso em faixa de 0,65 s, investida reta de no máximo 150 unidades e recuperação de 0,65 s, recebendo 25% mais dano nesse período. Recarga de 2,4 s.
+- Aranha Sombria: mira fixa por 0,7 s e espinho visível de velocidade 200, com recarga de 2,7 s.
+- Colosso da Casca: tronco humanoide escuro com galhos/musgo; movimento, braço erguido, golpe de raiz após aviso de 1 s e recuperação. Raio 90, chegando a 105 no terço final da vida; 2.200 de vida no Normal inicial.
+- Inimigos dracônicos repaginados com pixels maiores e paletas próximas à referência. Mantidos porrete, brasa preparada, bote/mordida e explosão anunciada. Cratos conserva seus três estágios e ataques.
+- Chefes: vida base × (1 + 0,20 × passagens concluídas). Primeiro dragão: 2.880 no Normal. Horda suspensa nos dois encontros; os próximos marcos são calculados ao entrar no mundo, sem fila de chefes de áreas anteriores.
+- Inimigos: multiplicadores base de vida 1,18 e dano 1,12; por passagem, +12% de vida e +7% de dano, com crescimento de nível suavizado após o nível 10. Cadência cresce 12% por passagem até +80%; limite absoluto de 160 simultâneos. Velocidades e avisos de ataque não escalam com o ciclo.
+- XP necessário: fórmula anterior × (1,25 + mínimo de 0,15 e 0,004 × nível), arredondada para cima. Primeiro nível exige 14 em vez de 11; requisito nunca diminui. Drops dracônicos −15%; chefe concede 96 em vez de 120 pontos.
+- Preservados atributos, ataques, controles, interface e progresso salvo dos personagens jogáveis. Nenhum arquivo de asset externo removido: as artes são embutidas no HTML; preservados recursos usados por aliados e sistemas compartilhados.
+- 63 testes automatizados aprovados, incluindo ciclos, portais, trios, ataques, XP e regressões. Cenários reproduzíveis dos dois mundos adicionados às prévias existentes.
+
+## 0.7.0-beta — integração dracônica inicial — 2026-11-03
 
 - Atualizado somente o trecho inicial, até a primeira vitória contra Cratos. Sem fase adicional, novo chefe ou alteração dos marcos de progressão.
 - Terreno procedural queimado com fissuras pequenas, poucos ossos, marcas de garras, pedras, cinzas, brasas apagadas e vegetação carbonizada esparsa. Detalhes determinísticos, sem colisores e desenhados sob inimigos, itens e projéteis; câmera, escala e movimentação preservadas.

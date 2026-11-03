@@ -12,11 +12,13 @@ A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanente
 
 ## Novidades da beta 0.7.0
 
-O trecho inicial de Cratos, o dragão, agora tem chão queimado, pequenas fissuras de brasa, ossos, cinzas, marcas de garras e vegetação carbonizada esparsa. A decoração fica sob o combate e não bloqueia movimento. Tamanho, câmera e escala do mapa foram preservados.
+A partida começa na **Floresta Sombria**, com clareiras, caminhos, árvores retorcidas e o **Colosso da Casca**. Após a vitória, um portal no chão leva ao **Bioma Dracônico**, onde o chefe é **Cratos, o dragão**. O portal de Cratos retorna à floresta, repetindo somente esses dois mundos.
 
-Catador de Ossos (nível 1), Lagarto de Cinza (3), Estufado da Podridão (5) e Asabrasa (7) substituem os inimigos elementais desse trecho, com sprites e ataques próprios. Catador prepara um porrete curto; Lagarto avisa um bote limitado; Estufado sinaliza uma explosão compacta com podridão breve; Asabrasa mantém distância e prepara uma brasa visível. A quantidade e a cadência de surgimento continuam iguais.
+A troca depende de contato com o portal e conserva personagem, nível, XP, melhorias, aliados, recargas e vida atual, sem cura automática. Baús e cristais ainda não recolhidos continuam acessíveis. Os chefes surgem nos próximos marcos de dez níveis; a etapa fica livre de hordas após a vitória, até o jogador escolher entrar no portal.
 
-Cratos mantém vida, três fases, ataques e recompensas. A horda continua suspensa durante o duelo; após a primeira vitória, a progressão e os biomas/elencos anteriores continuam normalmente. Não há nova área ou chefe. Personagens, controles, interface e progresso salvo foram preservados.
+A floresta tem **Trio de Esporos** (grupos de três, nuvem venenosa curta), **Besouro de Casca** (investida anunciada e recuperação vulnerável) e **Aranha Sombria** (espinho com preparação). O Colosso ergue o braço e golpeia uma área de raiz sinalizada por um segundo. No mundo do dragão, **Catador de Ossos**, **Asabrasa**, **Lagarto de Cinza** e **Estufado da Podridão** receberam paletas e escala revisadas, mantendo seus ataques próprios. Cratos mantém mordidas, cauda e sopro de podridão.
+
+A dificuldade cresce moderadamente por passagem; o limite é **160 inimigos simultâneos**. XP por nível exige aproximadamente 25%–40% mais pontos; os drops dracônicos são 15% menores. Atributos dos personagens, controles e estrutura da interface foram preservados. O fundo inicial usa a nova floresta procedural, sem carregar o mapa ou os chefes antigos. Mantida a identificação **beta 0.7.0** nesta revisão.
 
 ## Desenvolvimento
 
@@ -26,7 +28,7 @@ Use sempre o `index.html` da versão mais recente da branch `main` como base. An
 - Versão: `VERSION` e constante VERSION no HTML.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
-- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (inclui bioma dracônico e avisos dos quatro inimigos; progresso isolado).
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (inclui os dois mundos, avisos, Colosso, portais e ciclo completo; progresso isolado).
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
 - Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
