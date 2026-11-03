@@ -33,9 +33,9 @@ h2{font:700 16px monospace;color:#f2b84b;margin:12px 0 6px}.card p{font-size:12p
       card.innerHTML=`<h2>${name}</h2><p>${desc}</p><div class="sprites">${[1,2,3].map(st=>`<div><img alt="${name}, evolução ${st}" src="${g.iconURL(type,st)}"><small>${st===1?'Inicial':'Evolução '+st}</small></div>`).join('')}</div>`;
       document.getElementById('sprites').appendChild(card);
     }
-    for(const [type,data] of Object.entries(g.DRAGON_FOES)){
+    for(const [type,data] of Object.entries({...g.FOREST_FOES,colosso:g.EN.colosso,...g.DRAGON_FOES})){
       const card=document.createElement('article');card.className='card';
-      card.innerHTML=`<h2>${data.n}</h2><p>Primeiro trecho do dragão · ${data.kind}</p><div class="sprites">${[0,1,10,11].map((f,i)=>`<div><img alt="${data.n}" src="${g.monSprite(type,1,f).toDataURL()}"><small>${['Repouso','Movimento','Aviso','Ataque'][i]}</small></div>`).join('')}</div>`;
+      card.innerHTML=`<h2>${data.n}</h2><p>${g.DRAGON_FOES[type]?'Bioma Dracônico':'Floresta Sombria'}</p><div class="sprites">${[0,1,10,11].map((f,i)=>`<div><img alt="${data.n}" src="${g.monSprite(type,1,f).toDataURL()}"><small>${['Repouso','Movimento','Aviso','Ataque'][i]}</small></div>`).join('')}</div>`;
       document.getElementById('sprites').appendChild(card);
     }
     g.startRun('planta','normal');g.ACT.team();

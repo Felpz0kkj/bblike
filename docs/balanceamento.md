@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.6.4
+# Balanceamento — beta 0.7.0
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -12,6 +12,33 @@ Calibração inicial de alcance, dano e recuperação. Os testes verificam as re
 | Sombrinha | Dois orbes de 8,25 | Percurso de cada orbe 480 | 0,65 s | 8 s |
 
 Sem crítico, evoluções, aliados ou melhorias. Área concede até +50% por melhorias, somando o bônus natural de Frood (+10%); Tempestade tem limite próprio de +25%. Aliados respeitam os limites de distância correspondentes, com dano e cadência próprios.
+
+## Dois mundos e ciclos — revisão da beta 0.7.0
+
+Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → floresta**. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. O primeiro chefe surge no nível 10; ao entrar em outro mundo, o próximo marco é o múltiplo de dez seguinte ao nível atual. Níveis adicionais obtidos enquanto um portal está aberto não fazem surgir outro chefe no mundo vencido.
+
+Portal precisa de contato e 0,8 s de abertura. Não concede vida, XP ou melhorias; mantém recargas e aliados. Os perigos/projéteis são descartados, mas baús e cristais continuam acessíveis. A horda fica suspensa durante o chefe e depois da vitória, até a passagem.
+
+| Criatura | Aviso | Ataque e limite | Recuperação / recarga |
+| --- | --- | --- | --- |
+| Esporo, sempre em trio | 0,65 s | Nuvem de raio 48, duração 0,85 s; podridão 2 s | 0,30 s / 3 s |
+| Besouro de Casca | 0,65 s em faixa | Investida até 150, velocidade 390 | 0,65 s vulnerável (+25% de dano recebido) / 2,4 s |
+| Aranha Sombria | 0,70 s | Espinho de velocidade 200, duração 2,8 s, mira fixa | 0,25 s / 2,7 s |
+| Catador de Ossos | 0,45 s | Porrete em círculo de raio 28 | 0,22 s / 1,25 s |
+| Asabrasa | 0,60 s na garganta | Brasa de velocidade 210, duração 2,6 s, mira fixa | 0,20 s / 2,4 s |
+| Lagarto de Cinza | 0,32 s | Bote até 96, velocidade 480, seguido de mordida | 0,28 s / 2 s |
+| Estufado da Podridão | 1,05 s | Explosão de raio 72, podridão 2 s; nuvem 0,4 s | Morre na explosão |
+| Colosso da Casca | 1 s | Raiz de raio 90 (105 abaixo de 33% de vida), alvo fixado na preparação | Recupera até 1,85 s desde o início; espera 1,65 s pelo próximo golpe |
+
+Vida dos chefes: `base × (1 + 0,20 × visit) × dificuldade`. Colosso: base 2.200; dragão: base 2.400. Sequência no Normal: **2.200 → 2.880 → 3.080 → 3.840**, continuando gradualmente. Colosso não usa os padrões dos chefes removidos. Cratos conserva mordidas, cauda e sopro, com avisos e pausas descritos no histórico abaixo.
+
+Vida comum: `12 × fator da espécie × 1,18 × hpMul(ameaça) × dificuldade × (1 + 0,12 × visit)`, com `ameaça = min(nível, 10) + max(0, nível − 10) × 0,25`. Dano comum: `6 × fator da espécie × 1,12 × (1 + 0,025 × ameaça) × dificuldade × (1 + 0,07 × visit)`. Elites comuns têm 4× vida e escala visual 1,2; Esporos nunca viram elites isoladas.
+
+Cadência: `min(7, 1,5 + 0,16 × nível local) × (1 + min(0,8, 0,12 × visit)) × (1 + min(0,3, tempo local / 300))`. Contagem máxima: `min(160, 80 + 4 × nível local + 8 × visit)`, também aplicada aos anéis de horda. Um trio consome três vagas e três unidades de orçamento, evitando triplicar a população. Sem escalar velocidade de ataques, projéteis ou duração dos avisos a cada passagem.
+
+XP: `ceil((6 + 5 × nível + floor(nível² × 0,25)) × (1,25 + min(0,15, 0,004 × nível)))`. Requisitos: **14 no nível 1, 105 no 10 e 522 no 30**, sempre maiores que os anteriores. Drops: Esporo 0,55 cada; Besouro 1,7; Aranha 2,1; Catador 0,85; Lagarto/Estufado 1,7; Asabrasa 2,55. Chefes deixam 12 cristais de 8, total 96 (antes 120). Melhorias de XP continuam multiplicando a coleta.
+
+Árvores, raízes e cenário não criam colisores. As copas perdem opacidade ao encobrir jogador, inimigos, projéteis, perigos, coletas ou portal. O cenário inicial/menu é a nova floresta, sem a antiga seleção de quatro biomas. Os atributos dos personagens da tabela acima não mudaram.
 
 ## Capricorn
 
@@ -45,7 +72,7 @@ Redução de recarga por abate: Salamandra 0,08 s, Capricorn 0,06 s, Sombrinha 0
 Testes cobrem queda de dano, limites com melhorias, alvo morto na cadeia, pulsos independentes da duração do quadro, paralisia de chefes, fim de trajeto, colisão contínua, drenagem sem excesso, aliados, desbloqueios e regressões de menus/vida. `tests/combat.html` mostra quadros do código real sem mudar o progresso principal. Não há telemetria de partidas reais suficiente para declarar equilíbrio definitivo.
 
 
-## Integração da versão 9
+## Histórico: integração da versão 9 na beta 0.6.4
 
 Os números dos seis personagens da beta 0.6.3 foram preservados. A nova esquiva é uma ação defensiva independente: duração 0,18 s, velocidade 1.100 (198 de deslocamento durante o dash, mais inércia posterior), invulnerabilidade 0,24 s e recarga 2,4 s. Não causa dano, não pode começar em pausa ou durante a carga de Capricorn e não acrescenta dash aos golpes normais de Salamandra. O avanço de cada quadro é limitado ao tempo restante, evitando que quadros longos alonguem a esquiva.
 
