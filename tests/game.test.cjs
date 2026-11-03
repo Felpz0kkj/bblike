@@ -149,7 +149,7 @@ test('morte por contato interrompe coletas e cura no mesmo quadro',()=>{
 });
 
 test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
-  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.6.4-beta');
+  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.7.0-beta');
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
@@ -449,4 +449,103 @@ test('campo de visão muda zoom e persiste sem selecionar personagem',()=>{
   g.ACT.set({dataset:{k:'fov',v:'amplo'}});assert.ok(g.zoom<normal);assert.equal(g.P.char,ch);assert.match(node('#ui').innerHTML,/Campo de visão/);
   const next=JSON.parse(store.get('nevoa-selvagem-v3'));assert.equal(next.S.fov,'amplo');
   g.ACT.set({dataset:{k:'fov',v:'perto'}});assert.ok(g.zoom>normal);
+});
+
+function dragonFoe(g,type,x,y=0){
+  const e=g.mkEnemy(type,g.run.lv,x,y,{spawn:0});e.cd=0;g.enemies.push(e);return e;
+}
+function enemySteps(g,n,dt=.05){for(let i=0;i<n;i++)g.updEnemies(dt);}
+
+test('elenco dracônico substitui só os spawns até a vitória no primeiro chefe',()=>{
+  const {game:g}=boot();begin(g,'fogo');const ids=Object.keys(g.DRAGON_FOES);
+  for(const level of [1,3,5,7,9,13,20]){
+    g.run.lv=level;for(let i=0;i<100;i++){const type=g.pickType(level);assert.ok(ids.includes(type));assert.ok(g.DRAGON_FOES[type].unlock<=level);}
+  }
+  assert.equal(g.pickType(1),'catador');
+  g.run.lv=9;g.spawnRing(35);assert.equal(g.enemies.length,35);assert.ok(g.enemies.every(e=>ids.includes(e.type)));
+  g.enemies.length=0;g.spawnTick(10);assert.equal(g.enemies.length,31);assert.ok(g.enemies.every(e=>ids.includes(e.type)));
+  g.spawnBoss(10);const boss=g.enemies[0];boss.spawn=0;g.hitEnemy(boss,100000,{canCrit:false});
+  assert.equal(g.dragonRegion(),false);g.enemies.length=0;
+  for(let i=0;i<100;i++)assert.ok(!ids.includes(g.pickType(9)));
+  assert.equal(g.pickType(1),'normal');g.spawnRing(35);assert.ok(g.enemies.every(e=>!ids.includes(e.type)));
+  begin(g,'fogo');assert.equal(g.dragonRegion(),true);
+});
+
+test('Catador avisa antes do porrete, sem dano por contato; alcance e recarga limitados',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'catador',40),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'club');assert.equal(e.tele.r,28);assert.equal(g.run.pl.hp,hp);
+  enemySteps(g,8);assert.equal(g.run.pl.hp,hp);g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.ok(e.cd>=1.2);
+  const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,8);assert.equal(g.run.pl.hp,after);
+  begin(g,'fogo');const far=dragonFoe(g,'catador',40);g.updEnemies(.01);g.run.pl.x=180;enemySteps(g,10);assert.equal(g.run.pl.hp,hp);
+  assert.ok(far.cd>0);
+});
+
+test('Asabrasa recua, prepara a garganta e cospe uma brasa lenta de mira fixa',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'asabrasa',120);e.cd=1;
+  g.updEnemies(.1);assert.ok(e.x>120);e.cd=0;g.updEnemies(.01);assert.equal(e.attack.k,'spit');
+  const x=e.x;enemySteps(g,10);assert.equal(g.ebul.length,0);assert.equal(e.x,x);
+  g.run.pl.y=180;enemySteps(g,3);assert.equal(g.ebul.length,1);
+  const b=g.ebul[0];assert.equal(Math.round(Math.hypot(b.vx,b.vy)),210);assert.ok(b.r>=7);assert.ok(b.vy<40);assert.equal(b.life,2.6);
+  assert.ok(e.cd>2);g.updProj(3);assert.equal(g.ebul.length,0);
+});
+
+test('Lagarto avisa o bote, percorre no máximo 96 e morde uma única vez',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'lagarto',150);const x=e.x;
+  g.updEnemies(.01);assert.equal(e.attack.k,'crouch');assert.ok(e.tele);enemySteps(g,6);assert.equal(e.x,x);
+  enemySteps(g,12);assert.ok(x-e.x<=96.001);assert.ok(x-e.x>90);assert.ok(e.cd>1.6);
+  begin(g,'fogo');const near=dragonFoe(g,'lagarto',100);g.updEnemies(.01);const hp=g.run.pl.hp;
+  enemySteps(g,15);assert.ok(g.run.pl.hp<hp);const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,6);assert.equal(g.run.pl.hp,after);assert.ok(near.cd>0);
+});
+
+test('Estufado sinaliza raio compacto por mais de um segundo e usa podridão existente',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'estufado',60),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'swell');assert.equal(e.tele.r,72);enemySteps(g,20);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.rot,2);assert.equal(g.enemies.length,0);
+  assert.equal(g.run.kills,1);assert.equal(g.gems.length,1);assert.ok(g.fx.some(f=>f.k==='rotcloud'&&f.max<=.4));
+  g.updFx(.5);assert.ok(!g.fx.some(f=>f.k==='rotcloud'));
+});
+
+test('explosão permite fuga, respeita esquiva e não envenena ao ser morto antes',()=>{
+  const {game:g}=boot();
+  for(const escape of ['fuga','esquiva','morte']){
+    begin(g,'fogo');const e=dragonFoe(g,'estufado',60),hp=g.run.pl.hp;g.updEnemies(.01);
+    if(escape==='fuga')g.run.pl.x=180;
+    if(escape==='esquiva')g.run.pl.inv=2;
+    if(escape==='morte')g.hitEnemy(e,100000,{canCrit:false});
+    enemySteps(g,24);assert.equal(g.run.pl.hp,hp);assert.ok(!(g.run.pl.rot>0));assert.equal(g.enemies.length,0);
+  }
+});
+
+test('ataques dracônicos são interrompidos por paralisia e pelo início do chefe',()=>{
+  const {game:g}=boot();
+  for(const type of Object.keys(g.DRAGON_FOES)){
+    begin(g,'fogo');const e=dragonFoe(g,type,60);g.updEnemies(.01);assert.ok(e.attack);
+    e.stun=.5;g.updEnemies(.05);assert.equal(e.attack,null);assert.equal(e.tele,null);
+    g.spawnBoss(10);assert.equal(g.enemies.length,1);assert.equal(g.enemies[0].boss.id,'cratos');
+    g.spawnTick(20);assert.equal(g.enemies.length,1);assert.equal(g.ebul.length,0);
+  }
+});
+
+test('novos inimigos preservam dificuldade, fragilidade, drops e colisões com projéteis',()=>{
+  const {game:g}=boot();
+  for(const type of Object.keys(g.DRAGON_FOES)){
+    begin(g,'fogo','calma');const calm=g.mkEnemy(type,7,100,0,{});
+    begin(g,'planta','feroz');const e=dragonFoe(g,type,70);const old=g.mkEnemy('normal',1,70,0,{});
+    assert.ok(e.r>=12&&e.r<=24);assert.ok(Number.isFinite(e.maxhp));
+    const scaled=g.mkEnemy(type,7,100,0,{});assert.ok(Math.abs(scaled.maxhp/calm.maxhp-1.3/.8)<1e-10);
+    if(type==='lagarto'||type==='estufado')assert.ok(e.maxhp<old.maxhp);
+    e.hp=1;g.basicAttack(0,100,0);g.updProj(.1);assert.equal(g.enemies.length,0);assert.equal(g.run.kills,1);assert.ok(g.gems.length>0);
+  }
+});
+
+test('cada criatura tem silhueta e quadros próprios cacheados; cenário é decorativo',()=>{
+  const {game:g}=boot();begin(g,'fogo');const silhouettes=[];
+  for(const type of Object.keys(g.DRAGON_FOES)){
+    const frames=[0,1,2,3,10,11].map(f=>{const c=g.monSprite(type,1,f);assert.equal(c.width,40);assert.equal(c,g.monSprite(type,1,f));return c.toDataURL();});
+    assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);silhouettes.push(frames[0]);
+    dragonFoe(g,type,100,100);g.updEnemies(.01);g.render();
+  }
+  assert.equal(new Set(silhouettes).size,4);const list=[];g.addTrees(list);assert.equal(list.length,0);
+  const before=JSON.stringify(g.enemies);g.drawGround();g.drawGround();assert.equal(JSON.stringify(g.enemies),before);
+  assert.equal(g.hazards.length,0);g.run.bossKills=1;g.render();assert.equal(g.dragonRegion(),false);
 });

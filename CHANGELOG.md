@@ -1,5 +1,18 @@
 # Histórico
 
+## 0.7.0-beta — 2026-11-03
+
+- Atualizado somente o trecho inicial, até a primeira vitória contra Cratos. Sem fase adicional, novo chefe ou alteração dos marcos de progressão.
+- Terreno procedural queimado com fissuras pequenas, poucos ossos, marcas de garras, pedras, cinzas, brasas apagadas e vegetação carbonizada esparsa. Detalhes determinísticos, sem colisores e desenhados sob inimigos, itens e projéteis; câmera, escala e movimentação preservadas.
+- Substituídos Ventinho e os inimigos elementais que surgiam nesse trecho (planta, elétrico, fogo e pedra nos níveis 1–9). Qualquer surgimento posterior enquanto Cratos ainda não foi derrotado também usa o elenco dracônico. Elenco original preservado após a vitória.
+- Catador de Ossos: perseguidor fraco, porrete de raio 28 com aviso de 0,45 s e recarga de 1,25 s. Sem dano de contato instantâneo.
+- Lagarto de Cinza: rápido e frágil, preparação de 0,32 s, bote de no máximo 96 unidades, mordida curta e recarga de 2 s.
+- Estufado da Podridão: lento e frágil, bolsa verde pulsante, aviso de 1,05 s no raio de 72, explosão e 2 s de podridão pelo sistema existente; nuvem de apenas 0,4 s. Matar antes interrompe a explosão.
+- Asabrasa: voo animado, mantém distância de 200–290, prepara a garganta por 0,6 s e cospe uma única brasa de velocidade 210, com mira fixa e recarga de 2,4 s.
+- Sprites em canvas com quadros próprios de movimento, preparação e ataque, inspirados na referência; nenhuma prancha usada como sprite. Vida, dano, dificuldade, colisões, efeitos, drops e mortes reutilizam o fluxo atual. Taxas e limites globais de surgimento mantidos.
+- Cratos preserva vida, fases, ataques, condição de vitória, recompensas e suspensão da horda durante o duelo. Personagens, interface, controles e demais chefes preservados.
+- 52 testes automatizados; prévias de bioma, avisos e sprites adicionadas aos cenários existentes.
+
 ## 0.6.4-beta — 2026-11-02
 
 - Integradas as novidades compatíveis de Horda da Névoa (9), preservando o index da beta 0.6.3.
