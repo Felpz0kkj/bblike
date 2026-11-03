@@ -208,10 +208,12 @@ const SHAPE={normal:'blob',fogo:'blob',agua:'wide',planta:'tall',eletrico:'tri',
 const CHARS=['fogo','agua','planta','eletrico','pedra','sombra'];
 const DESIGN={fogo:'Guerreira das chamas',planta:'Arqueira de sakura',eletrico:'Condutor da tempestade',pedra:'Tatu escavador',sombra:'Gato espectral'};
 const BAL={
-  furyDuration:6,furyRate:.6,furyHit:.8,furyMove:1.15,
+  furyDuration:6,furyRate:.7,furyHit:.8,furyMove:1.15,
   chainRange:320,chainJump:120,chainFalloff:[1,.5,.25],chainStunChance:.15,chainStun:.25,
-  stormRadius:260,stormCharge:1.1,stormMove:.6,stormPulseTimes:[.3,.6,.9],stormPulse:.18,stormDamage:1.8,stormStun:1,stormCrowdCap:12,stormCrowdStep:.025,
-  sakuraRange:360,sakuraDamage:1.35,sakuraFalloff:.8,sakuraBloom:230,
+  stormRadius:260,stormCharge:1.1,stormMove:.6,stormPulseTimes:[.3,.6,.9],stormPulse:.15,stormDamage:1.5,stormStun:1,stormCrowdCap:12,stormCrowdStep:.025,
+  sakuraRange:360,sakuraDamage:1.15,sakuraFalloff:.8,sakuraBloom:230,
+  fishDamage:1.35,stoneDamage:1.1,allyDamage:6,burnRatio:.12,leechPerSecond:.01,
+  sakuraHealCooldown:10,bossSpawnRate:.2,bossSpawnCap:8,
   fishRange:330,stoneRange:320,shadowRange:480,shadowSeek:240,
   dashCooldown:2.4,dashDuration:.18,dashSpeed:1100,dashInvulnerability:.24,
   killRecharge:{fogo:.08,agua:.10,planta:.10,eletrico:.06,pedra:.10,sombra:.08}
@@ -224,29 +226,29 @@ function aimPoint(origin,ang,d,range,ox=0,oy=0){
   return {x:origin.x+dx*scale,y:origin.y+dy*scale};
 }
 const CH={
-  fogo:{hp:90,spd:225,dmg:13,cd:.4,regen:0,crit:.08,armor:0,life:0,area:0,cost:0,bars:[.45,.7,.85],
-    basic:'Garras de Fogo',bd:'Dois golpes alternados em arco que queimam, sem dash.',sp:'Fúria Berserker',sd:'Por 6 s: intervalo entre golpes 40% menor, 20% menos dano por golpe e +15% de movimento. Dash a cada 3 golpes. Recarga base: 24 s.',scd:24,
+  fogo:{hp:85,spd:225,dmg:8,cd:.48,regen:0,crit:.08,armor:0,life:0,area:0,cost:0,bars:[.45,.7,.85],
+    basic:'Garras de Fogo',bd:'Dois golpes alternados em arco que queimam, sem dash.',sp:'Fúria Berserker',sd:'Por 6 s: intervalo entre golpes 30% menor, 20% menos dano por golpe e +15% de movimento. Dash a cada 3 golpes. Recarga base: 24 s.',scd:24,
     pas:'Inimigos queimados explodem ao morrer.',style:'Assassino veloz'},
-  agua:{hp:110,spd:210,dmg:12,cd:.85,regen:1,crit:.05,armor:0,life:0,area:.1,cost:0,bars:[.6,.7,.65],
+  agua:{hp:100,spd:210,dmg:7,cd:1.05,regen:.35,crit:.05,armor:0,life:0,area:.1,cost:0,bars:[.6,.7,.65],
     basic:'Pescaria',bd:'Lança a vara até 330. A poça carrega e um peixe gigante salta e ataca a área, deixando os inimigos lentos.',sp:'Onda Maré',sd:'Onda de raio 260 que empurra e desacelera a horda. Limpa projéteis próximos.',scd:12,
-    pas:'Recupera 1 de vida por segundo e +10% de área.',style:'Controle de horda'},
-  planta:{hp:105,spd:215,dmg:12,cd:.55,regen:.3,crit:.08,armor:0,life:.04,area:0,cost:0,bars:[.55,.7,.7],
-    basic:'Flecha de Sakura',bd:'Flecha de alcance 360 que atravessa até 3 inimigos, perdendo 20% do dano a cada passagem.',sp:'Flor de Sakura',sd:'Flor de raio 230: fere e prende inimigos por 1,4 s. Cura de 6% a 16% da vida máxima, conforme os alvos atingidos.',scd:14,
-    pas:'Cada acerto drena 4% do dano em vida.',style:'Arqueira de drenagem'},
-  eletrico:{hp:90,spd:225,dmg:13,cd:.65,regen:0,crit:.08,armor:0,life:0,area:0,cost:120,bars:[.45,.6,.85],
+    pas:'Recupera 0,35 de vida por segundo e +10% de área.',style:'Controle de horda'},
+  planta:{hp:85,spd:215,dmg:7,cd:.7,regen:0,crit:.08,armor:0,life:.01,area:0,cost:0,bars:[.55,.7,.7],
+    basic:'Flecha de Sakura',bd:'Flecha de alcance 360 que atravessa até 3 inimigos, perdendo 20% do dano a cada passagem.',sp:'Flor de Sakura',sd:'Flor de raio 230: fere e prende por 0,8 s. Ao acertar, cura de 2,5% a 5% da vida máxima. Recarga: 20 s.',scd:20,
+    pas:'Drena 1% do dano dos próprios ataques, até 1% da vida máxima por segundo. Sem regeneração natural.',style:'Arqueira de drenagem'},
+  eletrico:{hp:85,spd:225,dmg:8,cd:.8,regen:0,crit:.08,armor:0,life:0,area:0,cost:120,bars:[.45,.6,.85],
     basic:'Corrente em Cadeia',bd:'Raio até 320, com dois saltos de até 120: dano de 100%, 50% e 25%. Máximo de 3 alvos; 15% de chance de paralisar por 0,25 s.',sp:'Tempestade Viva',sd:'Carrega por 1,1 s, movendo-se a 60% e sem ataque normal. Três pulsos e uma descarga no raio de 260; bônus de grupo limitado a 30%. Descarga paralisa por 1 s. Recarga: 18 s.',scd:18,
     pas:'Disparos extras aumentam o dano do raio em 10% por nível, mantendo o limite de 3 alvos.',style:'Controle e dano em cadeia'},
-  pedra:{hp:150,spd:172,dmg:20,cd:1,regen:0,crit:.05,armor:.25,life:0,area:0,cost:150,bars:[1,.95,.3],
+  pedra:{hp:135,spd:172,dmg:9,cd:1.2,regen:0,crit:.05,armor:.18,life:0,area:0,cost:150,bars:[1,.95,.3],
     basic:'Pedrada',bd:'Arremessa uma pedra até 320, com explosão em área e breve atordoamento.',sp:'Terremoto',sd:'Sacode o chão num raio de 260, causando dano e atordoando os inimigos.',scd:12,
-    pas:'Recebe 25% menos dano.',style:'Tanque lento e pesado'},
-  sombra:{hp:90,spd:225,dmg:11,cd:.65,regen:0,crit:.15,armor:0,life:.04,area:0,cost:200,bars:[.45,.65,.85],
+    pas:'Recebe 18% menos dano.',style:'Tanque lento e pesado'},
+  sombra:{hp:80,spd:225,dmg:6,cd:.8,regen:0,crit:.1,armor:0,life:.02,area:0,cost:200,bars:[.45,.65,.85],
     basic:'Orbe Sombrio',bd:'Orbes perseguidores com percurso máximo de 480 e busca de alvos próximos.',sp:'Salto Sombrio',sd:'Teleporta até 280 e explode nos dois pontos. Um mesmo alvo só recebe dano uma vez.',scd:8,
-    pas:'Recupera 4% do dano causado e +10% de crítico.',style:'Furtivo e perseguidor'}
+    pas:'Drena 2% do dano dos próprios ataques, até 1% da vida máxima por segundo. +5% de crítico.',style:'Furtivo e perseguidor'}
 };
 const AL={
   fogo:{d:'Ataca com a adaga o inimigo próximo com mais vida e o deixa queimando.',up:'Golpes mais fortes e mais rápidos'},
   agua:{d:'Lança a vara: um peixe gigante salta da poça e ataca a área, deixando inimigos lentos.',up:'Mais poças e mais dano'},
-  planta:{d:'Atira flechas nos monstros e, de vez em quando, uma flecha que cura você.',up:'Mais flechas e mais cura'},
+  planta:{d:'Atira flechas e, em combate, oferece uma cura pequena a cada 10 s quando sua vida está baixa.',up:'Mais flechas e cura um pouco maior'},
   eletrico:{d:'Raio em cadeia em até 3 alvos, com dano de 100%, 50% e 25%.',up:'Mais dano e menor intervalo entre raios'},
   pedra:{d:'Arremessa pedras que explodem em área.',up:'Mais pedras e área maior'},
   sombra:{d:'Solta sombras que perseguem inimigos.',up:'Mais sombras e mais dano'},
@@ -323,7 +325,7 @@ try{
   }
 }catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S,P}));}catch(e){}}
-P.start=(P.start||[]).filter(t=>P.coll[t]&&AL[t]);
+P.start=[...new Set(P.start||[])].filter(t=>P.coll[t]&&AL[t]&&t!==P.char);
 if(!CH[P.char]||!P.chars[P.char])P.char=CHARS.find(t=>P.chars[t])||'fogo';
 if(!DIFF[S.diff])S.diff='normal';
 
@@ -983,12 +985,13 @@ function startRun(ch=P.char,diff=S.diff){
   if(!CH[ch]||!P.chars[ch]||!DIFF[diff])return false;
   P.char=ch;S.diff=diff;
   run={ch,diff,stage:1,lv:1,xp:0,need:xpNeed(1),bl:1,pk:{},allies:[],bonusHp:0,st:null,time:0,kills:0,bossKills:0,sp:0,cd:0,pend:0,over:false,overT:0,ended:false,
-    spawnAcc:0,revived:false,world:'forest',visit:0,worldStartLv:1,worldTime:0,worldCleared:false,nextBoss:10,portal:null,packId:0,fade:1,
+    spawnAcc:0,bossSpawnAcc:0,revived:false,world:'forest',visit:0,worldStartLv:1,worldTime:0,worldCleared:false,nextBoss:10,portal:null,packId:0,fade:1,
     pl:{x:0,y:0,vx:0,vy:0,hp:1,face:1,inv:0,flash:0,t:0,dash:null,r:20}};
   PS.forEach(p=>run.pk[p.id]=0);
   const slots=1+P.up.slot;
-  P.start.slice(0,slots).forEach(t=>{if(P.coll[t])run.allies.push(mkAlly(t,1));});
-  recompute();run.pl.hp=run.st.maxhp;
+  P.start=[...new Set(P.start)].filter(t=>P.coll[t]&&AL[t]&&t!==ch);
+  P.start.slice(0,slots).forEach(t=>run.allies.push(mkAlly(t,1)));
+  recompute();run.pl.hp=run.st.maxhp;run.leech=run.st.maxhp*BAL.leechPerSecond;
   enemies=[];pbul=[];ebul=[];gems=[];picks=[];hazards=[];lobs=[];pools=[];parts=[];floats=[];fx=[];
   cam.x=-CW/zoom/2;cam.y=-CH_/zoom/2;
   run.allies.forEach((a,i)=>{a.x=-40;a.y=i*30;});
@@ -1002,7 +1005,7 @@ function recompute(){
   const r=run,c=CH[r.ch],pk=r.pk,p=r.pl,sm=[1,1.25,1.6][r.stage-1],old=r.st?r.st.maxhp:null,st={};
   st.maxhp=Math.round((c.hp+20*pk.hp+10*P.up.vida+r.bonusHp)*sm);
   st.dmgm=(1+.10*pk.dmg+.05*P.up.forca)*sm;
-  st.dmg=c.dmg*st.dmgm*(1+.25*(r.bl-1));
+  st.dmg=c.dmg*st.dmgm*(1+.15*(r.bl-1));
   st.spd=c.spd*(1+.07*pk.spd);
   st.cdm=1/(1+.08*pk.cd);
   st.area=1+.10*pk.area+c.area;
@@ -1051,8 +1054,21 @@ function spawnGroup(type,L,x,y,o={},slots=enemyCap()-enemies.length){
   return count;
 }
 function spawnTick(dt){
-  if(bossAlive()||run.worldCleared||run.over)return;
+  if(run.worldCleared||run.over)return;
   const rate=Math.min(7,1.5+.16*worldLevel())*worldPressure()*(1+Math.min(.3,run.worldTime/300));
+  const boss=enemies.find(e=>e.boss&&e.hp>0);
+  if(boss){
+    if(boss.spawn>0)return;
+    // Reforços pequenos e espaçados; o anel de horda continua desativado.
+    run.bossSpawnAcc=Math.min(3,run.bossSpawnAcc+Math.min(.8,rate*BAL.bossSpawnRate)*dt);
+    const count=enemies.filter(e=>!e.boss).length,slots=Math.min(BAL.bossSpawnCap-count,enemyCap()-enemies.length);
+    if(slots<1){run.bossSpawnAcc=0;return;}
+    if(run.bossSpawnAcc<1)return;
+    const ranged=run.world==='forest'?'aranha':'asabrasa';
+    let type=Math.random()<.8?ranged:pickType(),cost=type==='esporo'?3:1;
+    if(cost>slots||cost>run.bossSpawnAcc){type=ranged;cost=1;}
+    const p=spawnPos();spawnGroup(type,run.lv,p.x,p.y,{spawn:.8},slots);run.bossSpawnAcc-=cost;return;
+  }
   run.spawnAcc=Math.min(8,run.spawnAcc+rate*dt);
   while(run.spawnAcc>=1&&enemies.length<enemyCap()){
     const type=pickType(),count=type==='esporo'?3:1;if(run.spawnAcc<count||enemyCap()-enemies.length<count)break;
@@ -1071,14 +1087,14 @@ function spawnBoss(L=run.lv){
   const hp=world.hp*(1+.20*run.visit);
   const e=mkEnemy(id,L,p.x,p.y,{boss:{name:EN[id].n,id,level:run.nextBoss,visit:run.visit},hp,spd:EN[id].spd,spawn:1.4});
   if(id==='cratos'){e.r=95;e.csc=2.8;e.cf=1;e.pt=2.2;}else{e.r=52;e.pt=1.8;}
-  enemies.slice().forEach(m=>killEnemy(m,true));ebul.length=0;hazards.length=0;run.spawnAcc=0;
+  enemies.slice().forEach(m=>killEnemy(m,true));ebul.length=0;hazards.length=0;run.spawnAcc=0;run.bossSpawnAcc=0;
   enemies.push(e);sfx('boss');setMusic('boss');toast('Chefe: '+e.boss.name,1);return true;
 }
 function enterPortal(){
   const portal=run.portal;if(!portal||portal.t<.8||run.over||uiOpen||bossAlive()||!run.worldCleared||dist(run.pl,portal)>=run.pl.r+portal.r)return false;
   // O transporte conserva vida, XP, nível, melhorias, aliados e recargas.
   run.world=portal.to;run.visit++;run.worldStartLv=run.lv;run.worldTime=0;run.worldCleared=false;
-  run.nextBoss=(Math.floor(run.lv/10)+1)*10;run.portal=null;run.spawnAcc=0;
+  run.nextBoss=(Math.floor(run.lv/10)+1)*10;run.portal=null;run.spawnAcc=0;run.bossSpawnAcc=0;
   enemies.length=0;pbul.length=0;ebul.length=0;hazards.length=0;lobs.length=0;pools.length=0;parts.length=0;fx.length=0;
   run.pl.vx=run.pl.vy=0;run.pl.dash=null;run.fade=.7;
   // Coletas ainda no chão permanecem acessíveis, sem crédito ou cura automática.
@@ -1107,9 +1123,11 @@ function hitEnemy(e,dmg,o){
   dmg=Math.max(1,Math.round(dmg));
   const dealt=Math.min(e.hp,dmg);e.hp-=dmg;e.flash=.1;
   floater(e.x,e.y-e.r,dmg,crit?'#ffd23f':'#ffffff',crit);
-  if(run.st.life>0)run.pl.hp=Math.min(run.st.maxhp,run.pl.hp+dealt*run.st.life);
+  if(run.st.life>0&&o.from!=='ally'){
+    const heal=Math.min(dealt*run.st.life,run.leech);run.leech-=heal;run.pl.hp=Math.min(run.st.maxhp,run.pl.hp+heal);
+  }
   if(o.slow)e.slow=Math.max(e.slow,1.6);
-  if(o.burn){e.burn=3;e.burnD=Math.max(e.burnD,dmg*.25*(o.bm||1));}
+  if(o.burn){e.burn=3;e.burnD=Math.max(e.burnD,dmg*BAL.burnRatio*(o.bm||1));}
   if(o.stun)e.stun=Math.max(e.stun,e.boss&&!o.fullStun?Math.min(.3,o.stun):o.stun);
   if((o.kx||o.ky)&&!(e.boss)){const k=e.elite?.5:1;e.kx+=(o.kx||0)*k;e.ky+=(o.ky||0)*k;}
   if(o.root)e.root=Math.max(e.root,e.boss?.5:o.root);
@@ -1135,7 +1153,7 @@ function killEnemy(e,silent){
   if(e.boss){
     run.bossKills++;P.st.boss++;run.pl.rot=0;run.pl.rotTick=0;
     enemies.slice().forEach(m=>{if(!m.boss)killEnemy(m,true);});hazards.length=0;ebul.length=0;
-    run.worldCleared=true;run.spawnAcc=0;
+    run.worldCleared=true;run.spawnAcc=0;run.bossSpawnAcc=0;
     run.portal={x:e.x+140,y:e.y+55,r:30,t:0,to:WORLDS[run.world].next};
     for(let k=0;k<12;k++)dropGem(e.x,e.y,8);
     picks.push({k:'chest',x:e.x,y:e.y,t:0,big:true});
@@ -1184,7 +1202,7 @@ function aimInfo(){
   return{wx,wy,ang:Math.atan2(wy-p.y,wx-p.x)};
 }
 function pushProj(o){pbul.push(Object.assign({hit:new Set(),pierce:0,life:1,r:9,from:'p'},o));}
-function chainLightning(origin,first,damage){
+function chainLightning(origin,first,damage,source='player'){
   if(!first||first.hp<=0||first.spawn>0)return [];
   const live=enemies.filter(e=>e.hp>0&&e.spawn<=0),targets=[first];
   while(targets.length<BAL.chainFalloff.length){
@@ -1193,7 +1211,7 @@ function chainLightning(origin,first,damage){
   }
   // Um crítico é compartilhado por toda a cadeia, preservando a queda de dano.
   const power=damage*(Math.random()<run.st.crit?2:1);let from=origin;
-  targets.forEach((e,i)=>{fx.push({k:'cbolt',x1:from.x,y1:from.y,x2:e.x,y2:e.y,life:.18,max:.18});hitEnemy(e,power*BAL.chainFalloff[i],{canCrit:false,stun:Math.random()<BAL.chainStunChance?BAL.chainStun:0,c:BC[run.stage-1][0]});from=e;});
+  targets.forEach((e,i)=>{fx.push({k:'cbolt',x1:from.x,y1:from.y,x2:e.x,y2:e.y,life:.18,max:.18});hitEnemy(e,power*BAL.chainFalloff[i],{from:source,canCrit:false,stun:Math.random()<BAL.chainStunChance?BAL.chainStun:0,c:BC[run.stage-1][0]});from=e;});
   return targets;
 }
 function basicAttack(ang,tx,ty){
@@ -1217,7 +1235,7 @@ function basicAttack(ang,tx,ty){
     const maxd=BAL.fishRange,d=clamp(Math.hypot(tx-p.x,ty-p.y),70,maxd);
     for(let i=0;i<n;i++){
       const target=aimPoint(p,ang,d,maxd,i?rf(-90,90):0,i?rf(-90,90):0),ex=target.x,ey=target.y;
-      const fs=pickFish();lobs.push({kind:'drop',x0:p.x,y0:p.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*2.3*fs.dm,r:84*A*fs.rm,c:'#5aaeff',sp:fs});
+      const fs=pickFish();lobs.push({kind:'drop',x0:p.x,y0:p.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*BAL.fishDamage*fs.dm,r:84*A*fs.rm,c:'#5aaeff',sp:fs});
     }
     p.cast=.42;
   }else if(ch==='planta'){
@@ -1235,7 +1253,7 @@ function basicAttack(ang,tx,ty){
     const maxd=BAL.stoneRange,d=Math.min(maxd,Math.hypot(tx-p.x,ty-p.y));
     for(let i=0;i<n;i++){
       const target=aimPoint(p,ang,d,maxd,i?rf(-80,80):0,i?rf(-80,80):0),ex=target.x,ey=target.y;
-      lobs.push({x0:p.x,y0:p.y,tx:ex,ty:ey,t:0,dur:.55,dmg:dmg*1.55,r:64*A,stun:.4,c:'#c9a97f'});
+      lobs.push({x0:p.x,y0:p.y,tx:ex,ty:ey,t:0,dur:.55,dmg:dmg*BAL.stoneDamage,r:64*A,stun:.4,c:'#c9a97f'});
     }
   }else{
     const cnt=2*n;
@@ -1274,9 +1292,9 @@ function useSpecial(){
   }else if(ch==='planta'){
     const R=BAL.sakuraBloom*A;let hits=0;
     fx.push({k:'bloom',x:p.x,y:p.y,R,life:.95,max:.95});fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:R,life:.6,max:.6,c:'#ff8fd0'});
-    enemies.slice().forEach(e=>{if(e.hp>0&&e.spawn<=0&&dist(e,p)<R+e.r){hits++;hitEnemy(e,st.dmg*2,{root:1.4,c:'#ff8fd0'});
+    enemies.slice().forEach(e=>{if(e.hp>0&&e.spawn<=0&&dist(e,p)<R+e.r){hits++;hitEnemy(e,st.dmg*1.4,{root:.8,c:'#ff8fd0'});
       for(let k=0;k<4;k++){const a=Math.atan2(p.y-e.y,p.x-e.x)+rf(-.25,.25);parts.push({x:e.x,y:e.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,life:.5,max:.5,c:pick(['#ff8fd0','#ffd0ea','#d03a8a']),r:rf(5,9)});}}});
-    const h=st.maxhp*(.06+Math.min(10,hits)*.01);p.hp=Math.min(st.maxhp,p.hp+h);floater(p.x,p.y-34,'+'+Math.round(h),'#ffb3dc',true);
+    const h=hits?st.maxhp*(.02+Math.min(6,hits)*.005):0;if(h>0){p.hp=Math.min(st.maxhp,p.hp+h);floater(p.x,p.y-34,'+'+Math.round(h),'#ffb3dc',true);}
     burst(p.x,p.y,'#ffb3dc',36,340,.8);toast('FLOR DE SAKURA!');
   }else if(ch==='eletrico'){
     run.chg={t:0,dur:BAL.stormCharge,next:0,n:0};toast('TEMPESTADE VIVA!');
@@ -1303,6 +1321,7 @@ function update(dt){
   p.inv=Math.max(0,p.inv-dt);p.flash=Math.max(0,p.flash-dt);p.cast=Math.max(0,(p.cast||0)-dt);p.swing=Math.max(0,(p.swing||0)-dt);p.cast2=Math.max(0,(p.cast2||0)-dt);run.ber=Math.max(0,(run.ber||0)-dt);run.sp=Math.max(0,run.sp-dt);run.dcd=Math.max(0,(run.dcd||0)-dt);
   if(run.ber<=0&&p.dash&&p.dash.fire){p.dash=null;run.combo=0;}
   p.hp=Math.min(st.maxhp,p.hp+st.regen*dt);
+  run.leech=Math.min(st.maxhp*BAL.leechPerSecond,run.leech+st.maxhp*BAL.leechPerSecond*dt);
   tickRot(dt);if(run.over){updFx(dt);return;}
   // movimento
   let mx=(keys.r?1:0)-(keys.l?1:0),my=(keys.d?1:0)-(keys.u?1:0);
@@ -1397,13 +1416,15 @@ function updHeal(dt){
   const p=run.pl,st=run.st;if(!run.harr)return;
   for(let i=run.harr.length-1;i>=0;i--){
     const h=run.harr[i],a2=Math.atan2(p.y-h.y,p.x-h.x);h.ang=a2;h.x+=Math.cos(a2)*620*dt;h.y+=Math.sin(a2)*620*dt;h.life-=dt;
-    if(Math.hypot(p.x-h.x,p.y-h.y)<p.r+10){const amt=st.maxhp*(.04+.01*h.lv);p.hp=Math.min(st.maxhp,p.hp+amt);floater(p.x,p.y-34,'+'+Math.round(amt),'#ffb3dc',true);burst(p.x,p.y,'#ffb3dc',10,200,.4);sfx('chest');run.harr.splice(i,1);}
+    if(Math.hypot(p.x-h.x,p.y-h.y)<p.r+10){const amt=st.maxhp*(.015+.003*(h.lv-1));p.hp=Math.min(st.maxhp,p.hp+amt);floater(p.x,p.y-34,'+'+Math.round(amt),'#ffb3dc',true);burst(p.x,p.y,'#ffb3dc',10,200,.4);sfx('chest');run.harr.splice(i,1);}
     else if(h.life<=0)run.harr.splice(i,1);
   }
 }
 function updAllies(dt){
   const p=run.pl,st=run.st,offs=[[-60,-30],[-65,40],[-20,-72],[-30,72]];
   run.allies.forEach((a,i)=>{
+    if(a.type===run.ch)return;
+    a.healCd=Math.max(0,(a.healCd??BAL.sakuraHealCooldown)-dt);
     a.cd-=dt;a.cast=Math.max(0,(a.cast||0)-dt);a.swing=Math.max(0,(a.swing||0)-dt);a.bob+=dt*3;a.t+=dt*(Math.hypot(p.vx,p.vy)>20?1:.3);
     const o=offs[i%4],tx=p.x+o[0]*(p.face<0?-1:1),ty=p.y+o[1];
     let chase=null;
@@ -1417,38 +1438,38 @@ function updAllies(dt){
       const dx=chase.x-a.x,dy=chase.y-a.y,d=Math.hypot(dx,dy)||1,reach=chase.r+26;
       if(d>reach){a.x+=dx/d*390*dt;a.y+=dy/d*390*dt;a.mv=true;}else a.mv=false;a.fc=dx>=0?1:-1;
     }else{a.x+=(tx-a.x)*Math.min(1,dt*6);a.y+=(ty-a.y)*Math.min(1,dt*6);a.mv=false;}
-    const lv=a.lvl,dmg=12*st.dmgm*(1+.35*(lv-1)),t=a.type,cdm=st.cdm,A=areaScale();
+    const lv=a.lvl,dmg=BAL.allyDamage*st.dmgm*(1+.25*(lv-1)),t=a.type,cdm=st.cdm,A=areaScale();
     if(t==='agua'){
       if(a.cd<=0){const e=nearest(a,enemies,BAL.fishRange);if(e){
         const n=1+Math.floor((lv-1)/2),base=Math.atan2(e.y-a.y,e.x-a.x),d=clamp(Math.hypot(e.x-a.x,e.y-a.y),70,BAL.fishRange);
         for(let k=0;k<n;k++){
           const target=aimPoint(a,base,d,BAL.fishRange,k?rf(-90,90):0,k?rf(-90,90):0),ex=target.x,ey=target.y,fs=pickFish();
-          lobs.push({kind:'drop',own:a,x0:a.x,y0:a.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*2.3*fs.dm,r:80*A*fs.rm,c:'#5aaeff',sp:fs});
+          lobs.push({kind:'drop',from:'ally',own:a,x0:a.x,y0:a.y,tx:ex,ty:ey,t:-.14,dur:.4+d/1500,dmg:dmg*BAL.fishDamage*fs.dm,r:80*A*fs.rm,c:'#5aaeff',sp:fs});
         }
         a.cast=.42;a.cd=2.6*cdm;sfx('shoot');}}
     }else if(t==='fogo'){
       if(chase&&a.cd<=0&&Math.hypot(chase.x-a.x,chase.y-a.y)<=chase.r+34){
         const an=Math.atan2(chase.y-a.y,chase.x-a.x),hits=1+Math.floor(lv/3);
-        for(let k=0;k<hits;k++)hitEnemy(chase,dmg*1.1,{burn:true,bm:2,kx:Math.cos(an)*60,ky:Math.sin(an)*60,c:'#ff8a3d'});
-        enemies.slice().forEach(e=>{if(e!==chase&&e.spawn<=0&&Math.hypot(e.x-a.x,e.y-a.y)<e.r+44)hitEnemy(e,dmg*.4,{burn:true,canCrit:false,c:'#ff8a3d'});});
+        for(let k=0;k<hits;k++)hitEnemy(chase,dmg*1.1,{from:'ally',burn:true,bm:2,kx:Math.cos(an)*60,ky:Math.sin(an)*60,c:'#ff8a3d'});
+        enemies.slice().forEach(e=>{if(e!==chase&&e.spawn<=0&&Math.hypot(e.x-a.x,e.y-a.y)<e.r+44)hitEnemy(e,dmg*.4,{from:'ally',burn:true,canCrit:false,c:'#ff8a3d'});});
         fx.push({k:'slash',x:a.x+Math.cos(an)*10,y:a.y+Math.sin(an)*10,ang:an,R:52,span:.7,flip:(a.sw=-(a.sw||1)),life:.15,max:.15});
-        a.swing=.2;a.cd=.4*cdm;sfx('hit');
+        a.swing=.2;a.cd=.65*cdm;sfx('hit');
       }
     }else if(t==='planta'){
       if(a.cd<=0){
         const e=nearest(a,enemies,BAL.sakuraRange);
-        if(p.hp<st.maxhp*.98&&Math.random()<.12){
+        if(e&&p.hp<st.maxhp*.8&&a.healCd<=0){
           const an=Math.atan2(p.y-a.y,p.x-a.x);(run.harr=run.harr||[]).push({x:a.x,y:a.y-8,vx:0,vy:0,ang:an,life:1.2,lv});
-          a.fc=Math.cos(an)>=0?1:-1;a.swing=.28;a.cd=.7;sfx('shoot');
+          a.fc=Math.cos(an)>=0?1:-1;a.swing=.28;a.cd=1*cdm;a.healCd=BAL.sakuraHealCooldown;sfx('shoot');
         }else if(e){
           const n=1+Math.floor((lv-1)/2),base=Math.atan2(e.y-a.y,e.x-a.x);
-          for(let k=0;k<n;k++){const an=base+(k-(n-1)/2)*.16;pushProj({x:a.x+Math.cos(an)*14,y:a.y-8+Math.sin(an)*14,vx:Math.cos(an)*700,vy:Math.sin(an)*700,dmg:dmg*1.25,r:8,life:1,range:BAL.sakuraRange-14,falloff:BAL.sakuraFalloff,pierce:1,type:'planta',ang:an});}
-          a.fc=Math.cos(base)>=0?1:-1;a.swing=.28;a.cd=1.15*cdm;sfx('shoot');
-        }
+          for(let k=0;k<n;k++){const an=base+(k-(n-1)/2)*.16;pushProj({x:a.x+Math.cos(an)*14,y:a.y-8+Math.sin(an)*14,vx:Math.cos(an)*700,vy:Math.sin(an)*700,from:'ally',dmg:dmg*1.1,r:8,life:1,range:BAL.sakuraRange-14,falloff:BAL.sakuraFalloff,pierce:1,type:'planta',ang:an});}
+          a.fc=Math.cos(base)>=0?1:-1;a.swing=.28;a.cd=1.4*cdm;sfx('shoot');
+        }else a.cd=.25;
       }
     }else if(t==='eletrico'){
       if(a.cd<=0){const e=nearest(a,enemies,BAL.chainRange,e=>dist(e,a)<=BAL.chainRange);
-        if(e){chainLightning(a,e,dmg*.8);a.fc=e.x>=a.x?1:-1;a.swing=.3;a.cd=(2.2-.12*(lv-1))*cdm;sfx('zap');}
+        if(e){chainLightning(a,e,dmg*.8,'ally');a.fc=e.x>=a.x?1:-1;a.swing=.3;a.cd=(2.2-.12*(lv-1))*cdm;sfx('zap');}
         else a.cd=.4;
       }
     }else if(t==='pedra'){
@@ -1458,7 +1479,7 @@ function updAllies(dt){
           const n=1+Math.floor(lv/3);
           for(let k=0;k<n;k++){
             let best=null,bs=-1;for(let s=0;s<6;s++){const c=pick(vis);let sc=0;for(const o of vis)if(Math.hypot(o.x-c.x,o.y-c.y)<90)sc++;if(sc>bs){bs=sc;best=c;}}
-            lobs.push({x0:a.x,y0:a.y,tx:best.x,ty:best.y,t:0,dur:.6,dmg:dmg*2.4,r:(60+6*lv)*A,stun:.5,c:'#c9a97f'});
+            lobs.push({x0:a.x,y0:a.y,tx:best.x,ty:best.y,t:0,dur:.6,from:'ally',dmg:dmg*1.6,r:(60+6*lv)*A,stun:.5,c:'#c9a97f'});
           }
           a.cd=2.5*cdm;
         }else a.cd=.5;
@@ -1466,14 +1487,14 @@ function updAllies(dt){
     }else if(t==='sombra'){
       if(a.cd<=0){const e=nearest(a,enemies,BAL.shadowRange);if(e){
         const n=1+Math.floor((lv+1)/2),base=Math.atan2(e.y-a.y,e.x-a.x);
-        for(let k=0;k<n;k++){const an=base+(k-(n-1)/2)*.5;pushProj({x:a.x,y:a.y,vx:Math.cos(an)*300,vy:Math.sin(an)*300,dmg:dmg*1.2,r:9,life:2.4,range:BAL.shadowRange,type:'sombra',homing:true,hd:.15,ang:an});}
+        for(let k=0;k<n;k++){const an=base+(k-(n-1)/2)*.5;pushProj({x:a.x,y:a.y,vx:Math.cos(an)*300,vy:Math.sin(an)*300,from:'ally',dmg:dmg*.9,r:9,life:2.4,range:BAL.shadowRange,type:'sombra',homing:true,hd:.15,ang:an});}
         a.cd=1.9*cdm;sfx('shoot');}}
     }else if(t==='normal'){
       if(a.cd<=0){
         const rad=(105+10*lv)*A;
         if(enemies.some(e=>e.spawn<=0&&dist(e,p)<rad+e.r+40)){
           fx.push({k:'ring',x:p.x,y:p.y,r:0,mx:rad,life:.4,max:.4,c:'#b9e6f0'});
-          enemies.slice().forEach(e=>{if(e.spawn<=0&&dist(e,p)<rad+e.r){const aa=Math.atan2(e.y-p.y,e.x-p.x);hitEnemy(e,dmg*.9,{kx:Math.cos(aa)*(240+20*lv),ky:Math.sin(aa)*(240+20*lv),canCrit:false});}});
+          enemies.slice().forEach(e=>{if(e.spawn<=0&&dist(e,p)<rad+e.r){const aa=Math.atan2(e.y-p.y,e.x-p.x);hitEnemy(e,dmg*.9,{from:'ally',kx:Math.cos(aa)*(240+20*lv),ky:Math.sin(aa)*(240+20*lv),canCrit:false});}});
           a.cd=1.7*cdm;
         }else a.cd=.4;
       }
@@ -1755,7 +1776,7 @@ function updProj(dt){
     candidates.sort((a,b)=>a.t-b.t);
     for(const {e} of candidates){
       if(e.hp<=0)continue;b.hit.add(e);
-      hitEnemy(e,b.dmg,{slow:b.slow,burn:b.burn,kx:b.vx/(speed||1)*90,ky:b.vy/(speed||1)*90,c:TI[b.type].c});
+      hitEnemy(e,b.dmg,{from:b.from,slow:b.slow,burn:b.burn,kx:b.vx/(speed||1)*90,ky:b.vy/(speed||1)*90,c:TI[b.type].c});
       if(b.pierce>0){b.pierce--;b.dmg*=b.falloff??1;}else{b.life=0;break;}
     }
     if(b.range===0)b.life=0;
@@ -1780,11 +1801,11 @@ function updLobs(dt){
     if(l.t>=l.dur){
       if(l.kind==='drop'){
         burst(l.tx,l.ty,'#bfe6ff',12,200,.45);fx.push({k:'ring',x:l.tx,y:l.ty,r:0,mx:34,life:.35,max:.35,c:'#bfe6ff'});
-        pools.push({x:l.tx,y:l.ty,t:0,dur:.9,r:l.r,dmg:l.dmg,sp:l.sp,nb:0,flip:Math.random()<.5?1:-1,up:false,end:false});
+        pools.push({x:l.tx,y:l.ty,t:0,dur:.9,r:l.r,dmg:l.dmg,from:l.from,sp:l.sp,nb:0,flip:Math.random()<.5?1:-1,up:false,end:false});
         sfx('ui');lobs.splice(i,1);continue;
       }
       fx.push({k:'ring',x:l.tx,y:l.ty,r:0,mx:l.r,life:.3,max:.3,c:l.c});burst(l.tx,l.ty,l.c,10,200,.4);shk(3);
-      enemies.slice().forEach(e=>{if(e.spawn<=0&&Math.hypot(e.x-l.tx,e.y-l.ty)<l.r+e.r)hitEnemy(e,l.dmg,{stun:l.stun,slow:l.slow,c:l.c});});
+      enemies.slice().forEach(e=>{if(e.spawn<=0&&Math.hypot(e.x-l.tx,e.y-l.ty)<l.r+e.r)hitEnemy(e,l.dmg,{from:l.from,stun:l.stun,slow:l.slow,c:l.c});});
       lobs.splice(i,1);
     }
   }
@@ -1796,7 +1817,7 @@ function updPools(dt){
     if(o.up&&!o.named){o.named=true;floater(o.x,o.y-70,o.sp.n+'!','#bfe6ff',true);}
     if(o.nb<o.sp.bites.length&&o.t>=o.dur+o.sp.bites[o.nb]){
       o.nb++;shk(8);fx.push({k:'ring',x:o.x,y:o.y,r:0,mx:o.r,life:.4,max:.4,c:'#5aaeff'});burst(o.x,o.y,'#5aaeff',22,320,.6);
-      enemies.slice().forEach(e=>{if(e.spawn<=0&&Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r){const a=Math.atan2(e.y-o.y,e.x-o.x);hitEnemy(e,o.dmg,{slow:true,stun:o.sp.stun,root:o.sp.root,kx:Math.cos(a)*o.sp.kb,ky:Math.sin(a)*o.sp.kb,c:'#5aaeff'});}});
+      enemies.slice().forEach(e=>{if(e.spawn<=0&&Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r){const a=Math.atan2(e.y-o.y,e.x-o.x);hitEnemy(e,o.dmg,{from:o.from,slow:true,stun:o.sp.stun,root:o.sp.root,kx:Math.cos(a)*o.sp.kb,ky:Math.sin(a)*o.sp.kb,c:'#5aaeff'});}});
     }
     if(!o.end&&o.t>=o.dur+.75){o.end=true;burst(o.x,o.y,'#bfe6ff',14,240,.5);fx.push({k:'ring',x:o.x,y:o.y,r:0,mx:o.r*.55,life:.35,max:.35,c:'#bfe6ff'});}
     if(o.t>=o.dur+.95)pools.splice(i,1);
@@ -1831,7 +1852,7 @@ function updFx(dt){
 function ownedPs(){return PS.filter(p=>run.pk[p.id]>0).length;}
 function makeCards(){
   const pool=[];
-  TYPES.forEach(t=>{const a=run.allies.find(x=>x.type===t);if(a){if(a.lvl<5)pool.push({k:'ally',t,w:4});}else if(run.allies.length<MAXALLY)pool.push({k:'ally',t,w:3});});
+  TYPES.forEach(t=>{if(t===run.ch)return;const a=run.allies.find(x=>x.type===t);if(a){if(a.lvl<5)pool.push({k:'ally',t,w:4});}else if(run.allies.length<MAXALLY)pool.push({k:'ally',t,w:3});});
   PS.forEach(p=>{const n=run.pk[p.id];if(n>0){if(n<p.max)pool.push({k:'ps',id:p.id,w:4});}else if(ownedPs()<MAXPS)pool.push({k:'ps',id:p.id,w:3});});
   if(run.bl<5)pool.push({k:'basic',w:4});
   if(!pool.length){pool.push({k:'heal',w:1});pool.push({k:'ess',w:1});}
@@ -1853,7 +1874,7 @@ function showLevelUp(){
       const p=PSB[c.id],n=run.pk[c.id];
       s+=`<button class="cardbtn" data-a="card" data-i="${i}"><span class="k">${p.n}</span><span class="lvl">${n?'NÍVEL '+n+' → '+(n+1):'NOVO'}</span><span class="chip" style="--tc:var(--acc)">MELHORIA</span><span class="small">${p.d}</span></button>`;
     }else if(c.k==='basic'){
-      s+=`<button class="cardbtn" data-a="card" data-i="${i}">${ico(run.ch,run.stage)}<span class="k">${CH[run.ch].basic}</span><span class="lvl">NÍVEL ${run.bl} → ${run.bl+1}</span><span class="chip" style="--tc:var(--acc)">ATAQUE</span><span class="small">+25% de dano e ataques 5% mais rápidos</span></button>`;
+      s+=`<button class="cardbtn" data-a="card" data-i="${i}">${ico(run.ch,run.stage)}<span class="k">${CH[run.ch].basic}</span><span class="lvl">NÍVEL ${run.bl} → ${run.bl+1}</span><span class="chip" style="--tc:var(--acc)">ATAQUE</span><span class="small">+15% de dano e ataques 5% mais rápidos</span></button>`;
     }else if(c.k==='heal'){
       s+=`<button class="cardbtn" data-a="card" data-i="${i}"><span class="k">Fruta Doce</span><span class="small">Cura 40% da vida.</span></button>`;
     }else{
@@ -1864,7 +1885,9 @@ function showLevelUp(){
 }
 function applyCard(c){
   if(c.k==='ally'){
+    if(!AL[c.t]||c.t===run.ch)return false;
     const a=run.allies.find(x=>x.type===c.t);
+    if(a?.lvl>=5||(!a&&run.allies.length>=MAXALLY))return false;
     if(a)a.lvl++;else{const n=mkAlly(c.t,1);n.x=run.pl.x;n.y=run.pl.y;run.allies.push(n);}
     P.coll[c.t]=(P.coll[c.t]||0)+1;P.st.maxAlly=Math.max(P.st.maxAlly,run.allies.length);
     if(run.allies.some(x=>x.lvl>=5))P.st.allyMax=1;
@@ -1872,7 +1895,7 @@ function applyCard(c){
   else if(c.k==='basic')run.bl++;
   else if(c.k==='heal')run.pl.hp=Math.min(run.st.maxhp,run.pl.hp+run.st.maxhp*.4);
   else P.ess+=30;
-  recompute();checkAch();save();
+  recompute();checkAch();save();return true;
 }
 
 /* ================= conquistas ================= */
@@ -1965,13 +1988,13 @@ function teamHTML(){
     const c=CH[t],own=!!P.chars[t];
     s+=`<article class="card roster-card">${characterInfoHTML(t,own)}${own?'<b class="small" style="color:var(--good)">Desbloqueado</b>':`<button data-a="buychar" data-i="${t}" ${P.ess<c.cost?'disabled':''}>Desbloquear por ${c.cost} de essência</button>`}</article>`;
   });
-  s+=`</div><h3>Aliado inicial (${P.start.length}/${slots})</h3><p class="small mut">Aliados que você já escolheu em jornadas anteriores. Eles começam a jornada ao seu lado, no nível 1.</p><div class="slots">`;
+  s+=`</div><h3>Aliado inicial (${P.start.length}/${slots})</h3><p class="small mut">Aliados que você já escolheu em jornadas anteriores. Eles começam a jornada ao seu lado, no nível 1. Um aliado igual ao personagem escolhido não entra na partida.</p><div class="slots">`;
   for(let i=0;i<slots;i++){const t=P.start[i];s+=t?`<div class="slot full">${ico(t,1,'sm')}<b>${NM[t][0]}</b></div>`:`<div class="slot">Vaga livre</div>`;}
   s+='</div><div class="grid">';
   TYPES.forEach(t=>{
-    const have=!!P.coll[t],on=P.start.includes(t);
-    s+=`<button class="cardbtn" data-a="load" data-i="${t}" ${have?'':'disabled'} aria-pressed="${on}">${ico(t,1,have?'':'lock')}<span class="k">${have?NM[t][0]:'???'}</span>${chip(t)}
-    <span class="small">${have?AL[t].d:'Escolha este aliado em uma jornada para desbloquear.'}</span></button>`;
+    const have=!!P.coll[t],on=P.start.includes(t),same=t===P.char;
+    s+=`<button class="cardbtn" data-a="load" data-i="${t}" ${have&&!same?'':'disabled'} aria-pressed="${on}">${ico(t,1,have?'':'lock')}<span class="k">${have?NM[t][0]:'???'}</span>${chip(t)}
+    <span class="small">${same?'Não pode acompanhar um personagem igual.':have?AL[t].d:'Escolha este aliado em uma jornada para desbloquear.'}</span></button>`;
   });
   s+=`</div><h3>Melhorias permanentes · Essência ${P.ess}</h3><div class="card">`;
   UPS.forEach(u=>{const n=P.up[u.id]||0,c=u.c(n);
@@ -2000,7 +2023,7 @@ function howHTML(){
   <p>O mapa é infinito e a horda nunca para. Derrotar monstros deixa cristais ciano no chão: chegue perto para coletar. Ao encher a barra de experiência você sobe de nível e escolhe uma melhoria.</p>
   <p>As melhorias podem ser <b>aliados</b> (até 4, cada um com uma habilidade automática), <b>bônus</b> (até 6) ou o aprimoramento do seu ataque principal. Monstros dourados e chefes deixam baús com mais escolhas.</p>
   <p>Cada nível que você sobe deixa a horda mais forte e mais numerosa. A cada 5 níveis chega uma horda em círculo, e a cada 10 níveis um chefe. Seu personagem evolui nos níveis 15 e 30.</p></div>
-  <h3>Personagens</h3><div class="card small"><p><b>Salamandra:</b> dois golpes alternados, sem dash. A Fúria dura 6 s: ataca mais depressa, reduz o dano por golpe e libera um dash a cada três ataques.</p><p><b>Sakura:</b> flechas até 360, com até três acertos e 20% menos dano a cada passagem. Flor de Sakura de raio 230 para prender inimigos e recuperar de 6% a 16% da vida.</p></div><div class="card small"><p><b>Capricorn:</b> Corrente em Cadeia de alcance 320: até três alvos, com dano de 100%, 50% e 25% e saltos de até 120. A Tempestade Viva carrega por 1,1 s, reduz o movimento e bloqueia o ataque normal; sua descarga paralisa por 1 s num raio de 260.</p></div><h3>Aliados</h3><div class="grid">`+TYPES.map(t=>`<div class="card">${ico(t,1)}<b>${NM[t][0]}</b>${chip(t)}<span class="small">${AL[t].d}</span></div>`).join('')+`</div>
+  <h3>Personagens</h3><div class="card small"><p><b>Salamandra:</b> dois golpes alternados, sem dash. A Fúria dura 6 s: ataca mais depressa, reduz o dano por golpe e libera um dash a cada três ataques.</p><p><b>Sakura:</b> flechas até 360, com até três acertos e 20% menos dano a cada passagem. Flor de Sakura de raio 230: prende por 0,8 s e cura de 2,5% a 5% da vida somente ao acertar, com recarga de 20 s.</p></div><div class="card small"><p><b>Capricorn:</b> Corrente em Cadeia de alcance 320: até três alvos, com dano de 100%, 50% e 25% e saltos de até 120. A Tempestade Viva carrega por 1,1 s, reduz o movimento e bloqueia o ataque normal; sua descarga paralisa por 1 s num raio de 260.</p></div><h3>Aliados</h3><div class="grid">`+TYPES.map(t=>`<div class="card">${ico(t,1)}<b>${NM[t][0]}</b>${chip(t)}<span class="small">${AL[t].d}</span></div>`).join('')+`</div>
   <button class="pri big" data-a="menu">Entendi</button></div>`;
 }
 function pauseHTML(conf){
@@ -2032,7 +2055,9 @@ const ACT={
   full(){try{const r=stage.requestFullscreen&&stage.requestFullscreen();if(r&&r.catch)r.catch(()=>{});}catch(e){}},
   buychar(b){const t=b.dataset.i,c=CH[t];if(!c||P.chars[t]||P.ess<c.cost)return;P.ess-=c.cost;P.chars[t]=1;P.st.spent=1;checkAch();save();sfx('pick');const sc=ui.scrollTop;setUI('team',teamHTML());ui.scrollTop=sc;},
   load(b){
-    const t=b.dataset.i,i=P.start.indexOf(t),slots=1+P.up.slot;
+    const t=b.dataset.i;if(!AL[t])return;
+    const i=P.start.indexOf(t),slots=1+P.up.slot;
+    if(t===P.char&&i<0){toast('Escolha um aliado diferente do seu personagem.');return;}
     if(i>=0)P.start.splice(i,1);else if(P.coll[t]){if(P.start.length>=slots)P.start.shift();P.start.push(t);}
     save();sfx('ui');const sc=ui.scrollTop;setUI('team',teamHTML());ui.scrollTop=sc;
   },
@@ -2045,7 +2070,7 @@ const ACT={
   quit(){if(!pauseConf){pauseConf=true;setUI('pause',pauseHTML(true),'menu');return;}run.ended=true;showMenu();},
   card(b){
     const c=curCards[+b.dataset.i];if(!c)return;
-    sfx('pick');applyCard(c);run.pend--;
+    if(applyCard(c)===false)return;sfx('pick');run.pend--;
     if(run.pend>0)showLevelUp();else{run.chest=false;hideUI();run.pl.inv=Math.max(run.pl.inv,.8);}
   }
 };
@@ -2719,7 +2744,7 @@ function frame(ts){
 }
 applyTheme();resize();showMenu();initDb();
 requestAnimationFrame(frame);
-if(window.__NSDEBUG)window.__NS={WORLDS,FOREST_FOES,EN,xpNeed,worldLevel,enemyCap,worldPressure,spawnGroup,enterPortal,updPortal,updColossus,DRAGON_FOES,dragonRegion,pickType,spawnRing,updEnemies,updFx,drawGround,addTrees,get fx(){return fx;},mkAlly,monSprite,iconURL,fishCanvas,FISH,BAL,chainLightning,chargeTick,hitEnemy,attackRange,stormRadius,updProj,updAllies,doDash,applyRot,tickRot,updBoss,updCratos,spawnTick,bossAlive,treeCanvas,onLevel,endRun,resize,get zoom(){return zoom;},get hazards(){return hazards;},get lobs(){return lobs;},get ebul(){return ebul;},lootSprite,dropGem,hurtPlayer,updPick,VERSION,get picks(){return picks;},get run(){return run;},get enemies(){return enemies;},get gems(){return gems;},P,S,ACT,keys,update:dt=>update(dt),render,CH,makeCards,applyCard,showLevelUp,recompute,spawnBoss,mkEnemy,get cards(){return curCards;},useSpecial,basicAttack,updHud,healthState,startRun,get mouse(){return mouse;},get cam(){return cam;},get pbul(){return pbul;}};
+if(window.__NSDEBUG)window.__NS={WORLDS,FOREST_FOES,EN,xpNeed,worldLevel,enemyCap,worldPressure,updHeal,updLobs,updPools,spawnGroup,enterPortal,updPortal,updColossus,DRAGON_FOES,dragonRegion,pickType,spawnRing,updEnemies,updFx,drawGround,addTrees,get fx(){return fx;},mkAlly,monSprite,iconURL,fishCanvas,FISH,BAL,chainLightning,chargeTick,hitEnemy,attackRange,stormRadius,updProj,updAllies,doDash,applyRot,tickRot,updBoss,updCratos,spawnTick,bossAlive,treeCanvas,onLevel,endRun,resize,get zoom(){return zoom;},get hazards(){return hazards;},get lobs(){return lobs;},get ebul(){return ebul;},lootSprite,dropGem,hurtPlayer,updPick,VERSION,get picks(){return picks;},get run(){return run;},get enemies(){return enemies;},get gems(){return gems;},P,S,ACT,keys,update:dt=>update(dt),render,CH,makeCards,applyCard,showLevelUp,recompute,spawnBoss,mkEnemy,get cards(){return curCards;},useSpecial,basicAttack,updHud,healthState,startRun,get mouse(){return mouse;},get cam(){return cam;},get pbul(){return pbul;}};
 })();
 </script>
 

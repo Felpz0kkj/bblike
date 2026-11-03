@@ -18,7 +18,10 @@ A troca depende de contato com o portal e conserva personagem, nível, XP, melho
 
 A floresta tem **Trio de Esporos** (grupos de três, nuvem venenosa curta), **Besouro de Casca** (investida anunciada e recuperação vulnerável) e **Aranha Sombria** (espinho com preparação). O Colosso ergue o braço e golpeia uma área de raiz sinalizada por um segundo. No mundo do dragão, **Catador de Ossos**, **Asabrasa**, **Lagarto de Cinza** e **Estufado da Podridão** receberam paletas e escala revisadas, mantendo seus ataques próprios. Cratos mantém mordidas, cauda e sopro de podridão.
 
-A dificuldade cresce moderadamente por passagem; o limite é **160 inimigos simultâneos**. XP por nível exige aproximadamente 25%–40% mais pontos; os drops dracônicos são 15% menores. Atributos dos personagens, controles e estrutura da interface foram preservados. O fundo inicial usa a nova floresta procedural, sem carregar o mapa ou os chefes antigos. Mantida a identificação **beta 0.7.0** nesta revisão.
+A dificuldade cresce moderadamente por passagem; o limite é **160 inimigos simultâneos**. XP por nível exige aproximadamente 25%–40% mais pontos; os drops dracônicos são 15% menores. Controles e estrutura da interface foram preservados. O fundo inicial usa a nova floresta procedural, sem carregar o mapa ou os chefes antigos. Mantida a identificação **beta 0.7.0** nesta revisão.
+
+A revisão de balanceamento reduz vida/dano e cadência dos seis personagens e enfraquece aliados e a progressão do ataque básico. Um aliado igual ao herói não pode ser escolhido, inclusive por configurações salvas. Sakura perdeu a regeneração natural, tem drenagem de 1% apenas do próprio dano e especial que cura no máximo 5%, somente ao acertar, com recarga de 20 s. Sakura aliada tem cura pequena em combate com recarga própria de 10 s. Durante os chefes surgem reforços a 20% da cadência normal, até oito simultâneos, priorizando Aranhas e Asabrasas. A vitória limpa os reforços e abre o portal.
+
 
 ## Desenvolvimento
 

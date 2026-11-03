@@ -7,7 +7,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 // Executa o jogo real, sem rede ou dependências. O canvas registra a arte raster.
-function boot(saved){
+function boot(saved,random){
   const nodes=new Map(),events={},store=new Map();
   if(saved)store.set('nevoa-selvagem-v3',JSON.stringify(saved));
   function element(name){
@@ -37,6 +37,7 @@ function boot(saved){
     localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},
     performance:{now:()=>1000},console,requestAnimationFrame(){},setTimeout(){},setInterval(){},clearInterval(){},
     matchMedia:win.matchMedia};
+  if(random){const math=Object.create(Math);math.random=random;sandbox.Math=math;}
   vm.runInNewContext(script,sandbox,{filename:'index.html'});
   return {game:win.__NS,node,events,store};
 }
@@ -94,10 +95,10 @@ test('vida fracionária, cura, zero e renascimento preservam o preenchimento pro
     assert.ok(Math.abs(parseFloat(node('#hp-i').style.width)-ratio*100)<1e-10);
     assert.equal(Number(node('#player-health').getAttribute('aria-valuemax')),g.run.st.maxhp);
   }
-  g.run.pl.hp=10;g.useSpecial();assert.ok(g.run.pl.hp>10);g.updHud();
+  g.run.pl.hp=10;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.ok(g.run.pl.hp>10);g.updHud();
   assert.ok(parseFloat(node('#hp-i').style.width)>8);
   g.run.pl.hp=-5;g.updHud();assert.equal(node('#hp-i').style.width,'0%');
-  assert.equal(node('#hp-t').textContent,'0 / 105');
+  assert.equal(node('#hp-t').textContent,'0 / 85');
   begin(g);g.updHud();assert.equal(node('#hp-i').style.width,'100%');
 });
 
@@ -153,7 +154,7 @@ test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
-  g.run.pl.hp=50;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.equal(g.run.pl.hp,65.75);
+  g.run.pl.hp=50;g.picks.push({k:'heal',x:0,y:0,t:0});g.updPick(.016);assert.equal(g.run.pl.hp,62.75);
 });
 
 test('Salamandra alterna dois golpes sem dash; Fúria só avança no terceiro',()=>{
@@ -176,11 +177,11 @@ test('Fúria aumenta DPS com menos dano por golpe, sem explosão ao ativar',()=>
 });
 
 test('Sakura dispara flechas perfurantes e drena vida ao acertar',()=>{
-  const {game:g}=boot();begin(g);g.run.pl.hp=20;g.basicAttack(0,100,0);
+  const {game:g}=boot();begin(g);g.run.pl.hp=20;g.run.st.crit=0;g.basicAttack(0,100,0);
   assert.equal(g.pbul[0].pierce,2);assert.equal(g.pbul[0].vx,760);
   const e=g.mkEnemy('catador',1,40,0,{});e.spawn=0;e.hp=100;g.enemies.push(e);
-  g.update(.04);assert.ok(g.run.pl.hp>20.1);
-  g.useSpecial();assert.ok(g.run.pl.hp>26);assert.equal(g.CH.planta.basic,'Flecha de Sakura');
+  g.update(.04);assert.ok(Math.abs(g.run.pl.hp-20.08)<1e-9);
+  g.useSpecial();assert.ok(g.run.pl.hp>22&&g.run.pl.hp<23);assert.equal(g.CH.planta.basic,'Flecha de Sakura');
 });
 
 test('Capricorn encadeia em três alvos próximos com dano 100%, 50%, 25%',()=>{
@@ -211,7 +212,7 @@ test('Tempestade carrega antes de paralisar por um segundo, incluindo chefes',()
 test('Capricorn substitui Zero em telas e salva o desbloqueio anterior',()=>{
   const {game:g,node}=boot({P:{char:'eletrico',chars:{eletrico:1},coll:{eletrico:1},start:['eletrico'],seen:1}});
   g.ACT.team();assert.match(node('#ui').innerHTML,/Capricorn/);assert.doesNotMatch(node('#ui').innerHTML,/Zero|Fagulhim|Esquilo elétrico|Corrida Elétrica/);
-  begin(g,'eletrico');assert.equal(g.run.allies[0].type,'eletrico');assert.equal(g.run.ch,'eletrico');
+  begin(g,'eletrico');assert.equal(g.run.allies.length,0);assert.equal(g.P.coll.eletrico,1);assert.equal(g.P.chars.eletrico,1);assert.equal(g.run.ch,'eletrico');
   for(let stage=1;stage<=3;stage++)for(let frame=0;frame<=4;frame++){
     const c=g.monSprite('eletrico',stage,frame);assert.equal(c.width,56);assert.equal(c.fy,51);assert.ok(c.getContext('2d').ops.length>100);
   }
@@ -249,7 +250,7 @@ test('Tempestade tem três pulsos, teto por grupo e dano independente do quadro'
   }
   const fine=storm(12,Array(110).fill(.01));
   assert.deepEqual(fine,storm(12,[.29,.31,.5]));
-  assert.equal(fine[0],303);assert.equal(storm(40,[1.1])[0],fine[0]);
+  assert.equal(fine[0],255);assert.equal(storm(40,[1.1])[0],fine[0]);
   assert.ok(storm(1,[1.1])[0]<fine[0]);
 });
 
@@ -283,13 +284,13 @@ test('flechas rápidas acertam em ordem de distância sem pular alvos eliminados
   const {game:g}=boot();begin(g);g.run.st.crit=0;g.run.st.dmg=20;
   const third=target(g,220,-8),second=target(g,140,-8),first=target(g,60,-8,1),fourth=target(g,300,-8);
   g.basicAttack(0,400,0);g.updProj(.5);
-  assert.equal(first.hp,0);assert.equal(1000-second.hp,22);assert.equal(1000-third.hp,17);assert.equal(fourth.hp,1000);
+  assert.equal(first.hp,0);assert.equal(1000-second.hp,18);assert.equal(1000-third.hp,15);assert.equal(fourth.hp,1000);
   assert.equal(g.pbul.length,0);
 });
 
 test('drenagem cura apenas o dano efetivo, sem cura depois da morte',()=>{
   const {game:g}=boot();begin(g);g.run.pl.hp=20;g.run.st.crit=0;
-  g.hitEnemy(target(g,100,0,1),1000,{canCrit:false});assert.ok(Math.abs(g.run.pl.hp-20.04)<1e-9);
+  g.hitEnemy(target(g,100,0,1),1000,{canCrit:false});assert.ok(Math.abs(g.run.pl.hp-20.01)<1e-9);
   const e=target(g,100);g.run.over=true;g.run.pl.hp=0;g.hitEnemy(e,1000);
   assert.equal(g.run.pl.hp,0);assert.equal(e.hp,1000);
 });
@@ -314,7 +315,7 @@ test('orbes sombrios têm orçamento de percurso mesmo quando perseguem',()=>{
 test('Salto Sombrio não causa dano duplo no mesmo alvo',()=>{
   const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.S.aim='manual';g.run.st.crit=0;
   g.mouse.x=0;g.mouse.y=0;g.cam.x=0;g.cam.y=0;
-  const e=target(g,40);g.useSpecial();assert.equal(1000-e.hp,24);assert.equal(g.run.sp,8);
+  const e=target(g,40);g.useSpecial();assert.equal(1000-e.hp,13);assert.equal(g.run.sp,8);
 });
 
 test('mira automática não gasta o ataque em alvos fora do alcance',()=>{
@@ -633,7 +634,7 @@ test('XP evolui mais devagar: requisitos maiores e drops dracônicos reduzidos',
   const {game:g}=boot();begin(g,'fogo');let previous=0;
   for(let l=1;l<=150;l++){const old=6+l*5+Math.floor(l*l*.25),now=g.xpNeed(l);assert.ok(now>old);assert.ok(now>previous);previous=now;}
   assert.equal(g.run.need,14);const e=dragonFoe(g,'catador',100);g.hitEnemy(e,100000,{canCrit:false});assert.equal(g.gems[0].v,.85);
-  assert.equal(g.CH.fogo.hp,90);assert.equal(g.CH.fogo.dmg,13);assert.equal(g.CH.fogo.spd,225);
+  assert.equal(g.CH.fogo.hp,85);assert.equal(g.CH.fogo.dmg,8);assert.equal(g.CH.fogo.spd,225);
 });
 
 test('sprites da floresta têm movimento, preparação, golpe e recuperação distintos',()=>{
@@ -644,4 +645,95 @@ test('sprites da floresta têm movimento, preparação, golpe e recuperação di
     const c=g.monSprite(type,1,0);assert.equal(c.width,type==='colosso'?72:40);assert.equal(c,g.monSprite(type,1,0));
   }
   assert.equal(new Set(all).size,4);
+});
+
+test('nenhum personagem pode obter uma cópia de si pelas cartas ou por chamada direta',()=>{
+  const {game:g}=boot();
+  for(const type of Object.keys(g.CH)){
+    g.P.chars[type]=1;begin(g,type);
+    for(let i=0;i<60;i++)assert.ok(g.makeCards().every(c=>c.k!=='ally'||c.t!==type));
+    assert.equal(g.applyCard({k:'ally',t:type}),false);assert.equal(g.run.allies.length,0);
+    g.run.pend=1;g.showLevelUp();g.cards.length=0;g.cards.push({k:'ally',t:type});g.ACT.card(button(0));
+    assert.equal(g.run.pend,1);assert.equal(g.run.allies.length,0);g.ACT.resume();
+  }
+});
+
+test('aliados iniciais salvos são únicos e filtrados antes de ocupar vagas',()=>{
+  const {game:g,node,store}=boot({P:{seen:1,char:'fogo',coll:{planta:3,fogo:2,agua:1},start:['planta','planta','agua'],up:{slot:1}}});
+  begin(g,'planta');assert.equal(g.run.allies.length,1);assert.equal(g.run.allies[0].type,'agua');
+  assert.equal(g.P.coll.planta,3);assert.equal(g.P.coll.fogo,2);
+  g.ACT.team();assert.match(node('#ui').innerHTML,/<button[^>]*data-a="load" data-i="planta"[^>]*disabled/);
+  g.ACT.load(button('planta'));assert.ok(!g.P.start.includes('planta'));
+  const saved=JSON.parse(store.get('nevoa-selvagem-v3'));assert.ok(!saved.P.start.includes('planta'));
+  g.ACT.load(button('fogo'));assert.ok(g.P.start.includes('fogo'));
+});
+
+test('dano de aliados não ativa drenagem, incluindo projéteis, poças e correntes',()=>{
+  for(const hero of ['planta','sombra'])for(const ally of ['fogo','agua','planta','eletrico','pedra','sombra','normal']){
+    if(hero===ally)continue;const {game:g}=boot(undefined,()=>.5);g.P.chars[hero]=1;begin(g,hero);g.run.st.crit=0;g.run.pl.hp=20;
+    const e=target(g,ally==='fogo'?30:100,0,100000),a=g.mkAlly(ally,1);a.x=0;a.y=0;a.cd=0;g.run.allies.push(a);
+    g.updAllies(.01);g.updProj(1);g.updLobs(2);g.updPools(2);
+    assert.ok(e.hp<100000,hero+' / '+ally+' deve atingir o alvo');assert.equal(g.run.pl.hp,20,hero+' não drena dano de '+ally);
+  }
+});
+
+test('Sakura perde a regeneração passiva e a drenagem tem orçamento por segundo',()=>{
+  const {game:g}=boot();begin(g,'planta');g.run.pl.hp=20;g.run.st.crit=0;g.run.pl.inv=100;
+  const e=target(g,100,0,100000);g.hitEnemy(e,1000,{canCrit:false});assert.ok(Math.abs(g.run.pl.hp-20.85)<1e-9);
+  for(let i=0;i<30;i++)g.hitEnemy(e,1000,{canCrit:false});assert.ok(Math.abs(g.run.pl.hp-20.85)<1e-9);
+  g.update(.5);assert.ok(Math.abs(g.run.pl.hp-20.85)<1e-9);g.hitEnemy(e,1000,{canCrit:false});assert.ok(Math.abs(g.run.pl.hp-21.275)<1e-9);
+  assert.equal(g.run.st.regen,0);assert.equal(g.run.st.life,.01);
+});
+
+test('Flor de Sakura só cura ao acertar, no máximo 5%, com recarga de 20 s',()=>{
+  const {game:g}=boot();begin(g,'planta');g.run.st.life=0;g.run.st.crit=0;g.run.pl.hp=20;
+  g.useSpecial();assert.equal(g.run.pl.hp,20);assert.equal(g.run.sp,20);
+  const e=target(g,100);g.run.sp=0;g.useSpecial();assert.ok(Math.abs(g.run.pl.hp-22.125)<1e-9);assert.equal(e.root,.8);
+  g.enemies.length=0;for(let i=0;i<30;i++)target(g,100,i);g.run.sp=0;g.run.pl.hp=20;g.useSpecial();assert.equal(g.run.pl.hp,24.25);
+});
+
+test('Sakura aliada não cura sem combate e tem recarga própria mesmo com cadência máxima',()=>{
+  const {game:g}=boot(undefined,()=>.5);begin(g,'fogo');g.run.pl.hp=20;g.run.st.cdm=.1;
+  const a=g.mkAlly('planta',5);a.x=-60;a.y=-30;a.cd=0;g.run.allies.push(a);
+  for(let i=0;i<600;i++){g.updAllies(.05);g.updHeal(.05);}
+  assert.equal(g.run.pl.hp,20);assert.ok(!g.run.harr?.length);
+  target(g,100,0,100000);a.cd=0;g.updAllies(.05);assert.equal(g.run.harr.length,1);assert.equal(a.healCd,10);
+  for(let i=0;i<12;i++)g.updHeal(.02);assert.ok(Math.abs(g.run.pl.hp-22.295)<1e-9);
+  for(let i=0;i<150;i++){g.updAllies(.05);g.updHeal(.05);}
+  assert.ok(Math.abs(g.run.pl.hp-22.295)<1e-9);assert.ok(a.healCd>2);
+});
+
+test('ataques básicos iniciais sem crítico precisam de mais de um acerto contra comuns',()=>{
+  for(const hero of ['fogo','agua','planta','eletrico','pedra','sombra'])for(const foe of ['esporo','catador','besouro']){
+    const {game:g}=boot(undefined,()=>.5);
+    g.P.chars[hero]=1;begin(g,hero);g.run.st.crit=0;const e=g.mkEnemy(foe,1,60,0,{});e.spd=0;e.cd=10;g.enemies.push(e);
+    g.basicAttack(0,60,0);g.updProj(.6);g.updLobs(2);g.updPools(2);
+    if(hero==='fogo')enemySteps(g,61);
+    assert.ok(e.hp>0,hero+' não elimina '+foe+' com um ataque inicial');assert.ok(e.hp<e.maxhp,hero+' atinge '+foe);
+  }
+});
+
+test('reforços de chefe surgem devagar, priorizam distância e têm teto de oito',()=>{
+  const {game:g}=boot(undefined,()=>.1);
+  for(const world of ['forest','dragon']){
+    begin(g,'fogo');g.run.world=world;g.run.lv=10;g.spawnBoss();const boss=g.enemies[0];
+    g.spawnTick(20);assert.equal(g.enemies.length,1);boss.spawn=0;
+    g.spawnTick(1);assert.equal(g.enemies.length,1);g.spawnTick(.7);assert.equal(g.enemies.length,2);
+    const helper=g.enemies[1];assert.equal(helper.type,world==='forest'?'aranha':'asabrasa');assert.equal(helper.spawn,.8);assert.equal(helper.elite,false);
+    g.spawnRing(100);assert.equal(g.enemies.length,2);
+    for(let i=0;i<600;i++)g.spawnTick(.05);
+    const helpers=g.enemies.filter(e=>!e.boss);assert.equal(helpers.length,8);assert.ok(helpers.every(e=>e.type===helper.type));
+    g.enemies.splice(1,1);g.spawnTick(.1);assert.equal(g.enemies.filter(e=>!e.boss).length,7);
+    boss.spawn=0;g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.gems.length,12);
+    g.spawnTick(100);assert.equal(g.enemies.length,0);assert.ok(g.run.portal);assert.equal(g.run.bossSpawnAcc,0);
+  }
+});
+
+test('cadência durante o chefe é menor que a horda normal e respeita o mundo atual',()=>{
+  const {game:g}=boot(undefined,()=>.1);begin(g,'fogo');g.run.lv=10;
+  for(let i=0;i<200;i++)g.spawnTick(.1);const normal=g.enemies.length;
+  g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;
+  for(let i=0;i<200;i++)g.spawnTick(.1);const helpers=g.enemies.filter(e=>!e.boss);
+  assert.ok(normal>=50);assert.ok(helpers.length>0&&helpers.length<normal*.3);
+  assert.ok(helpers.every(e=>g.FOREST_FOES[e.type]));
 });
