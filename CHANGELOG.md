@@ -1,5 +1,17 @@
 # Histórico
 
+## 0.7.0-beta — balanceamento, aliados e reforços — 2026-11-03
+
+- Bloqueado aliado igual ao personagem em uso nas cartas, no início da jornada, nas preferências salvas e na Equipe. Configurações antigas são deduplicadas/filtradas sem apagar coleção ou desbloqueios; carta inválida não consome escolha.
+- Corrigida drenagem acionada pelo dano de aliados. Origem do dano preservada em golpes, correntes, projéteis, pedras e poças; somente ataques próprios podem drenar.
+- Nerf dos seis personagens: danos base 8/7/7/8/9/6; intervalos 0,48/1,05/0,70/0,80/1,20/0,80 s; vidas 85/100/85/85/135/80 (Salamandra/Frood/Sakura/Capricorn/Pedrino/Sombrinha). Crescimento do ataque básico reduzido de +25% para +15% por nível.
+- Sakura: sem regeneração natural, drenagem 4% → 1%, flecha ×1,35 → ×1,15. Flor: recarga 14 → 20 s, dano ×2 → ×1,4, raiz 1,4 → 0,8 s e cura apenas ao acertar, de 2,5% a 5% em vez de 6% a 16%.
+- Sombrinha drena 2% (antes 4%) e tem crítico natural de 10% (antes 15%). Drenagem usa reserva máxima de 1% da vida, reposta a 1%/s, compartilhada entre os acertos e sem crédito pelo dano excedente.
+- Sakura aliada: removida a repetição de sorteios de cura a cada quadro sem inimigos. Só cura em combate, abaixo de 80% de vida, com recarga própria de 10 s e quantidade de 1,5%–2,7% conforme nível (antes 5%–9%). Cadência não reduz essa recarga.
+- Aliados: base de dano 12 → 6 e crescimento por nível 35% → 25%; multiplicadores/cadências reduzidos. Queimadura passa a 12% do golpe por segundo, Fúria a intervalo ×0,7, peixes a multiplicador ×1,35, pedrada a ×1,1 e Tempestade a pulsos ×0,15/descarga ×1,5. Armadura de Pedrino 25% → 18%; regeneração de Frood 1 → 0,35/s.
+- Reforços durante chefes: 20% da cadência normal, teto de 0,8 inimigo/s e oito simultâneos. Prioridade de 80% para Aranha Sombria/Asabrasa, conforme mundo; sem elites, com aviso de surgimento de 0,8 s. Mantida suspensão dos anéis de horda e da entrada do chefe. Vitória limpa reforços/perigos e mantém os portais.
+- 72 testes aprovados, incluindo bloqueio de cópias, curas, dano de aliados, ataques iniciais contra comuns e reforços dos dois chefes. Prévia com reforços adicionada aos cenários existentes. Mapas, ciclo de mundos, atributos dos inimigos/chefes e progressão de XP preservados.
+
 ## 0.7.0-beta — revisão dos dois mundos — 2026-11-03
 
 - Progressão substituída por Floresta Sombria → Bioma Dracônico → Floresta Sombria, em ciclos. Colosso da Casca é o primeiro chefe; Cratos é o segundo. Removidos do jogo os antigos chefes de pedra/névoa, seus padrões exclusivos e o mapa inicial de quatro biomas.

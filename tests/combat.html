@@ -9,6 +9,7 @@
 <button data-scene="normal">Ataque normal</button><button data-scene="charge">Carga do especial</button><button data-scene="special">Especial completo</button><button data-scene="fury">Três golpes na Fúria</button>
 <button data-scene="boss1">Cratos · Fase 1</button><button data-scene="boss2">Cratos · Fase 2</button><button data-scene="boss3">Cratos · Fase 3</button><button data-scene="defeat">Derrota</button>
 <button data-scene="forest">Floresta Sombria</button><button data-scene="forestwarnings">Avisos da floresta</button><button data-scene="colossus">Colosso · golpe de raiz</button><button data-scene="portal">Portal após vitória</button><button data-scene="cycle">Ciclo completo</button>
+<button data-scene="forestadds">Colosso + reforços</button><button data-scene="dragonadds">Cratos + reforços</button>
 <button data-scene="draconic">Bioma dracônico</button><button data-scene="warnings">Avisos dos quatro inimigos</button>
 <p id="status">Carregando…</p><iframe id="game" title="Cenário de combate isolado"></iframe>
 <script>
@@ -30,7 +31,11 @@
         const es=[[110,0],[190,45],[260,85],[340,-80],[-170,40]].map(([x,y])=>{
           const e=g.mkEnemy('catador',1,x,y,{});e.hp=e.maxhp=1000;e.spd=0;g.enemies.push(e);return e;
         });
-        if(['forest','forestwarnings','colossus','portal','cycle'].includes(scene)){
+        if(scene==='forestadds'||scene==='dragonadds'){
+          g.enemies.length=0;g.run.world=scene==='forestadds'?'forest':'dragon';g.run.visit=scene==='forestadds'?0:1;g.run.lv=10;g.run.pl.inv=100;
+          g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=220;boss.y=40;
+          for(let i=0;i<400;i++)g.update(.05);
+        }else if(['forest','forestwarnings','colossus','portal','cycle'].includes(scene)){
           g.enemies.length=0;g.run.lv=7;
           if(scene==='forest'||scene==='forestwarnings'){
             const warning=scene==='forestwarnings';
@@ -62,7 +67,7 @@
         else if(scene==='normal'){g.basicAttack(0,240,0);if(type==='planta'||type==='sombra')g.updProj(.16);}
         else{g.useSpecial();if(type==='eletrico')g.chargeTick(scene==='charge'?.65:1.1);if(scene==='fury'&&type==='fogo')for(let i=0;i<3;i++)g.basicAttack(0,240,0);}
         g.render();g.updHud();
-        status.textContent=['forest','forestwarnings','colossus','portal','cycle'].includes(scene)?g.WORLDS[g.run.world].n+' · passagem '+(g.run.visit+1)+' · '+scene:scene==='draconic'||scene==='warnings'?'Bioma Dracônico · Catador de Ossos, Asabrasa, Lagarto de Cinza e Estufado da Podridão':scene.startsWith('boss')?'Cratos · Fase '+scene.slice(-1)+' · avisos de ataque e ambientação':scene==='defeat'?'Derrota · tempo final preservado em 2:05':'Quadro '+scene+' · '+document.querySelector('#hero').selectedOptions[0].text+' · dano por alvo: '+es.map(e=>Math.round(1000-e.hp)).join(' / ');
+        status.textContent=scene.endsWith('adds')?g.WORLDS[g.run.world].n+' · chefe com '+g.enemies.filter(e=>!e.boss).length+' reforços (máximo 8)': ['forest','forestwarnings','colossus','portal','cycle'].includes(scene)?g.WORLDS[g.run.world].n+' · passagem '+(g.run.visit+1)+' · '+scene:scene==='draconic'||scene==='warnings'?'Bioma Dracônico · Catador de Ossos, Asabrasa, Lagarto de Cinza e Estufado da Podridão':scene.startsWith('boss')?'Cratos · Fase '+scene.slice(-1)+' · avisos de ataque e ambientação':scene==='defeat'?'Derrota · tempo final preservado em 2:05':'Quadro '+scene+' · '+document.querySelector('#hero').selectedOptions[0].text+' · dano por alvo: '+es.map(e=>Math.round(1000-e.hp)).join(' / ');
       }catch(e){status.textContent='ERRO: '+e.message;console.error(e);}
     }
     document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>show(b.dataset.scene));
