@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.8.2
+# Balanceamento — beta 0.8.3
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -27,7 +27,7 @@ Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador est
 
 Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
-## Três mundos e ciclos — mantidos na beta 0.8.2
+## Três mundos e ciclos — mantidos na beta 0.8.3
 
 Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → Pântano de Frood / Serpente Branca → portal → floresta**. A primeira área permanece a floresta, conforme confirmação do autor. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. Cada chefe surge aos **240 segundos de combate da etapa**, independentemente do nível/XP. Antes, o gatilho era ganhar dez níveis e não havia tempo fixo. Pausas e escolhas suspendem o cronômetro; derrota o congela. A abertura do portal impede um segundo chefe na área vencida; somente entrar no portal reinicia `worldTime` em zero.
 
@@ -103,15 +103,15 @@ As recargas são separadas e exibidas nos dois botões. A preparação impede in
 
 **Granito não tem dash nem invulnerabilidade de esquiva.** `doDash` o recusa; Shift e o botão secundário acionam Pedrada. Os demais personagens mantêm a esquiva e seus controles. Vida 135, dano 9, velocidade 172, Carapaça de 18%, custo 150, ID `pedra` e progresso salvo permanecem iguais. Granito aliado conserva seus valores/rotina de Pedrada automática e recebe os mesmos sprites originais.
 
-A arte foi importada diretamente de `assets/granito/reference.png`, sem redesenhar, reduzir resolução ou trocar paleta. São **27 recortes**, incluindo 22 poses de personagem e cinco efeitos. `assets/granito/frames.json` guarda os retângulos e âncoras; `scripts/build-granito.cjs` copia os pixels para o HTML. Apenas o fundo quase preto conectado às bordas fica transparente; pretos internos de olhos/sulcos e todos os RGB de personagem/efeitos são preservados. As três evoluções usam os mesmos pixels, mantendo os respectivos atributos da evolução. Não há novos brilhos, contornos ou deformações no personagem.
+A arte foi importada diretamente de `assets/granito/reference.png`, sem redesenhar, reduzir resolução ou trocar paleta. São **27 recortes**, incluindo 22 poses de personagem e cinco efeitos. `assets/granito/frames.json` guarda os retângulos e âncoras; `scripts/build-granito.cjs` copia os pixels para o HTML. O fundo quase preto conectado às bordas fica transparente; máscaras internas também protegem as sombras abertas do torso/membros, corrigindo os buracos na caminhada. Pretos de olhos/sulcos e todos os RGB retidos de personagem/efeitos são preservados. A escala do asset é 0,16 (antes 0,23); o principal, de resolução dupla, usa 0,08. Menu, jogador e aliado aplicam essa normalização uma única vez, com linha dos pés estável. A caminhada normal alterna as poses de passos; corrida só acima de 120% da velocidade base. As três evoluções usam os mesmos pixels, mantendo os respectivos atributos da evolução. Não há novos brilhos, contornos ou deformações no personagem.
 
 `node scripts/build-granito.cjs --check` confere os dados embutidos. O PNG original é preservado byte a byte, com SHA-256 `4d8a6fb61786d344368f64bb395dc88b59b96a745460c44285aa21647ee3b705`. O jogo continua em um HTML independente, sem requisição ao arquivo externo durante a partida. A prancha de desenvolvimento em `tests/granito.html` mostra os mesmos recortes; nunca é usada inteira como sprite.
 
-Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Não há mudanças de mapa, inimigos, chefes, drops ou progressão nesta revisão.
+Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Não há mudanças de atributos, ataques, mapas, drops ou progressão nesta revisão. A revisão visual da Serpente usa 11 recortes originais em `assets/serpente/reference.png`, com metadados em `frames.json` e importador `scripts/build-serpente.cjs`. O desenho original aponta para a esquerda; o espelhamento acompanha a direção do combate. A boca do quadro de mordida fornece tanto a origem do aviso quanto a trajetória de acerto. Corpo, dano, vida e temporizadores do chefe continuam iguais. Fundo e legenda são descartados; olhos, escamas, musgo e contornos mantêm seus RGB. A prancha em `tests/serpente.html` permite conferir os quadros individuais.
 
 ## Validação
 
-116 testes cobrem fidelidade de todos os recortes ao PNG original, preservação dos pretos internos, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 34 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
+120 testes cobrem fidelidade dos recortes aos dois PNGs originais, preservação dos pretos internos e das sombras abertas, tamanho de Granito no menu/jogador/aliado, quadros e espelhamento da Serpente, origem da mordida, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 38 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
 
 ## Histórico: integração da versão 9 na beta 0.6.4
 

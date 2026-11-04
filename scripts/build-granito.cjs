@@ -1,7 +1,8 @@
 // Importação determinística dos pixels fornecidos pelo autor, sem redesenhar,
 // reduzir resolução, trocar paleta ou gerar variantes. Só o fundo quase preto
-// conectado às bordas fica transparente. Os pretos internos (olhos, sulcos,
-// sombras) e todos os demais pixels conservam o RGB exato do PNG original.
+// conectado às bordas fica transparente. Máscaras internas protegem as sombras
+// do corpo mesmo quando o preto encosta no fundo entre os braços e as pernas.
+// Todos os pixels retidos conservam o RGB exato do PNG original.
 const fs=require('node:fs');
 const path=require('node:path');
 const zlib=require('node:zlib');
@@ -34,17 +35,23 @@ function readSource(){
   const bytes=fs.readFileSync(path.join(root,'assets/granito',manifest.source));
   return {...readPng(bytes),sha256:crypto.createHash('sha256').update(bytes).digest('hex')};
 }
-function crop(source,rect){
+function crop(source,rect,options={}){
   const [x,y,w,h,ax,fy,bw]=rect,out=Buffer.alloc(w*h*4),outside=new Uint8Array(w*h),queue=new Int32Array(w*h);let head=0,tail=0;
   if(x<0||y<0||x+w>source.width||y+h>source.height)throw new Error('Quadro fora da imagem');
-  const visit=(X,Y)=>{const index=Y*w+X;if(outside[index])return;const at=((y+Y)*source.width+x+X)*4;
-    if(Math.max(source.data[at],source.data[at+1],source.data[at+2])<=manifest.backgroundMax){outside[index]=1;queue[tail++]=index;}
+  const inside=(X,Y,poly)=>{let hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const [a,b]=poly[i],[c,d]=poly[j];if((b>Y)!==(d>Y)&&X<(c-a)*(Y-b)/(d-b)+a)hit=!hit;
+  }return hit;};
+  const solid=options.solid||[],background=options.background||((r,g,b)=>Math.max(r,g,b)<=manifest.backgroundMax);
+  const visit=(X,Y)=>{const index=Y*w+X;if(outside[index]||solid.some(poly=>inside(X+.5,Y+.5,poly)))return;const at=((y+Y)*source.width+x+X)*4;
+    if(background(source.data[at],source.data[at+1],source.data[at+2])){outside[index]=1;queue[tail++]=index;}
   };
   for(let X=0;X<w;X++){visit(X,0);visit(X,h-1);}for(let Y=1;Y<h-1;Y++){visit(0,Y);visit(w-1,Y);}
+  for(const [X,Y]of options.holes||[])visit(X,Y);
   while(head<tail){const index=queue[head++],X=index%w,Y=Math.floor(index/w);if(X>0)visit(X-1,Y);if(X+1<w)visit(X+1,Y);if(Y>0)visit(X,Y-1);if(Y+1<h)visit(X,Y+1);}
   for(let Y=0;Y<h;Y++)for(let X=0;X<w;X++){const s=((y+Y)*source.width+x+X)*4,d=(Y*w+X)*4;
     if(!outside[Y*w+X])source.data.copy(out,d,s,s+4);
   }
+  for(const [X,Y,W,H]of options.exclude||[])for(let row=Y;row<Y+H;row++)out.fill(0,(row*w+X)*4,(row*w+X+W)*4);
   return {w,h,ax,fy,bw,data:out};
 }
 function pack(frame){
@@ -60,7 +67,7 @@ function unpack(frame){
   if(at!==rgba.length)throw new Error('Quadro incompleto');return rgba;
 }
 function build(){
-  const source=readSource(),frames={};for(const [id,rect]of Object.entries(manifest.frames))frames[id]=pack(crop(source,rect));
+  const source=readSource(),frames={};for(const [id,rect]of Object.entries(manifest.frames))frames[id]={...pack(crop(source,rect,{solid:manifest.opaque[id]})),unitScale:id==='principal'?manifest.unitScale/2:manifest.unitScale};
   return {sourceSha256:source.sha256,backgroundMax:manifest.backgroundMax,frames};
 }
 if(require.main===module){
