@@ -2,7 +2,7 @@
 <html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BaubLike · Verificação de combate</title>
 <style>body{margin:20px;background:#0b1411;color:#eee;font:15px system-ui}h1{font-size:22px;color:#f2b84b}button,select{padding:9px;margin:4px;background:#243b30;color:#fff;border:1px solid #61765e;border-radius:4px}iframe{display:block;width:min(960px,100%);height:600px;border:1px solid #61765e;margin-top:12px}p{color:#abbcaf}#status{color:#b6e4c4}</style>
-<h1>BaubLike · Beta 0.7.0 · Combate</h1>
+<h1>BaubLike · Beta 0.8.0 · Combate</h1>
 <p>Cenários reproduzíveis usando o código real, com progresso e áudio isolados. O jogo fica parado no quadro escolhido.</p>
 <label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Pedrino</option><option value="sombra">Sombrinha</option></select></label>
 <label>Evolução <select id="stage"><option value="1">Inicial</option><option value="2">Evolução 2</option><option value="3">Evolução 3</option></select></label>
@@ -10,6 +10,7 @@
 <button data-scene="boss1">Cratos · Fase 1</button><button data-scene="boss2">Cratos · Fase 2</button><button data-scene="boss3">Cratos · Fase 3</button><button data-scene="defeat">Derrota</button>
 <button data-scene="forest">Floresta Sombria</button><button data-scene="forestwarnings">Avisos da floresta</button><button data-scene="colossus">Colosso · golpe de raiz</button><button data-scene="portal">Portal após vitória</button><button data-scene="cycle">Ciclo completo</button>
 <button data-scene="forestadds">Colosso + reforços</button><button data-scene="dragonadds">Cratos + reforços</button>
+<button data-scene="swamp">Pântano de Frood</button><button data-scene="swampwarnings">Avisos do pântano</button><button data-scene="split">Bocarra · divisão</button><button data-scene="snakebite">Serpente · bote</button><button data-scene="snaketail">Serpente · cauda</button><button data-scene="swampadds">Serpente + reforços</button>
 <button data-scene="draconic">Bioma dracônico</button><button data-scene="warnings">Avisos dos quatro inimigos</button>
 <p id="status">Carregando…</p><iframe id="game" title="Cenário de combate isolado"></iframe>
 <script>
@@ -31,10 +32,21 @@
         const es=[[110,0],[190,45],[260,85],[340,-80],[-170,40]].map(([x,y])=>{
           const e=g.mkEnemy('catador',1,x,y,{});e.hp=e.maxhp=1000;e.spd=0;g.enemies.push(e);return e;
         });
-        if(scene==='forestadds'||scene==='dragonadds'){
-          g.enemies.length=0;g.run.world=scene==='forestadds'?'forest':'dragon';g.run.visit=scene==='forestadds'?0:1;g.run.lv=10;g.run.pl.inv=100;
+        if(scene==='forestadds'||scene==='dragonadds'||scene==='swampadds'){
+          g.enemies.length=0;g.run.world={forestadds:'forest',dragonadds:'dragon',swampadds:'swamp'}[scene];g.run.visit={forestadds:0,dragonadds:1,swampadds:2}[scene];g.run.lv=10;g.run.pl.inv=100;
           g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=220;boss.y=40;
           for(let i=0;i<400;i++)g.update(.05);
+        }else if(['swamp','swampwarnings','split','snakebite','snaketail'].includes(scene)){
+          g.run.world='swamp';g.run.visit=2;g.run.lv=21;g.run.worldStartLv=21;g.run.nextBoss=30;g.enemies.length=0;
+          if(scene.startsWith('snake')){
+            g.run.lv=30;g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=190;boss.y=100;boss.pt=0;boss.pi=scene==='snaketail'?1:0;
+            for(let i=0;i<7;i++)g.updEnemies(.05);
+          }else{
+            const poses=scene==='swampwarnings'?[[60,20],[-115,-70],[50,60]]:[[220,-100],[-210,-100],[180,130]];
+            ['bocarra','mosquito','caranguejo'].forEach((t,i)=>{const e=g.mkEnemy(t,21,...poses[i],{});e.cd=scene==='swampwarnings'?0:2;g.enemies.push(e);});
+            if(scene==='swampwarnings')for(let i=0;i<4;i++)g.updEnemies(.05);
+            if(scene==='split'){const root=g.enemies[0];g.killEnemy(root);for(const child of [...g.enemies].filter(e=>e.type==='bocarra'))g.killEnemy(child);}
+          }
         }else if(['forest','forestwarnings','colossus','portal','cycle'].includes(scene)){
           g.enemies.length=0;g.run.lv=7;
           if(scene==='forest'||scene==='forestwarnings'){
@@ -49,6 +61,8 @@
             else{g.hitEnemy(boss,100000,{canCrit:false});if(scene==='cycle'){
               g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);
               g.run.lv=20;g.spawnBoss();const cr=g.enemies[0];cr.spawn=0;cr.x=200;cr.y=30;g.hitEnemy(cr,100000,{canCrit:false});
+              g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);
+              g.run.lv=30;g.spawnBoss();const snake=g.enemies[0];snake.spawn=0;snake.x=200;snake.y=30;g.hitEnemy(snake,100000,{canCrit:false});
               g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);g.cam.x=g.run.pl.x-400;g.cam.y=g.run.pl.y-250;g.run.fade=0;
             }}
           }
@@ -67,7 +81,7 @@
         else if(scene==='normal'){g.basicAttack(0,240,0);if(type==='planta'||type==='sombra')g.updProj(.16);}
         else{g.useSpecial();if(type==='eletrico')g.chargeTick(scene==='charge'?.65:1.1);if(scene==='fury'&&type==='fogo')for(let i=0;i<3;i++)g.basicAttack(0,240,0);}
         g.render();g.updHud();
-        status.textContent=scene.endsWith('adds')?g.WORLDS[g.run.world].n+' · chefe com '+g.enemies.filter(e=>!e.boss).length+' reforços (máximo 8)': ['forest','forestwarnings','colossus','portal','cycle'].includes(scene)?g.WORLDS[g.run.world].n+' · passagem '+(g.run.visit+1)+' · '+scene:scene==='draconic'||scene==='warnings'?'Bioma Dracônico · Catador de Ossos, Asabrasa, Lagarto de Cinza e Estufado da Podridão':scene.startsWith('boss')?'Cratos · Fase '+scene.slice(-1)+' · avisos de ataque e ambientação':scene==='defeat'?'Derrota · tempo final preservado em 2:05':'Quadro '+scene+' · '+document.querySelector('#hero').selectedOptions[0].text+' · dano por alvo: '+es.map(e=>Math.round(1000-e.hp)).join(' / ');
+        status.textContent=['swamp','swampwarnings','split','snakebite','snaketail'].includes(scene)?'Pântano de Frood · '+scene+' · Bocarra, Mosquito, Caranguejo e Serpente':scene.endsWith('adds')?g.WORLDS[g.run.world].n+' · chefe com '+g.enemies.filter(e=>!e.boss).length+' reforços (máximo 8)': ['forest','forestwarnings','colossus','portal','cycle'].includes(scene)?g.WORLDS[g.run.world].n+' · passagem '+(g.run.visit+1)+' · '+scene:scene==='draconic'||scene==='warnings'?'Bioma Dracônico · Catador de Ossos, Asabrasa, Lagarto de Cinza e Estufado da Podridão':scene.startsWith('boss')?'Cratos · Fase '+scene.slice(-1)+' · avisos de ataque e ambientação':scene==='defeat'?'Derrota · tempo final preservado em 2:05':'Quadro '+scene+' · '+document.querySelector('#hero').selectedOptions[0].text+' · dano por alvo: '+es.map(e=>Math.round(1000-e.hp)).join(' / ');
       }catch(e){status.textContent='ERRO: '+e.message;console.error(e);}
     }
     document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>show(b.dataset.scene));

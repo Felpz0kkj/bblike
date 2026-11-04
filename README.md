@@ -1,4 +1,4 @@
-# BaubLike — Beta 0.7.0
+# BaubLike — Beta 0.8.0
 
 Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Pedrino e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
@@ -10,17 +10,21 @@ Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WA
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
 
-## Novidades da beta 0.7.0
+## Novidades da beta 0.8.0
 
-A partida começa na **Floresta Sombria**, com clareiras, caminhos, árvores retorcidas e o **Colosso da Casca**. Após a vitória, um portal no chão leva ao **Bioma Dracônico**, onde o chefe é **Cratos, o dragão**. O portal de Cratos retorna à floresta, repetindo somente esses dois mundos.
+A ordem agora é **Floresta Sombria / Colosso da Casca → Bioma Dracônico / Cratos → Pântano de Frood / Serpente Branca → Floresta Sombria**. A floresta permanece como primeira área. Cada chefe derrotado abre um portal no chão; o jogador precisa entrar nele para avançar.
 
 A troca depende de contato com o portal e conserva personagem, nível, XP, melhorias, aliados, recargas e vida atual, sem cura automática. Baús e cristais ainda não recolhidos continuam acessíveis. Os chefes surgem nos próximos marcos de dez níveis; a etapa fica livre de hordas após a vitória, até o jogador escolher entrar no portal.
 
 A floresta tem **Trio de Esporos** (grupos de três, nuvem venenosa curta), **Besouro de Casca** (investida anunciada e recuperação vulnerável) e **Aranha Sombria** (espinho com preparação). O Colosso ergue o braço e golpeia uma área de raiz sinalizada por um segundo. No mundo do dragão, **Catador de Ossos**, **Asabrasa**, **Lagarto de Cinza** e **Estufado da Podridão** receberam paletas e escala revisadas, mantendo seus ataques próprios. Cratos mantém mordidas, cauda e sopro de podridão.
 
-A dificuldade cresce moderadamente por passagem; o limite é **160 inimigos simultâneos**. XP por nível exige aproximadamente 25%–40% mais pontos; os drops dracônicos são 15% menores. Controles e estrutura da interface foram preservados. O fundo inicial usa a nova floresta procedural, sem carregar o mapa ou os chefes antigos. Mantida a identificação **beta 0.7.0** nesta revisão.
+O **Pântano de Frood** tem lama, poças rasas, juncos, raízes, troncos baixos e plantas aquáticas, com terreno livre e sem árvores densas ou novos obstáculos. **Bocarra do Brejo** morde após um aviso e se divide uma única vez por morte: tamanho 3 → duas tamanho 2 → quatro tamanho 1, menores e mais rápidas. **Mosquito do Brejo** prepara uma investida curta com a probóscide; a picada tem 20% de chance de causar sangramento leve por 2 s, sem acumular ou renovar aplicações ativas. **Caranguejo de Lodo** avança de lado, anuncia a pinçada e tem casco frontal resistente, com recuperação vulnerável.
 
-A revisão de balanceamento reduz vida/dano e cadência dos seis personagens e enfraquece aliados e a progressão do ataque básico. Um aliado igual ao herói não pode ser escolhido, inclusive por configurações salvas. Sakura perdeu a regeneração natural, tem drenagem de 1% apenas do próprio dano e especial que cura no máximo 5%, somente ao acertar, com recarga de 20 s. Sakura aliada tem cura pequena em combate com recarga própria de 10 s. Durante os chefes surgem reforços a 20% da cadência normal, até oito simultâneos, priorizando Aranhas e Asabrasas. A vitória limpa os reforços e abre o portal.
+A **Serpente Branca** alterna bote com mordida e varrida ampla de cauda, com áreas de aviso claras. Abaixo da metade da vida, reduz moderadamente a espera entre ataques. O cenário do pântano também aparece durante a transição, usando o mesmo fundo procedural do combate.
+
+A dificuldade cresce moderadamente por passagem; o limite continua em **160 inimigos simultâneos**, reservando as vagas necessárias aos descendentes das Bocarras. Em relação à revisão anterior, inimigos comuns têm **12% mais vida e 8% mais dano**, e todos os drops de XP foram reduzidos em **20%**. Requisitos de nível, controles, personagens e melhorias foram preservados.
+
+Mantidos os nerfs anteriores dos seis personagens e o bloqueio de aliado igual ao herói, inclusive por configurações salvas. Sakura continua sem regeneração natural, com drenagem de 1% apenas do próprio dano e especial que cura no máximo 5%, somente ao acertar, com recarga de 20 s. Sakura aliada tem cura pequena em combate com recarga própria de 10 s. Durante os chefes surgem reforços a 20% da cadência normal, até oito vagas simultâneas, priorizando Aranhas, Asabrasas e Mosquitos conforme o mundo. A vitória limpa os reforços e abre o portal.
 
 
 ## Desenvolvimento
@@ -28,10 +32,10 @@ A revisão de balanceamento reduz vida/dano e cadência dos seis personagens e e
 Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
 
 - Fonte principal: `index.html`.
-- Versão: `VERSION` e constante VERSION no HTML.
+- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Novos conteúdos avançam a versão menor (esta revisão: 0.8.0); correções seguintes avançam o último número (0.8.1, 0.8.2…). Um teste verifica a consistência das identificações ativas.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
-- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (inclui os dois mundos, avisos, Colosso, portais e ciclo completo; progresso isolado).
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (23 cenários dos três mundos, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
 - Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
