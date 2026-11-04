@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.7.0
+# Balanceamento — beta 0.8.0
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -27,9 +27,9 @@ Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador est
 
 Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
-## Dois mundos e ciclos — revisão da beta 0.7.0
+## Três mundos e ciclos — beta 0.8.0
 
-Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → floresta**. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. O primeiro chefe surge no nível 10; ao entrar em outro mundo, o próximo marco é o múltiplo de dez seguinte ao nível atual. Níveis adicionais obtidos enquanto um portal está aberto não fazem surgir outro chefe no mundo vencido.
+Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → Pântano de Frood / Serpente Branca → portal → floresta**. A primeira área permanece a floresta, conforme confirmação do autor. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. O primeiro chefe surge no nível 10; ao entrar em outro mundo, o próximo marco é o múltiplo de dez seguinte ao nível atual. Níveis adicionais obtidos enquanto um portal está aberto não fazem surgir outro chefe no mundo vencido.
 
 Portal precisa de contato e 0,8 s de abertura. Não concede vida, XP ou melhorias; mantém recargas e aliados. Os perigos/projéteis são descartados, mas baús e cristais continuam acessíveis. Durante os chefes, a horda comum dá lugar a reforços limitados; depois da vitória, não surgem novos inimigos até a passagem.
 
@@ -43,19 +43,30 @@ Portal precisa de contato e 0,8 s de abertura. Não concede vida, XP ou melhoria
 | Lagarto de Cinza | 0,32 s | Bote até 96, velocidade 480, seguido de mordida | 0,28 s / 2 s |
 | Estufado da Podridão | 1,05 s | Explosão de raio 72, podridão 2 s; nuvem 0,4 s | Morre na explosão |
 | Colosso da Casca | 1 s | Raiz de raio 90 (105 abaixo de 33% de vida), alvo fixado na preparação | Recupera até 1,85 s desde o início; espera 1,65 s pelo próximo golpe |
+| Bocarra do Brejo | 0,32 s (tamanho 3), 0,26 s (menores) | Mordida de raio 28, sem dano de contato | 0,22 s / 0,85 s |
+| Mosquito do Brejo | 0,38 s em faixa | Probóscide em investida até 105, velocidade 430; sangramento eventual | 0,35 s / 1,7 s |
+| Caranguejo de Lodo | 0,60 s | Pinçada de raio 34, centro 35 à frente | 0,70 s vulnerável (+25%) / 1,8 s |
+| Serpente Branca · bote | 0,75 s em faixa | Mordida com avanço até 180, velocidade 520, largura sinalizada 56 | 0,55 s; espera 1,8 s (1,3 s abaixo de 50% de vida) |
+| Serpente Branca · cauda | 0,95 s | Varredura de raio 185, um acerto por ataque | Ataque 0,25 s + recuperação 0,60 s; mesma espera do bote |
 
-Vida dos chefes: `base × (1 + 0,20 × visit) × dificuldade`. Colosso: base 2.200; dragão: base 2.400. Sequência no Normal: **2.200 → 2.880 → 3.080 → 3.840**, continuando gradualmente. Colosso não usa os padrões dos chefes removidos. Cratos conserva mordidas, cauda e sopro, com avisos e pausas descritos no histórico abaixo.
+Vida dos chefes: `base × (1 + 0,20 × visit) × dificuldade`. Colosso: base 2.200; dragão: base 2.400; Serpente: base 2.500. Sequência no Normal: **2.200 → 2.880 → 3.500 → 3.520 → 4.320 → 5.000**, continuando gradualmente. Vida e ataques de Colosso e Cratos não mudaram nesta revisão. A Serpente alterna bote e cauda, com mira fixada na preparação e sem dano de contato; abaixo da metade da vida, somente a espera entre ataques diminui.
 
-Vida comum: `12 × fator da espécie × 1,18 × hpMul(ameaça) × dificuldade × (1 + 0,12 × visit)`, com `ameaça = min(nível, 10) + max(0, nível − 10) × 0,25`. Dano comum: `6 × fator da espécie × 1,12 × (1 + 0,025 × ameaça) × dificuldade × (1 + 0,07 × visit)`. Elites comuns têm 4× vida e escala visual 1,2; Esporos nunca viram elites isoladas.
+Vida comum: `12 × fator da espécie × 1,18 × 1,12 × hpMul(ameaça) × dificuldade × (1 + 0,12 × visit)`, com `ameaça = min(nível, 10) + max(0, nível − 10) × 0,25`. Dano comum: `6 × fator da espécie × 1,12 × 1,08 × (1 + 0,025 × ameaça) × dificuldade × (1 + 0,07 × visit)`. Os novos fatores são +12% de vida e +8% de dano em relação à revisão anterior, sem aplicá-los aos chefes. Catador inicial no Normal: aproximadamente 17,5 de vida e 5,95 de dano antes da armadura. Elites comuns têm 4× vida e escala visual 1,2; Esporos e Bocarras nunca viram elites isoladas.
 
-Cadência: `min(7, 1,5 + 0,16 × nível local) × (1 + min(0,8, 0,12 × visit)) × (1 + min(0,3, tempo local / 300))`. Contagem máxima: `min(160, 80 + 4 × nível local + 8 × visit)`, também aplicada aos anéis de horda. Um trio consome três vagas e três unidades de orçamento, evitando triplicar a população. Sem escalar velocidade de ataques, projéteis ou duração dos avisos a cada passagem.
+Cadência: `min(7, 1,5 + 0,16 × nível local) × (1 + min(0,8, 0,12 × visit)) × (1 + min(0,3, tempo local / 300))`. Contagem máxima: `min(160, 80 + 4 × nível local + 8 × visit)`, também aplicada aos anéis de horda. Um trio consome três vagas e três unidades de orçamento. Bocarras reservam 4/2/1 vagas nos tamanhos 3/2/1: dividir mantém o custo total e garante os descendentes sem ultrapassar o limite. O surgimento de uma Bocarra tamanho 3 consome quatro unidades do orçamento. Sem escalar velocidade de ataques, projéteis ou duração dos avisos a cada passagem.
 
-Durante o chefe: 20% da cadência normal, limitada a 0,8 inimigo/s e **oito reforços simultâneos**, contando vagas do limite global. Cada escolha tem 80% de chance de priorizar **Aranha Sombria** na floresta ou **Asabrasa** no mundo dracônico; o restante usa o elenco local. Reforços são comuns, sem elites, com aviso de surgimento de 0,8 s e posição normal fora do campo visível. Não surgem durante a entrada do chefe (1,4 s), e anéis de horda continuam suspensos. O orçamento não acumula uma rajada quando o teto está cheio. Vitória remove reforços e projéteis/perigos hostis, zera os orçamentos e abre o portal normalmente.
+Durante o chefe: 20% da cadência normal, limitada a 0,8 inimigo/s e **oito vagas de reforços simultâneos**, contando no limite global. Cada escolha tem 80% de chance de priorizar **Aranha Sombria**, **Asabrasa** ou **Mosquito do Brejo**, conforme o mundo; o restante usa o elenco local quando cabe nas vagas e no orçamento. O Mosquito ataca com a probóscide, sem inventar um ataque à distância para ele. Reforços são comuns, sem elites, com aviso de surgimento de 0,8 s e posição normal fora do campo visível. Não surgem durante a entrada do chefe (1,4 s), e anéis de horda continuam suspensos. O orçamento não acumula uma rajada quando o teto está cheio. Vitória remove reforços e projéteis/perigos hostis, zera os orçamentos e abre o portal normalmente.
 
 
-XP: `ceil((6 + 5 × nível + floor(nível² × 0,25)) × (1,25 + min(0,15, 0,004 × nível)))`. Requisitos: **14 no nível 1, 105 no 10 e 522 no 30**, sempre maiores que os anteriores. Drops: Esporo 0,55 cada; Besouro 1,7; Aranha 2,1; Catador 0,85; Lagarto/Estufado 1,7; Asabrasa 2,55. Chefes deixam 12 cristais de 8, total 96 (antes 120). Melhorias de XP continuam multiplicando a coleta.
+XP: `ceil((6 + 5 × nível + floor(nível² × 0,25)) × (1,25 + min(0,15, 0,004 × nível)))`. Requisitos preservados: **14 no nível 1, 105 no 10 e 522 no 30**, sempre maiores que os anteriores. Todos os drops passam a ×0,8. Valores atuais: Esporo 0,44 cada; Besouro 1,36; Aranha 1,68; Catador 0,68; Lagarto/Estufado 1,36; Asabrasa 2,04. Bocarra: 0,44 / 0,28 / 0,16 por morte nos tamanhos 3/2/1, total **1,64** por família completa; Mosquito 1,36; Caranguejo 2,04. Chefes deixam 12 cristais de 6,4, total **76,8** (antes 96). Melhorias de XP continuam multiplicando a coleta.
 
-Árvores, raízes e cenário não criam colisores. As copas perdem opacidade ao encobrir jogador, inimigos, projéteis, perigos, coletas ou portal. O cenário inicial/menu é a nova floresta, sem a antiga seleção de quatro biomas. Os atributos atuais dos personagens estão na tabela acima; vida e dano dos inimigos/chefes não foram elevados nesta revisão.
+Árvores, raízes e cenário não criam colisores. As copas da floresta perdem opacidade ao encobrir jogador, inimigos, projéteis, perigos, coletas ou portal. O cenário inicial/menu continua sendo a floresta. O pântano usa lama, poças rasas, juncos e vegetação baixa sob o combate, sem árvores densas, lentidão ambiental ou bloqueios novos. O fundo da transição acompanha o mundo de destino.
+
+Bocarra começa sempre no tamanho 3. Vida relativa por tamanho 3/2/1: 100% / 55% / 28%; velocidade relativa: 100% / 120% / 142%; dano: 100% / 80% / 65%. A morte tem guarda contra repetição e gera exatamente dois filhos quando o tamanho é maior que 1, com proteção de surgimento de 0,35 s. Mortes silenciosas ao iniciar/encerrar chefe ou trocar mapa não dividem nem concedem XP.
+
+Sangramento: 20% de chance em uma picada efetiva; 2 de dano base por segundo durante 2 s, antes da armadura. Aplicações ativas não acumulam nem renovam a duração. Usa o mesmo processamento de dano periódico da podridão e o fluxo comum de morte/renascimento; efeitos são removidos ao reviver e vencer o chefe. Esquiva ou invulnerabilidade impede nova aplicação.
+
+Casco do Caranguejo: reduz 40% do dano vindo do cone frontal de 120°; lados e costas recebem dano normal. Durante os 0,7 s de recuperação da pinçada, não há redução frontal e todo dano é multiplicado por 1,25. Origem de flechas, correntes, golpes aliados, pedras e poças chega ao sistema de dano compartilhado.
 
 ## Capricorn
 
@@ -80,7 +91,7 @@ Redução de recarga por abate e melhorias permanentes continuam com os mesmos v
 
 ## Validação
 
-72 testes cobrem bloqueio de cópias, origem do dano/drenagem, limites de cura e reforços nos chefes, além de queda de dano, limites com melhorias, alvo morto na cadeia, pulsos independentes da duração do quadro, paralisia de chefes, fim de trajeto, colisão contínua, drenagem sem excesso, aliados, desbloqueios e regressões de menus/vida. `tests/combat.html` mostra quadros do código real sem mudar o progresso principal. Não há telemetria de partidas reais suficiente para declarar equilíbrio definitivo.
+91 testes cobrem consistência de versão, três ciclos completos, portais, divisão das Bocarras no limite de população, sangramento e dano fatal, casco/direção de projéteis, ataques e fuga dos avisos da Serpente, terreno procedural e quadros de animação. Incluem as regressões anteriores de cópias de aliados, origem do dano/drenagem, limites de cura, reforços, personagens, colisão contínua, desbloqueios e menus/vida. `tests/combat.html` oferece 23 quadros do código real sem mudar o progresso principal. Não há telemetria de partidas reais suficiente para declarar equilíbrio definitivo.
 
 
 ## Histórico: integração da versão 9 na beta 0.6.4

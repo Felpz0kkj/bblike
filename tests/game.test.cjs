@@ -46,6 +46,24 @@ function begin(game,type='planta',diff='normal'){
   game.ACT.play();game.ACT.difficulty(button(diff));game.ACT.begin(button(type));
 }
 
+test('versão beta acompanha manifesto, jogo, documentação e prévias',()=>{
+  const root=path.join(__dirname,'..'),version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim();
+  assert.match(version,/^\d+\.\d+\.\d+-beta$/);const number=version.replace('-beta','');
+  const {game:g,node}=boot();assert.equal(g.VERSION,version);g.ACT.menu();
+  assert.ok(html.includes('<title>BaubLike · Beta '+number+'</title>'));
+  assert.ok(node('#ui').innerHTML.includes('BETA '+number));
+  for(const file of ['README.md','docs/balanceamento.md']){
+    const title=fs.readFileSync(path.join(root,file),'utf8').split('\n')[0].trim();assert.ok(title.endsWith(number),file);
+  }
+  const latest=fs.readFileSync(path.join(root,'CHANGELOG.md'),'utf8').split('\n').find(line=>line.startsWith('## '));
+  assert.ok(latest.startsWith('## '+version+' —'));
+  for(const file of ['combat.html','visual.html']){
+    const preview=fs.readFileSync(path.join(__dirname,file),'utf8');
+    for(const label of preview.match(/Beta \d+\.\d+\.\d+/g)||[])assert.equal(label,'Beta '+number,file);
+    assert.ok(preview.includes('Beta '+number),file);
+  }
+});
+
 test('iniciar exige dificuldade, depois personagem; voltar e cancelar não iniciam',()=>{
   const {game:g,node}=boot();
   g.ACT.play();assert.equal(g.run,null);assert.equal(node('#ui').dataset.scr,'difficulty');
@@ -150,7 +168,7 @@ test('morte por golpe interrompe coletas e cura no mesmo quadro',()=>{
 });
 
 test('arte de XP e vida é cacheada e preserva o valor das coletas',()=>{
-  const {game:g}=boot();begin(g);assert.equal(g.VERSION,'0.7.0-beta');
+  const {game:g}=boot();begin(g);assert.equal(g.VERSION,fs.readFileSync(path.join(__dirname,'..','VERSION'),'utf8').trim());
   assert.equal(g.lootSprite('xp'),g.lootSprite('xp'));assert.notEqual(g.lootSprite('xp').toDataURL(),g.lootSprite('heal').toDataURL());
   for(let i=0;i<500;i++)g.dropGem(0,0,1);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),500);assert.ok(g.gems.length<=380);
   g.updPick(.016);assert.equal(g.run.xp,500);assert.equal(g.gems.length,0);
@@ -461,7 +479,7 @@ function enemySteps(g,n,dt=.05){for(let i=0;i<n;i++)g.updEnemies(dt);}
 
 test('cada mundo só usa seu elenco, com desbloqueios relativos à etapa',()=>{
   const {game:g}=boot();begin(g,'fogo');
-  for(const world of ['forest','dragon']){
+  for(const world of ['forest','dragon','swamp']){
     g.run.world=world;const ids=Object.keys(g.WORLDS[world].foes);
     for(const level of [1,3,5,7,9,13,20])for(let i=0;i<100;i++){const type=g.pickType(level);assert.ok(ids.includes(type));assert.ok(g.EN[type].unlock<=level);}
     g.run.lv=9;g.enemies.length=0;g.spawnRing(35);assert.ok(g.enemies.length<=35);assert.ok(g.enemies.every(e=>ids.includes(e.type)));
@@ -552,16 +570,16 @@ test('cada criatura tem silhueta e quadros próprios cacheados; cenário é deco
 function crossPortal(g){g.run.portal.t=1;g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;assert.equal(g.enterPortal(),true);}
 function defeatWorld(g){g.run.lv=g.run.nextBoss;g.run.need=g.xpNeed(g.run.lv);g.spawnBoss();const e=g.enemies.find(e=>e.boss);e.spawn=0;g.hitEnemy(e,100000000,{canCrit:false});return e;}
 
-test('o ciclo usa apenas dois mundos e dois chefes por oito passagens',()=>{
-  const {game:g}=boot();begin(g,'fogo');assert.deepEqual(Object.keys(g.WORLDS),['forest','dragon']);
-  for(let visit=0;visit<8;visit++){
-    assert.equal(g.run.visit,visit);const world=visit%2?'dragon':'forest';assert.equal(g.run.world,world);
-    const boss=defeatWorld(g);assert.equal(boss.boss.id,world==='forest'?'colosso':'cratos');
-    assert.equal(g.run.world,world);assert.equal(g.run.worldCleared,true);assert.equal(g.run.portal.to,world==='forest'?'dragon':'forest');
+test('o ciclo alterna floresta, dragão e pântano por três voltas completas',()=>{
+  const {game:g}=boot();begin(g,'fogo');assert.deepEqual(Object.keys(g.WORLDS),['forest','dragon','swamp']);
+  for(let visit=0;visit<9;visit++){
+    assert.equal(g.run.visit,visit);const world=['forest','dragon','swamp'][visit%3];assert.equal(g.run.world,world);
+    const boss=defeatWorld(g);assert.equal(boss.boss.id,{forest:'colosso',dragon:'cratos',swamp:'serpente'}[world]);
+    assert.equal(g.run.world,world);assert.equal(g.run.worldCleared,true);assert.equal(g.run.portal.to,{forest:'dragon',dragon:'swamp',swamp:'forest'}[world]);
     const kills=g.run.bossKills;g.spawnBoss(g.run.lv+30);assert.equal(g.enemies.length,0);assert.equal(g.run.bossKills,kills);
     crossPortal(g);assert.equal(g.run.portal,null);assert.equal(g.run.worldCleared,false);
   }
-  assert.equal(g.run.world,'forest');assert.equal(g.run.bossKills,8);
+  assert.equal(g.run.world,'forest');assert.equal(g.run.bossKills,9);
 });
 
 test('portal preserva vida, nível, XP, melhorias, aliados, recargas e coletas',()=>{
@@ -590,7 +608,7 @@ test('Esporos sempre surgem em trios completos e respeitam o teto simultâneo',(
   assert.ok(g.enemies.length>=9);assert.equal(g.enemies.length%3,0);
   const groups=new Map();for(const e of g.enemies){assert.equal(e.type,'esporo');if(!groups.has(e.pack))groups.set(e.pack,[]);groups.get(e.pack).push(e);}
   for(const group of groups.values()){assert.equal(group.length,3);assert.equal(new Set(group.map(e=>e.slot)).size,3);assert.ok(Math.hypot(group[0].x-group[1].x,group[0].y-group[1].y)<50);}
-  for(const world of ['forest','dragon']){g.run.world=world;g.run.lv=100;g.run.visit=30;g.enemies.length=0;g.spawnRing(1000);assert.ok(g.enemies.length<=160);assert.equal(g.enemyCap(),160);for(let i=0;i<100;i++)g.spawnTick(.1);assert.ok(g.enemies.length<=160);}
+  for(const world of ['forest','dragon','swamp']){g.run.world=world;g.run.lv=100;g.run.visit=30;g.enemies.length=0;g.spawnRing(1000);assert.ok(g.enemies.length<=160);assert.equal(g.enemyCap(),160);for(let i=0;i<100;i++)g.spawnTick(.1);assert.ok(g.enemies.length<=160);}
 });
 
 test('nuvem dos Esporos só aparece após aviso e desaparece em menos de um segundo',()=>{
@@ -627,13 +645,13 @@ test('crescimento moderado por passagem não acelera ataques nem remove limites'
   const {game:g}=boot();begin(g,'fogo');const first=g.mkEnemy('catador',1,100,0,{}),pressure=g.worldPressure();
   g.run.visit=1;const second=g.mkEnemy('catador',1,100,0,{});assert.ok(Math.abs(second.maxhp/first.maxhp-1.12)<1e-10);assert.ok(Math.abs(second.dmg/first.dmg-1.07)<1e-10);
   assert.ok(g.worldPressure()>pressure);g.run.visit=100;assert.ok(g.worldPressure()<=1.8);assert.ok(g.enemyCap()<=160);
-  begin(g,'fogo');const forestHp=defeatWorld(g).maxhp;crossPortal(g);defeatWorld(g);crossPortal(g);const forestAgain=defeatWorld(g);assert.ok(Math.abs(forestAgain.maxhp/forestHp-1.4)<1e-10);
+  begin(g,'fogo');const forestHp=defeatWorld(g).maxhp;crossPortal(g);defeatWorld(g);crossPortal(g);defeatWorld(g);crossPortal(g);const forestAgain=defeatWorld(g);assert.ok(Math.abs(forestAgain.maxhp/forestHp-1.6)<1e-10);
 });
 
 test('XP evolui mais devagar: requisitos maiores e drops dracônicos reduzidos',()=>{
   const {game:g}=boot();begin(g,'fogo');let previous=0;
   for(let l=1;l<=150;l++){const old=6+l*5+Math.floor(l*l*.25),now=g.xpNeed(l);assert.ok(now>old);assert.ok(now>previous);previous=now;}
-  assert.equal(g.run.need,14);const e=dragonFoe(g,'catador',100);g.hitEnemy(e,100000,{canCrit:false});assert.equal(g.gems[0].v,.85);
+  assert.equal(g.run.need,14);const e=dragonFoe(g,'catador',100);g.hitEnemy(e,100000,{canCrit:false});assert.equal(g.gems[0].v,.68);
   assert.equal(g.CH.fogo.hp,85);assert.equal(g.CH.fogo.dmg,8);assert.equal(g.CH.fogo.spd,225);
 });
 
@@ -715,11 +733,11 @@ test('ataques básicos iniciais sem crítico precisam de mais de um acerto contr
 
 test('reforços de chefe surgem devagar, priorizam distância e têm teto de oito',()=>{
   const {game:g}=boot(undefined,()=>.1);
-  for(const world of ['forest','dragon']){
+  for(const world of ['forest','dragon','swamp']){
     begin(g,'fogo');g.run.world=world;g.run.lv=10;g.spawnBoss();const boss=g.enemies[0];
     g.spawnTick(20);assert.equal(g.enemies.length,1);boss.spawn=0;
     g.spawnTick(1);assert.equal(g.enemies.length,1);g.spawnTick(.7);assert.equal(g.enemies.length,2);
-    const helper=g.enemies[1];assert.equal(helper.type,world==='forest'?'aranha':'asabrasa');assert.equal(helper.spawn,.8);assert.equal(helper.elite,false);
+    const helper=g.enemies[1];assert.equal(helper.type,g.WORLDS[world].reinforcement);assert.equal(helper.spawn,.8);assert.equal(helper.elite,false);
     g.spawnRing(100);assert.equal(g.enemies.length,2);
     for(let i=0;i<600;i++)g.spawnTick(.05);
     const helpers=g.enemies.filter(e=>!e.boss);assert.equal(helpers.length,8);assert.ok(helpers.every(e=>e.type===helper.type));
@@ -736,4 +754,139 @@ test('cadência durante o chefe é menor que a horda normal e respeita o mundo a
   for(let i=0;i<200;i++)g.spawnTick(.1);const helpers=g.enemies.filter(e=>!e.boss);
   assert.ok(normal>=50);assert.ok(helpers.length>0&&helpers.length<normal*.3);
   assert.ok(helpers.every(e=>g.FOREST_FOES[e.type]));
+});
+
+function swampRun(g){begin(g,'fogo');g.run.world='swamp';g.run.visit=2;g.run.worldStartLv=g.run.lv=21;g.run.nextBoss=30;}
+function snakeBoss(g){swampRun(g);g.run.lv=30;g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=200;e.y=80;e.face=-1;e.pt=0;return e;}
+
+test('Bocarra nasce tamanho 3 e divide uma vez em duas tamanho 2 e quatro tamanho 1',()=>{
+  const {game:g}=boot(undefined,()=>.5);swampRun(g);assert.equal(g.spawnGroup('bocarra',21,150,0),4);
+  const root=g.enemies[0];assert.equal(root.size,3);assert.equal(g.enemies.length,1);assert.equal(g.enemySlots(),4);
+  g.hitEnemy(root,100000,{canCrit:false});assert.equal(g.enemies.length,2);assert.ok(g.enemies.every(e=>e.size===2&&e.lineage===root.lineage&&e.spawn>0));
+  g.killEnemy(root);g.hitEnemy(root,100000,{canCrit:false});assert.equal(g.enemies.length,2);assert.equal(g.enemySlots(),4);
+  for(const e of [...g.enemies]){e.spawn=0;g.hitEnemy(e,100000,{canCrit:false});g.killEnemy(e);}
+  assert.equal(g.enemies.length,4);assert.ok(g.enemies.every(e=>e.size===1&&e.lineage===root.lineage));assert.equal(g.enemySlots(),4);
+  for(const e of [...g.enemies]){e.spawn=0;g.hitEnemy(e,100000,{canCrit:false});}
+  assert.equal(g.enemies.length,0);assert.equal(g.run.kills,7);assert.equal(g.gems.length,7);
+  assert.ok(Math.abs(g.gems.reduce((n,e)=>n+e.v,0)-1.64)<1e-9);
+});
+
+test('divisão reserva espaço e nunca perde descendentes mesmo com população cheia',()=>{
+  const {game:g}=boot();swampRun(g);g.run.lv=100;g.run.visit=30;
+  for(let i=0;i<40;i++)assert.equal(g.spawnGroup('bocarra',30,300+i,0),4);
+  assert.equal(g.enemies.length,40);assert.equal(g.enemySlots(),160);assert.equal(g.spawnGroup('mosquito',30,400,0),0);
+  for(const size of [3,2]){
+    for(const e of [...g.enemies].filter(e=>e.size===size)){e.spawn=0;g.hitEnemy(e,100000,{canCrit:false});}
+    assert.equal(g.enemySlots(),160);assert.ok(g.enemies.length<=160);
+  }
+  assert.equal(g.enemies.length,160);assert.ok(g.enemies.every(e=>e.size===1));g.spawnTick(10);g.spawnRing(100);assert.equal(g.enemies.length,160);
+});
+
+test('limpeza de Bocarras em chefe ou transição não gera divisão nem recompensa',()=>{
+  const {game:g}=boot();swampRun(g);g.spawnGroup('bocarra',21,200,0);const root=g.enemies[0];g.killEnemy(root,true);g.killEnemy(root);
+  assert.equal(g.enemies.length,0);assert.equal(g.run.kills,0);assert.equal(g.gems.length,0);
+  g.spawnGroup('bocarra',21,200,0);g.run.lv=30;g.spawnBoss();assert.equal(g.enemies.length,1);const boss=g.enemies[0];boss.spawn=0;
+  g.spawnGroup('bocarra',30,300,0);g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.run.kills,1);assert.equal(g.gems.length,12);assert.equal(g.run.portal.to,'forest');
+});
+
+test('Bocarras menores têm menos vida, raio menor e velocidade maior',()=>{
+  const {game:g}=boot(undefined,()=>.5);swampRun(g);const es=[3,2,1].map(size=>g.mkEnemy('bocarra',21,100,0,{size}));
+  for(let i=1;i<es.length;i++){assert.ok(es[i].maxhp<es[i-1].maxhp);assert.ok(es[i].r<es[i-1].r);assert.ok(es[i].spd>es[i-1].spd);assert.ok(es[i].dmg<es[i-1].dmg);}
+  assert.equal(g.monSprite('bocarra',3,0).width,40);
+});
+
+test('mordida da Bocarra tem aviso curto e não causa contato instantâneo',()=>{
+  const {game:g}=boot();swampRun(g);const e=dragonFoe(g,'bocarra',60),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'mawbite');assert.equal(e.tele.t,'circle');enemySteps(g,6);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.03);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,6);assert.equal(g.run.pl.hp,after);
+});
+
+test('Mosquito pica com investida limitada e pode aplicar sangramento de dois segundos',()=>{
+  const {game:g}=boot(undefined,()=>.1);swampRun(g);const e=dragonFoe(g,'mosquito',120),x=e.x,hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'needlewind');assert.equal(e.tele.t,'lane');enemySteps(g,7);assert.equal(e.x,x);assert.equal(g.run.pl.hp,hp);
+  enemySteps(g,7);assert.ok(Math.abs(e.x-x)<=105.001);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.bleed,2);
+  const bitten=g.run.pl.hp;g.run.pl.inv=0;assert.equal(g.applyBleed(),false);g.tickBleed(1);assert.equal(g.run.pl.bleed,1);
+  assert.equal(g.applyBleed(),false);assert.equal(g.run.pl.bleed,1);g.tickBleed(1);assert.equal(g.run.pl.hp,bitten-4);assert.equal(g.run.pl.bleed,0);
+  g.tickBleed(10);assert.equal(g.run.pl.hp,bitten-4);
+});
+
+test('picada permite fuga, respeita esquiva e não garante sangramento em todo acerto',()=>{
+  for(const mode of ['fuga','esquiva','sem sangramento']){
+    const {game:g}=boot(undefined,()=>.9);swampRun(g);dragonFoe(g,'mosquito',120);const hp=g.run.pl.hp;g.updEnemies(.01);
+    if(mode==='fuga')g.run.pl.y=180;if(mode==='esquiva')g.run.pl.inv=2;
+    enemySteps(g,18);assert.ok(!(g.run.pl.bleed>0));if(mode==='sem sangramento')assert.ok(g.run.pl.hp<hp);else assert.equal(g.run.pl.hp,hp);
+  }
+});
+
+test('sangramento usa armadura, renascimento e interrupção de coleta por dano fatal',()=>{
+  const {game:g}=boot();swampRun(g);g.run.pl.hp=20;g.applyBleed();g.tickBleed(2);assert.equal(g.run.pl.hp,16);
+  g.run.st.armor=.5;g.run.pl.inv=0;g.applyBleed();g.tickBleed(2);assert.equal(g.run.pl.hp,14);
+  g.P.up.revive=1;g.run.pl.hp=1;g.run.pl.inv=0;g.applyBleed();g.tickBleed(1);assert.equal(g.run.revived,true);assert.equal(g.run.pl.bleed,0);
+  g.P.up.revive=0;swampRun(g);g.run.pl.hp=1;g.applyBleed();g.dropGem(0,0,10);g.picks.push({k:'heal',x:0,y:0,t:0});g.update(1);
+  assert.equal(g.run.over,true);assert.equal(g.run.xp,0);assert.equal(g.picks.length,1);assert.equal(g.run.pl.hp,0);
+});
+
+test('casco do Caranguejo reduz dano frontal e abre na recuperação',()=>{
+  const {game:g}=boot();swampRun(g);const e=dragonFoe(g,'caranguejo',0);e.hp=e.maxhp=1000;e.heading=0;
+  function damage(x,y,recover=false){e.hp=1000;e.attack=recover?{k:'recover'}:null;g.hitEnemy(e,20,{origin:{x,y},canCrit:false});return 1000-e.hp;}
+  assert.equal(damage(100,0),12);assert.equal(damage(0,100),20);assert.equal(damage(-100,0),20);assert.equal(damage(100,0,true),25);
+});
+
+test('flechas usam a direção real de chegada para atingir frente e costas do casco',()=>{
+  const {game:g}=boot();function shot(front){begin(g,'planta');g.run.st.crit=0;const e=g.mkEnemy('caranguejo',1,100,0,{});e.hp=e.maxhp=100;e.heading=0;g.enemies.push(e);g.run.pl.x=front?200:0;g.basicAttack(front?Math.PI:0,100,0);g.updProj(.5);return 100-e.hp;}
+  assert.equal(shot(true),5);assert.equal(shot(false),8);
+});
+
+test('Caranguejo se move lateralmente e avisa antes de dar a pinçada',()=>{
+  const {game:g}=boot(undefined,()=>.5);swampRun(g);const e=dragonFoe(g,'caranguejo',120);g.updEnemies(.05);assert.ok(Math.abs(e.y)>.1);
+  e.x=60;e.y=0;e.cd=0;const hp=g.run.pl.hp;g.updEnemies(.01);assert.equal(e.attack.k,'pinch');assert.ok(e.tele);
+  enemySteps(g,11);assert.equal(g.run.pl.hp,hp);g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');assert.equal(e.attack.dur,.7);
+});
+
+test('Serpente avisa o bote, limita avanço e acerta no máximo uma mordida',()=>{
+  const {game:g}=boot();const e=snakeBoss(g),x=e.x,y=e.y,hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.act.k,'snakebite');assert.equal(e.act.dur,.75);assert.equal(e.tele.t,'lane');enemySteps(g,14);assert.equal(g.run.pl.hp,hp);assert.equal(e.x,x);
+  enemySteps(g,7);assert.ok(g.run.pl.hp<hp);assert.ok(Math.hypot(e.x-x,e.y-y)<=180.001);assert.equal(e.act.phase,'recover');
+  const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,5);assert.equal(g.run.pl.hp,after);
+});
+
+test('bote e cauda da Serpente permitem sair da área avisada',()=>{
+  const {game:g}=boot();let e=snakeBoss(g);g.updEnemies(.01);g.run.pl.y=350;const hp=g.run.pl.hp;enemySteps(g,25);assert.equal(g.run.pl.hp,hp);
+  e=snakeBoss(g);e.x=100;e.y=0;e.pi=1;g.updEnemies(.01);assert.equal(e.act.k,'snaketail');assert.equal(e.tele.r,185);enemySteps(g,18);assert.equal(g.run.pl.hp,hp);
+  g.run.pl.x=400;enemySteps(g,6);assert.equal(g.run.pl.hp,hp);
+});
+
+test('cauda causa dano uma vez e segunda metade da vida reduz só o intervalo',()=>{
+  const {game:g}=boot();const e=snakeBoss(g);e.x=100;e.y=0;e.pi=1;e.hp=e.maxhp*.49;g.updEnemies(.01);
+  assert.equal(e.rage,true);assert.equal(e.act.dur,.95);const hp=g.run.pl.hp;enemySteps(g,21);assert.ok(g.run.pl.hp<hp);
+  const after=g.run.pl.hp;g.run.pl.inv=0;for(let i=0;i<30&&e.act;i++)g.updEnemies(.05);assert.equal(g.run.pl.hp,after);assert.equal(e.pt,1.3);
+});
+
+test('pântano usa o mesmo portal e conserva a partida ao retornar à floresta',()=>{
+  const {game:g}=boot();swampRun(g);defeatWorld(g);assert.equal(g.run.portal.to,'forest');assert.equal(g.run.world,'swamp');
+  g.run.pl.hp=31.5;g.run.xp=17;g.run.pk.dmg=3;g.run.sp=5;g.run.cd=.4;g.run.allies.push(g.mkAlly('planta',3));const ally=g.run.allies[0],lv=g.run.lv;
+  crossPortal(g);assert.equal(g.run.world,'forest');assert.equal(g.run.visit,3);assert.equal(g.run.pl.hp,31.5);assert.equal(g.run.xp,17);assert.equal(g.run.pk.dmg,3);assert.equal(g.run.sp,5);assert.equal(g.run.cd,.4);assert.equal(g.run.lv,lv);assert.equal(g.run.allies[0],ally);
+});
+
+test('pântano procedural deixa áreas secas e molhadas, sem árvores densas nem colisores',()=>{
+  const {game:g}=boot();swampRun(g);let wet=0;for(let y=-10;y<=10;y++)for(let x=-10;x<=10;x++)if(g.swampWet(x,y))wet++;
+  assert.ok(wet>0&&wet<441);const trees=[];g.addTrees(trees);assert.equal(trees.length,0);
+  assert.equal(g.tileCanvas(2,0,15),g.tileCanvas(2,0,15));assert.notEqual(g.tileCanvas(2,0,15).toDataURL(),g.tileCanvas(2,0,0).toDataURL());
+  const e=dragonFoe(g,'caranguejo',120),before=JSON.stringify(e);g.drawGround();g.drawGround();g.render();assert.equal(JSON.stringify(e),before);assert.equal(g.hazards.length,0);
+});
+
+test('arte do pântano tem silhuetas distintas e quadros de movimento, aviso e ataque',()=>{
+  const {game:g}=boot();const all=[];
+  for(const type of ['bocarra','mosquito','caranguejo','serpente']){
+    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?80:40);
+    assert.notEqual(frames[0].toDataURL(),frames[1].toDataURL());assert.notEqual(frames[0].toDataURL(),frames[2].toDataURL());assert.notEqual(frames[2].toDataURL(),frames[3].toDataURL());
+  }
+  assert.equal(new Set(all).size,4);
+});
+
+test('inimigos resistem mais e dão pouco mais de dano, com XP menor e heróis preservados',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=g.mkEnemy('catador',1,100,0,{});
+  assert.ok(e.maxhp>17&&e.maxhp<18);assert.ok(e.dmg>5.8&&e.dmg<6.1);assert.equal(e.xp,.68);
+  const boss=defeatWorld(g);assert.equal(boss.maxhp,2200);assert.ok(Math.abs(g.gems.reduce((n,e)=>n+e.v,0)-76.8)<1e-9);
+  assert.deepEqual(Object.values(g.CH).map(c=>c.dmg),[8,7,7,8,9,6]);assert.equal(g.CH.planta.regen,0);assert.equal(g.CH.planta.life,.01);
 });

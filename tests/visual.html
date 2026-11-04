@@ -14,8 +14,8 @@ h2{font:700 16px monospace;color:#f2b84b;margin:12px 0 6px}.card p{font-size:12p
 .state span{display:block;font-size:12px;color:#97ac9f;margin-bottom:10px}iframe{position:absolute;left:-10000px;width:1040px;height:700px;border:0}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){body{padding:12px}.states{grid-template-columns:1fr}}
 </style>
-<h1>BaubLike · Beta 0.7.0</h1><p>Sprites no tamanho dos ícones do jogo, com as três evoluções. Prévia isolada do progresso do jogador.</p>
-<div class="grid" id="sprites"></div><section class="health"><h2>Beta 0.7.0 · XP e cura</h2><p>Cristais ciano por valor de XP e coração vermelho com folha. Comparação sobre o chão real do jogo.</p><canvas id="loot" style="height:auto" width="900" height="150"></canvas></section><section class="health"><h2>Vida contínua · moldura fixa</h2><p>Os estados mudam o coração; o preenchimento vermelho acompanha a porcentagem exata de vida.</p><div class="states" id="states"></div></section>
+<h1>BaubLike · Beta 0.8.0</h1><p>Sprites no tamanho dos ícones do jogo, com as três evoluções. Prévia isolada do progresso do jogador.</p>
+<div class="grid" id="sprites"></div><section class="health"><h2>Beta 0.8.0 · XP e cura</h2><p>Cristais ciano por valor de XP e coração vermelho com folha. Comparação sobre o chão real do jogo.</p><canvas id="loot" style="height:auto" width="900" height="150"></canvas></section><section class="health"><h2>Vida contínua · moldura fixa</h2><p>Os estados mudam o coração; o preenchimento vermelho acompanha a porcentagem exata de vida.</p><div class="states" id="states"></div></section>
 <iframe title="Jogo de teste isolado" id="game"></iframe>
 <script>
 (async()=>{
@@ -33,9 +33,9 @@ h2{font:700 16px monospace;color:#f2b84b;margin:12px 0 6px}.card p{font-size:12p
       card.innerHTML=`<h2>${name}</h2><p>${desc}</p><div class="sprites">${[1,2,3].map(st=>`<div><img alt="${name}, evolução ${st}" src="${g.iconURL(type,st)}"><small>${st===1?'Inicial':'Evolução '+st}</small></div>`).join('')}</div>`;
       document.getElementById('sprites').appendChild(card);
     }
-    for(const [type,data] of Object.entries({...g.FOREST_FOES,colosso:g.EN.colosso,...g.DRAGON_FOES})){
+    for(const [type,data] of Object.entries({...g.FOREST_FOES,colosso:g.EN.colosso,...g.DRAGON_FOES,...g.SWAMP_FOES,serpente:g.EN.serpente})){
       const card=document.createElement('article');card.className='card';
-      card.innerHTML=`<h2>${data.n}</h2><p>${g.DRAGON_FOES[type]?'Bioma Dracônico':'Floresta Sombria'}</p><div class="sprites">${[0,1,10,11].map((f,i)=>`<div><img alt="${data.n}" src="${g.monSprite(type,1,f).toDataURL()}"><small>${['Repouso','Movimento','Aviso','Ataque'][i]}</small></div>`).join('')}</div>`;
+      card.innerHTML=`<h2>${data.n}</h2><p>${g.SWAMP_FOES[type]||type==='serpente'?'Pântano de Frood':g.DRAGON_FOES[type]?'Bioma Dracônico':'Floresta Sombria'}</p><div class="sprites">${[0,1,10,11].map((f,i)=>`<div><img alt="${data.n}" src="${g.monSprite(type,type==='bocarra'?3:1,f).toDataURL()}"><small>${['Repouso','Movimento','Aviso','Ataque'][i]}</small></div>`).join('')}</div>`;
       document.getElementById('sprites').appendChild(card);
     }
     g.startRun('planta','normal');g.ACT.team();

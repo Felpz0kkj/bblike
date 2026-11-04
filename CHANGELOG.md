@@ -1,5 +1,18 @@
 # Histórico
 
+## 0.8.0-beta — Pântano de Frood e ciclo de três mundos — 2026-11-04
+
+- Ciclo atualizado para Floresta Sombria → Bioma Dracônico → Pântano de Frood → Floresta Sombria. Mantida a floresta inicial conforme confirmação do autor. Cada vitória abre o portal existente, ativado somente por contato; vida, nível, XP, melhorias, aliados e recargas permanecem na transição.
+- Cenário procedural de brejo: lama, poças rasas com margens irregulares, juncos, raízes expostas, troncos baixos e plantas aquáticas. Sem árvores densas, novos colisores ou mudança de câmera/escala. O mesmo cenário representa o destino durante a transição.
+- Bocarra do Brejo: perseguição e mordida anunciada; tamanho 3 gera duas tamanho 2, que geram quatro tamanho 1. Descendentes menores são mais rápidos. Cada morte divide uma única vez; limpeza de chefe não divide nem concede recompensas. Vagas reservadas de 4/2/1 por tamanho mantêm o teto de população durante a divisão.
+- Mosquito do Brejo: voo rápido, aviso de 0,38 s, investida de até 105 com a probóscide e recuperação de 0,35 s. Picada tem 20% de chance de aplicar sangramento por 2 s, com 2 de dano base por segundo. Não acumula nem renova sangramento ativo; usa o fluxo comum de dano, armadura, morte e renascimento.
+- Caranguejo de Lodo: lento, resistente e com deslocamento lateral. Pinçada de raio 34 anunciada por 0,6 s; recuperação de 0,7 s. Casco reduz dano frontal em 40%; lados/costas recebem dano normal e a recuperação aumenta o dano recebido em 25%. Golpes e projéteis informam a origem real do dano ao sistema compartilhado.
+- Serpente Branca: novo chefe exclusivo do pântano, escamas claras, sombras lilases e olhos vermelhos. Alterna bote de até 180 (aviso de 0,75 s) e cauda de raio 185 (aviso de 0,95 s). Abaixo de 50% da vida, a espera entre ataques passa de 1,8 para 1,3 s, mantendo os avisos. Vida base 2.500; primeiro encontro no Normal com 3.500 pela progressão atual. Vitória limpa reforços/perigos e abre portal à floresta.
+- Vida comum +12%, dano comum +8% e todos os drops de XP −20% em relação à revisão anterior. Requisitos de nível, escala por passagem, atributos dos heróis e vida/ataques dos dois chefes anteriores preservados. Reforços continuam reduzidos e limitados a oito vagas, priorizando Mosquitos no pântano.
+- Sprites e quadros próprios em canvas, coerentes com a arte pixelada existente, sem usar a prancha de referência como sprite. Galeria com os quatro novos personagens e seis novos cenários de combate.
+- Identificações de versão sincronizadas em 0.8.0-beta, incluindo menu, título, documentação e prévias; teste de consistência para as próximas revisões. Histórico anterior preservado.
+- Validação: 91 testes automatizados, incluindo três ciclos completos, portais, divisões no limite de população, sangramento, casco, ataques/avisos da Serpente e regressões dos heróis.
+
 ## 0.7.0-beta — balanceamento, aliados e reforços — 2026-11-03
 
 - Bloqueado aliado igual ao personagem em uso nas cartas, no início da jornada, nas preferências salvas e na Equipe. Configurações antigas são deduplicadas/filtradas sem apagar coleção ou desbloqueios; carta inválida não consome escolha.
