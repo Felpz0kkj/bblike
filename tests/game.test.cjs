@@ -14,11 +14,11 @@ function boot(saved,random,legacy){
   if(legacy)store.set('nevoa-selvagem-v2',JSON.stringify(legacy));
   function element(name){
     const attrs={},classes=new Set(),ops=[];
-    const context=new Proxy({ops,fillRect(...a){ops.push([this.fillStyle,...a]);},
+    const context=new Proxy({ops,images:[],fillRect(...a){ops.push([this.fillStyle,...a]);},
       createImageData(w,h){return{width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},
       putImageData(data){this.raster=data;ops.push(['raster',data.width,data.height,crypto.createHash('sha256').update(data.data).digest('hex')]);},
       getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}return {data:new Uint8ClampedArray(w*h*4)};},
-      drawImage(img,...a){ops.push(['image',img.width,...a]);},
+      drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a});},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
     },{get:(t,k)=>k in t?t[k]:()=>{}});
@@ -63,7 +63,7 @@ test('versão beta acompanha manifesto, jogo, documentação e prévias',()=>{
   }
   const latest=fs.readFileSync(path.join(root,'CHANGELOG.md'),'utf8').split('\n').find(line=>line.startsWith('## '));
   assert.ok(latest.startsWith('## '+version+' —'));
-  for(const file of ['combat.html','visual.html','granito.html']){
+  for(const file of ['combat.html','visual.html','granito.html','serpente.html']){
     const preview=fs.readFileSync(path.join(__dirname,file),'utf8');
     for(const label of preview.match(/Beta \d+\.\d+\.\d+/g)||[])assert.equal(label,'Beta '+number,file);
     assert.ok(preview.includes('Beta '+number),file);
@@ -878,7 +878,7 @@ test('pântano procedural deixa áreas secas e molhadas, sem árvores densas nem
 test('arte do pântano tem silhuetas distintas e quadros de movimento, aviso e ataque',()=>{
   const {game:g}=boot();const all=[];
   for(const type of ['bocarra','mosquito','caranguejo','serpente']){
-    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?96:40);
+    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?g.SERPENTE_ART.frames.move0.w:40);
     assert.notEqual(frames[0].toDataURL(),frames[1].toDataURL());assert.notEqual(frames[0].toDataURL(),frames[2].toDataURL());assert.notEqual(frames[2].toDataURL(),frames[3].toDataURL());
   }
   assert.equal(new Set(all).size,4);
@@ -1042,7 +1042,7 @@ test('todos os recortes de Granito preservam o RGB original, sem títulos ou a p
   const expected=crypto.createHash('sha256').update(JSON.stringify(importer.build())).digest('hex');
   assert.equal(crypto.createHash('sha256').update(JSON.stringify(g.GRANITO_ART)).digest('hex'),expected);
   for(const [id,rect]of Object.entries(importer.manifest.frames)){
-    const c=g.granitoAsset(id),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data,original=importer.crop(source,rect);
+    const c=g.granitoAsset(id),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data,original=importer.crop(source,rect,{solid:importer.manifest.opaque[id]});
     assert.equal(Buffer.compare(Buffer.from(pixels),original.data),0,id+' copia cada pixel');assert.ok(c.width<768&&c.height<512,id);
     let visible=0,annotations=0;for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]){visible++;if(pixels[i]>130&&pixels[i+2]>130&&pixels[i+2]>pixels[i]*1.1&&pixels[i+1]<100)annotations++;}
     assert.ok(visible>100,id);assert.equal(annotations,0,id+' não inclui linhas/títulos magenta');
@@ -1109,4 +1109,79 @@ test('portal preserva as duas recargas de Granito e uma nova jornada zera ambas'
   const {game:g}=boot();g.P.chars.pedra=1;begin(g,'pedra');defeatWorld(g);g.run.sp2=4.25;g.run.sp2Max=6;g.run.sp=7.5;g.run.spMax=12;g.run.pl.hp=80;
   crossPortal(g);assert.equal(g.run.sp2,4.25);assert.equal(g.run.sp2Max,6);assert.equal(g.run.sp,7.5);assert.equal(g.run.pl.hp,80);
   begin(g,'pedra');assert.equal(g.run.sp,0);assert.equal(g.run.sp2,0);assert.equal(g.run.pl.dash,null);
+});
+
+test('sombras abertas do torso de Granito não viram buracos durante os passos e a corrida',()=>{
+  const {game:g}=boot();
+  for(const [id,x,y]of [['walk',115,110],['run',110,70],['run',100,110],['hurt',120,88],['claw0',110,80]]){
+    const c=g.granitoAsset(id),rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+    assert.equal(rgba[(y*c.width+x)*4+3],255,id+' mantém a sombra do corpo');
+    assert.equal(rgba[3],0,id+' retira o fundo externo');
+  }
+  const c=g.granitoAsset('run'),rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  assert.equal(rgba[(140*c.width+110)*4+3],0,'o espaço entre as pernas permanece vazado');
+  for(let t=0;t<1;t+=.1){const pose=g.granitoFrame({vx:172,vy:0,t},true);assert.ok(pose>=10&&pose<=13,'andar não troca pela pose de corrida');}
+  assert.equal(g.granitoFrame({vx:240,vy:0,t:0},true),40,'a pose de corrida fica disponível para velocidade aumentada');
+});
+
+function visibleBox(c){
+  const rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=-1,y1=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(rgba[(y*c.width+x)*4+3]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  return {x0,y0,x1,y1,h:y1-y0+1,w:x1-x0+1};
+}
+
+test('escala de Granito é consistente no menu, na partida e como aliado',()=>{
+  const {game:g,node}=boot();g.P.chars.pedra=1;g.frame(1100);
+  let images=node('#cv').getContext('2d').images.filter(d=>d.img.assetGroup==='granito');
+  assert.ok(images.length>0,'o menu realmente desenha Granito');
+  for(const {args}of images){assert.ok(args[2]<120);assert.ok(args[3]<110,'nenhum recorte gigante no menu');}
+  for(const stage of [1,2,3])for(const frame of [0,10,20,40]){
+    const c=g.monSprite('pedra',stage,frame),box=g.spriteLayout(c,'pedra',3.3+stage*.15),bounds=visibleBox(c);
+    assert.ok(bounds.h*box.scale>=60&&bounds.h*box.scale<85,'altura do personagem entre 60 e 85 unidades');
+    assert.equal(box.top+c.fy*box.scale,12,'linha dos pés estável');
+  }
+  begin(g,'pedra');g.run.fade=0;g.render();
+  images=node('#cv').getContext('2d').images.filter(d=>d.img.assetGroup==='granito');
+  assert.ok(images.at(-1).args[3]>75,'a normalização não é aplicada duas vezes ao jogador');
+  begin(g,'fogo');g.run.allies.push(g.mkAlly('pedra',1));g.render();
+  const ally=node('#cv').getContext('2d').images.filter(d=>d.img.assetGroup==='granito').at(-1);
+  assert.ok(ally.args[3]>50&&ally.args[3]<70,'o aliado também usa a escala do asset uma vez');
+});
+
+test('a Serpente usa os recortes da referência sem redesenho ou prancha inteira',()=>{
+  const importer=require('../scripts/build-serpente.cjs'),source=importer.readSource(),{game:g}=boot();
+  assert.equal(source.sha256,'d7153f6a059bbd5540a1f149039c62129f43afd32a0c80fd3f5203a79dd7525f');
+  assert.equal(g.SERPENTE_ART.sourceSha256,source.sha256);assert.equal(Object.keys(g.SERPENTE_ART.frames).length,11);
+  assert.equal(JSON.stringify(g.SERPENTE_ART),JSON.stringify(importer.build()));
+  for(const [frame,id]of Object.entries(g.SERPENTE_POSES)){
+    const c=g.monSprite('serpente',1,+frame),r=importer.manifest.frames[id],rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+    assert.equal(c.sourceId,id);assert.ok(c.width<=176&&c.height<=182);let count=0;
+    for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const at=(y*c.width+x)*4;if(!rgba[at+3])continue;count++;
+      const orig=((r[1]+y)*source.width+r[0]+x)*4;
+      assert.equal(Buffer.compare(Buffer.from(rgba.subarray(at,at+3)),source.data.subarray(orig,orig+3)),0,id+' mantém RGB');
+    }
+    assert.ok(count>1000,id+' tem o corpo completo');assert.equal(rgba[3],0,'sem retângulo verde da prancha');
+  }
+  const c=g.monSprite('serpente',1,30),rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  assert.equal(rgba[(54*c.width+4)*4+3],0,'a legenda à esquerda não é importada');
+  assert.equal(rgba[(56*c.width+89)*4+3],0,'o vão interno do pescoço também fica transparente');
+});
+
+test('quadros da Serpente acompanham os dois ataques e a boca acompanha o espelhamento',()=>{
+  const {game:g}=boot(),e=snakeBoss(g);
+  const pose=(act)=>g.monSprite('serpente',1,g.serpentFrame({...e,t:0,act})).sourceId;
+  assert.equal(pose(null),'move0');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.1,dur:.75}),'biteWarn');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.6,dur:.75}),'biteReady');
+  assert.equal(pose({k:'snakebite',phase:'dash'}),'bite');
+  assert.equal(pose({k:'snakebite',phase:'recover'}),'biteReady');
+  assert.equal(pose({k:'snaketail',phase:'windup'}),'tailReady');
+  assert.equal(pose({k:'snaketail',phase:'sweep'}),'tailSweep');
+  assert.equal(pose({k:'snaketail',phase:'recover'}),'tailRecover');
+  const c=g.monSprite('serpente',1,11);assert.equal(c.facing,-1);
+  e.x=200;e.y=80;e.face=1;const right=g.snakeMouth(e);e.face=-1;const left=g.snakeMouth(e);
+  assert.ok(right.x>e.x&&left.x<e.x);assert.ok(Math.abs((right.x-e.x)-(e.x-left.x))<1e-9);assert.equal(right.y,left.y);
+  const box=g.spriteLayout(c,'serpente',e.sc);
+  assert.equal(right.y,e.y+box.top+c.mouth.y*box.scale,'origem do bote é a boca desenhada');
+  g.updEnemies(.01);assert.equal(e.tele.x,g.snakeMouth(e).x);assert.equal(e.tele.y,g.snakeMouth(e).y);
 });

@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.8.3-beta — transparência e escala de Granito; Serpente original — 2026-11-04
+
+- Corrigidos os buracos no torso/membros de Granito: máscaras internas preservam sombras pretas que encostam no fundo entre braços e pernas. RGB original mantido em todos os pixels retidos; espaços externos continuam transparentes.
+- Escala de Granito reduzida de 0,23 para 0,16 no jogo (cerca de 30%). A normalização pertence ao asset e vale no menu, no jogador e como aliado. Recorte principal tem escala proporcional própria, evitando a prévia gigante. Passos normais não usam mais a pose de corrida; âncoras dos pés mantidas.
+- Serpente procedural substituída por 11 recortes da referência enviada: principal, quatro quadros de movimento, três de bote e três de cauda. Fundo verde, vazios do pescoço e legenda removidos; pixels originais preservados. Espelhamento e origem da mordida acompanham o novo desenho. Vida, dano, alcances, preparações, recargas, colisão do corpo e portal mantidos.
+- PNG da Serpente, retângulos, âncoras e importação determinística adicionados; dados embutidos no index para manter o HTML independente. Nova prancha em `tests/serpente.html` e 38 cenários de combate, incluindo caminhada/corrida e execução dos dois ataques da Serpente.
+- Mantidos garras, Pedrada, Terremoto e ausência de dash de Granito; atributos, outros personagens, mapas, inimigos, drops, salvamentos e progressão preservados.
+- Validação: 120 testes de regressão, comparação de RGB com as duas referências e verificação no navegador de escala, movimento, boca, avisos e ataques.
+
 ## 0.8.2-beta — pixels originais de Granito e dois especiais — 2026-11-04
 
 - Substituído o redesenho procedural de Granito pelos pixels da imagem fornecida. Importados 22 recortes de personagem e cinco efeitos, com cores, proporções e detalhes originais. Somente o fundo quase preto conectado às bordas vira transparência; olhos, sulcos e sombras internas são preservados. Mesma arte nas três evoluções, com seus atributos mantidos.
