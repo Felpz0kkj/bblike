@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
+const crypto=require('node:crypto');
 const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
@@ -14,7 +15,9 @@ function boot(saved,random,legacy){
   function element(name){
     const attrs={},classes=new Set(),ops=[];
     const context=new Proxy({ops,fillRect(...a){ops.push([this.fillStyle,...a]);},
-      getImageData(x,y,w,h){return {data:new Uint8ClampedArray(w*h*4)};},
+      createImageData(w,h){return{width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},
+      putImageData(data){this.raster=data;ops.push(['raster',data.width,data.height,crypto.createHash('sha256').update(data.data).digest('hex')]);},
+      getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}return {data:new Uint8ClampedArray(w*h*4)};},
       drawImage(img,...a){ops.push(['image',img.width,...a]);},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
@@ -36,7 +39,7 @@ function boot(saved,random,legacy){
   const sandbox={window:win,document:{documentElement:root,hidden:false,querySelector:node,
     createElement:element,addEventListener:(k,f)=>events[k]=f},
     localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)},
-    performance:{now:()=>1000},console,requestAnimationFrame(){},setTimeout(){},setInterval(){},clearInterval(){},
+    atob:s=>Buffer.from(s,'base64').toString('binary'),performance:{now:()=>1000},console,requestAnimationFrame(){},setTimeout(){},setInterval(){},clearInterval(){},
     matchMedia:win.matchMedia};
   if(random){const math=Object.create(Math);math.random=random;sandbox.Math=math;}
   vm.runInNewContext(script,sandbox,{filename:'index.html'});
@@ -123,19 +126,13 @@ test('vida fracionária, cura, zero e renascimento preservam o preenchimento pro
   begin(g);g.updHud();assert.equal(node('#hp-i').style.width,'100%');
 });
 
-test('as criaturas jogáveis preservadas têm arte própria, animações e evoluções',()=>{
-  const {game:g}=boot();const all=[];
-  for(const type of ['pedra','sombra']){
-    const frames=[];
-    for(let stage=1;stage<=3;stage++)for(let frame=0;frame<4;frame++){
-      const c=g.monSprite(type,stage,frame);assert.equal(c.width,type==='pedra'?64:32);assert.equal(c.fy,type==='pedra'?60:30);
-      assert.ok(c.getContext('2d').ops.length>100);frames.push(c.toDataURL());
-      assert.equal(g.monSprite(type,stage,frame),c);
-    }
-    assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);assert.notEqual(frames[4],frames[8]);
-    all.push(frames[0]);
+test('Sombrinha mantém arte e evoluções; Granito usa os mesmos pixels originais em todas as evoluções',()=>{
+  const {game:g}=boot();const frames=[];
+  for(let stage=1;stage<=3;stage++)for(let frame=0;frame<4;frame++){
+    const c=g.monSprite('sombra',stage,frame);assert.equal(c.width,32);assert.equal(c.fy,30);assert.ok(c.getContext('2d').ops.length>100);frames.push(c.toDataURL());assert.equal(c,g.monSprite('sombra',stage,frame));
   }
-  assert.equal(new Set(all).size,2);
+  assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);assert.notEqual(frames[4],frames[8]);
+  for(const pose of [0,10,20,30,50,63,73,84])assert.equal(g.monSprite('pedra',1,pose),g.monSprite('pedra',3,pose));
 });
 
 test('jornada funciona com todos os personagens e a pausa limpa movimento e ataque',()=>{
@@ -320,7 +317,7 @@ test('arremessos extras respeitam a distância máxima do ponto de impacto',()=>
   const {game:g}=boot();
   for(const [type,range] of [['agua',330],['pedra',320]]){
     g.P.chars[type]=1;begin(g,type);g.run.st.multi=4;
-    for(const angle of [0,1,2,3])g.basicAttack(angle,3000,3000);
+    for(const angle of [0,1,2,3]){if(type==='pedra'){g.run.sp2=0;g.run.chg=null;g.S.aim='manual';g.cam.x=0;g.cam.y=0;g.mouse.x=Math.cos(angle)*3000*g.zoom;g.mouse.y=Math.sin(angle)*3000*g.zoom;g.useStoneSpecial();}else g.basicAttack(angle,3000,3000);}
     assert.equal(g.lobs.length,16);assert.ok(g.lobs.every(l=>Math.hypot(l.tx-l.x0,l.ty-l.y0)<=range+1e-9));
   }
 });
@@ -910,7 +907,7 @@ test('saves atuais e legados retiram o ajudante removido sem perder Granito ou p
 test('Granito conserva desbloqueio, atributos e Carapaça na seleção e na jornada',()=>{
   const {game:g,node}=boot({P:{seen:1,ess:500}});g.ACT.team();assert.match(node('#ui').innerHTML,/Granito/);assert.doesNotMatch(node('#ui').innerHTML,/Pedrin|Rochedão|Tatu escavador/);
   g.ACT.buychar(button('pedra'));assert.equal(g.P.ess,350);assert.equal(g.P.chars.pedra,1);
-  g.ACT.play();g.ACT.difficulty(button('normal'));assert.match(node('#ui').innerHTML,/Granito/);assert.match(node('#ui').innerHTML,/Escavador do elemento Terra/);assert.match(node('#ui').innerHTML,/Carapaça/);
+  g.ACT.play();g.ACT.difficulty(button('normal'));assert.match(node('#ui').innerHTML,/Granito/);assert.match(node('#ui').innerHTML,/Escavador de Pedra · Terra/);assert.match(node('#ui').innerHTML,/Carapaça/);
   g.ACT.begin(button('pedra'));assert.deepEqual([g.run.st.maxhp,g.run.st.dmg,g.run.st.spd,g.run.st.armor],[135,9,172,.18]);
   g.hurtPlayer(100);assert.equal(g.run.pl.hp,53);assert.equal(g.run.sp,0);assert.equal(g.CH.pedra.scd,12);
 });
@@ -926,16 +923,14 @@ test('ajudante removido não tem entidade, cartas, seleção, invocação ou efe
   assert.deepEqual([...g.TYPES],['fogo','agua','planta','eletrico','pedra','sombra']);
 });
 
-test('Granito usa sprites individuais legíveis para estados, habilidades, dano e morte',()=>{
-  const {game:g}=boot();const poses=new Set();
-  for(const [name,frames] of Object.entries(g.GRANITO_STATES)){
-    const drawings=frames.map(f=>{const c=g.granitoSprite(1,f);assert.equal(c.width,64);assert.equal(c.fy,f>=62&&f<=63?61:60);assert.equal(c,g.granitoSprite(1,f));return c.toDataURL();});
-    assert.ok(new Set(drawings).size>=2,name);poses.add(drawings[0]);
+test('Granito usa recortes originais distintos e mantém o desenho em todas as evoluções',()=>{
+  const {game:g}=boot();const expected={20:'idle',10:'walk',40:'run',30:'claw0',33:'claw3',50:'hurt',63:'dead',72:'stone2',84:'quake4'};
+  for(const [frame,id]of Object.entries(expected)){
+    const c=g.granitoSprite(1,+frame),meta=g.GRANITO_ART.frames[id];assert.equal(c.sourceId,id);assert.equal(c.width,meta.w);assert.equal(c.height,meta.h);assert.equal(c.fy,meta.fy);assert.equal(c,g.granitoSprite(3,+frame));
+    assert.ok(c.getContext('2d').getImageData(0,0,c.width,c.height).data.some(v=>v>0));
   }
-  assert.equal(poses.size,8);assert.notEqual(g.granitoSprite(1,20).toDataURL(),g.granitoSprite(3,20).toDataURL());
-  const colors=new Set(g.granitoSprite(1,20).getContext('2d').ops.map(o=>o[0]));assert.ok(colors.has('#7d3043'));assert.ok(colors.has('#e8b77c'));assert.ok(colors.size>=14);
   assert.equal(g.granitoFrame({flash:.2,gAnim:{k:'stone',t:.1,dur:.55}}),50);
-  assert.equal(g.granitoFrame({dash:{},t:.1}),41);assert.equal(g.granitoFrame({},false,1),63);
+  assert.equal(g.granitoFrame({dash:{},t:.1}),20);assert.equal(g.granitoFrame({},false,1),63);
 });
 
 test('garras de Granito acertam duas vezes de perto sem somar uma Pedrada',()=>{
@@ -944,24 +939,24 @@ test('garras de Granito acertam duas vezes de perto sem somar uma Pedrada',()=>{
   g.basicAttack(0,70,0);assert.equal(g.run.cd,1.2);assert.equal(g.lobs.length,0);assert.equal(near.hp,100);
   g.granitoStrikeTick(.19);assert.equal(near.hp,100);g.granitoStrikeTick(.01);assert.equal(near.hp,95);
   g.granitoStrikeTick(.12);assert.equal(near.hp,90);g.granitoStrikeTick(1);assert.equal(near.hp,90);assert.equal(far.hp,100);assert.equal(behind.hp,100);
-  assert.equal(g.attackRange(),320);assert.equal(g.run.pl.x,0);assert.equal(g.run.pl.dash,null);
+  assert.equal(g.attackRange(),112);assert.equal(g.run.pl.x,0);assert.equal(g.run.pl.dash,null);
 });
 
-test('Pedrada prepara, mantém impacto em 0,55 s e limita alcance mesmo após movimento',()=>{
-  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;const e=target(g,240,0,100);
-  g.basicAttack(0,240,0);assert.equal(g.run.cd,1.2);assert.equal(g.run.pl.gAnim.k,'stone');assert.equal(g.lobs.length,1);
+test('Pedrada especial prepara, mantém impacto em 0,55 s e limita alcance após movimento',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;g.cam.x=g.cam.y=0;g.mouse.x=240*g.zoom;g.mouse.y=0;const e=target(g,240,0,100);
+  g.useStoneSpecial();assert.equal(g.run.sp2,6);assert.equal(g.run.sp,0);assert.equal(g.run.pl.gAnim.k,'stone');assert.equal(g.lobs.length,1);
   g.updLobs(.25);assert.equal(e.hp,100);assert.ok(g.lobs[0].t<0);g.updLobs(.01);assert.equal(g.lobs[0].launched,true);
   g.updLobs(.28);assert.equal(e.hp,100);g.updLobs(.01);assert.equal(e.hp,90);assert.equal(e.stun,.4);assert.equal(g.lobs.length,0);
-  g.basicAttack(0,9999,0);g.run.pl.x=-200;g.updLobs(.26);const l=g.lobs[0];assert.equal(l.x0,-200);assert.ok(Math.hypot(l.tx-l.x0,l.ty-l.y0)<=320.00001);
+  g.run.chg=null;g.run.sp2=0;g.mouse.x=9999*g.zoom;g.useStoneSpecial();g.run.pl.x=-200;g.updLobs(.26);const l=g.lobs[0];assert.equal(l.x0,-200);assert.ok(Math.hypot(l.tx-l.x0,l.ty-l.y0)<=320.00001);
   assert.equal(g.granitoFrame({gAnim:{k:'stone',t:.2,dur:.55}}),73);assert.equal(g.granitoFrame({gAnim:{k:'stone',t:.32,dur:.55}}),74);
 });
 
-test('Terremoto anuncia por 0,28 s e preserva raio, dano, recarga, atordoamento e empurrão',()=>{
+test('Terremoto anuncia por 0,36 s e preserva raio, dano, recarga, atordoamento e empurrão',()=>{
   const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;const near=target(g,240,0,100),far=target(g,340,0,100);
   g.useSpecial();assert.equal(g.run.chg.kind,'quake');assert.equal(g.run.chg.R,260);assert.equal(g.run.sp,12);assert.equal(near.hp,100);
-  g.chargeTick(.27);assert.equal(near.hp,100);g.useSpecial();assert.equal(g.run.sp,12);g.chargeTick(.01);
+  g.chargeTick(.35);assert.equal(near.hp,100);g.useSpecial();assert.equal(g.run.sp,12);g.chargeTick(.01);
   assert.equal(near.hp,77);assert.equal(near.stun,1.4);assert.ok(near.kx>300);assert.equal(far.hp,100);assert.equal(g.run.chg,null);
-  g.chargeTick(1);assert.equal(near.hp,77);assert.ok(g.fx.some(f=>f.k==='earth'));
+  g.chargeTick(1);assert.equal(near.hp,77);assert.ok(g.fx.some(f=>f.k==='granitoquake'));
   g.run.sp=0;g.useSpecial();g.keys.r=true;g.update(.1);assert.equal(g.run.pl.vx,172);
 });
 
@@ -1038,4 +1033,80 @@ test('novo pântano tem trilhas, poças e detalhes distintos sem alterar colisõ
   assert.ok(paths>0&&paths<400);assert.ok(wet>0&&wet<400);assert.notEqual(g.tileCanvas(2,0,0,0).toDataURL(),g.tileCanvas(2,0,0,15).toDataURL());
   const details=new Set(Array.from({length:8},(_,i)=>g.swampDecorCanvas(i,0).toDataURL()));assert.equal(details.size,8);
   const e=dragonFoe(g,'mosquito',120),before=JSON.stringify(e);g.drawGround();g.render();assert.equal(JSON.stringify(e),before);assert.equal(g.hazards.length,0);
+});
+
+test('todos os recortes de Granito preservam o RGB original, sem títulos ou a prancha completa',()=>{
+  const importer=require('../scripts/build-granito.cjs'),source=importer.readSource(),{game:g}=boot();
+  assert.equal(source.sha256,'4d8a6fb61786d344368f64bb395dc88b59b96a745460c44285aa21647ee3b705');
+  assert.equal(g.GRANITO_ART.sourceSha256,source.sha256);assert.equal(Object.keys(g.GRANITO_ART.frames).length,27);
+  const expected=crypto.createHash('sha256').update(JSON.stringify(importer.build())).digest('hex');
+  assert.equal(crypto.createHash('sha256').update(JSON.stringify(g.GRANITO_ART)).digest('hex'),expected);
+  for(const [id,rect]of Object.entries(importer.manifest.frames)){
+    const c=g.granitoAsset(id),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data,original=importer.crop(source,rect);
+    assert.equal(Buffer.compare(Buffer.from(pixels),original.data),0,id+' copia cada pixel');assert.ok(c.width<768&&c.height<512,id);
+    let visible=0,annotations=0;for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]){visible++;if(pixels[i]>130&&pixels[i+2]>130&&pixels[i+2]>pixels[i]*1.1&&pixels[i+1]<100)annotations++;}
+    assert.ok(visible>100,id);assert.equal(annotations,0,id+' não inclui linhas/títulos magenta');
+  }
+  const tiny={width:5,height:5,data:Buffer.alloc(100)};
+  for(let i=3;i<100;i+=4)tiny.data[i]=255;
+  for(let y=1;y<4;y++)for(let x=1;x<4;x++)if(x===1||x===3||y===1||y===3){const at=(y*5+x)*4;tiny.data[at]=40;tiny.data[at+1]=25;tiny.data[at+2]=45;}
+  const cut=importer.crop(tiny,[0,0,5,5,2,4,4]).data;assert.equal(cut[3],0);assert.equal(cut[(2*5+2)*4+3],255);assert.equal(cut[(2*5+2)*4],0);
+});
+
+test('ataque básico continua sendo garras mesmo com a mira distante ou Disparo Extra',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;g.run.st.multi=4;
+  const near=target(g,70,0,100),far=target(g,500,0,100);g.basicAttack(0,500,0);g.granitoStrikeTick(.42);
+  assert.equal(near.hp,90);assert.equal(far.hp,100);assert.equal(g.lobs.length,0);assert.equal(g.run.sp2,0);assert.equal(g.run.cd,1.2);
+  g.enemies.splice(g.enemies.indexOf(near),1);g.S.aim='auto';g.run.cd=0;g.update(.1);assert.equal(g.lobs.length,0);assert.equal(far.hp,100);assert.ok(g.run.cd<=0);
+});
+
+test('Pedrada e Terremoto têm recargas independentes e só compartilham a preparação',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.pl.inv=100;
+  assert.equal(g.useStoneSpecial(),true);assert.equal(g.run.sp2,6);assert.equal(g.run.sp,0);assert.equal(g.run.chg.kind,'stone');
+  g.useSpecial();assert.equal(g.run.sp,0);assert.equal(g.useStoneSpecial(),false);assert.equal(g.lobs.length,1);
+  g.chargeTick(.26);g.useSpecial();assert.equal(g.run.sp,12);assert.equal(g.run.sp2,6);assert.equal(g.run.chg.kind,'quake');
+  g.chargeTick(.36);g.useSpecial();assert.equal(g.run.chg,null);assert.equal(g.useStoneSpecial(),false);
+  g.update(1);assert.equal(g.run.sp,11);assert.equal(g.run.sp2,5);const e=target(g,700,0,1);g.killEnemy(e);
+  assert.ok(Math.abs(g.run.sp-10.9)<1e-9);assert.ok(Math.abs(g.run.sp2-4.9)<1e-9);
+  g.run.pl.gAnim={k:'stone',t:.3,dur:.55};g.basicAttack(0,80,0);assert.equal(g.run.pl.gAnim.k,'stone');
+  g.run.pl.gAnim.t=.36;g.basicAttack(0,80,0);assert.equal(g.run.pl.gAnim.k,'claw');
+});
+
+test('Granito não faz dash: Shift e o botão secundário usam Pedrada sem invulnerabilidade',()=>{
+  const {game:g,events}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.doDash();assert.equal(g.run.pl.dash,null);assert.equal(g.run.pl.inv,0);
+  const key={key:'Shift',repeat:false,preventDefault(){}};events.keydown(key);assert.equal(g.run.pl.dash,null);assert.equal(g.run.pl.inv,0);assert.equal(g.run.sp2,6);assert.equal(g.run.dcd||0,0);
+  events.keydown({...key,repeat:true});assert.equal(g.lobs.length,1);g.update(.1);assert.equal(g.run.pl.x,0);assert.equal(g.run.pl.y,0);assert.equal(g.run.pl.dash,null);
+  g.run.chg=null;g.run.sp2=0;events['#b-dash:click']({currentTarget:{blur(){}}});assert.equal(g.run.sp2,6);assert.equal(g.run.pl.dash,null);
+  begin(g,'fogo');events.keydown(key);assert.ok(g.run.pl.dash);assert.equal(g.run.pl.dash.nodmg,true);assert.equal(g.run.dcd,2.4);
+});
+
+test('interface de Granito oferece os dois especiais e restaura esquiva nos outros heróis',()=>{
+  const {game:g,node}=boot({P:{seen:1,chars:{pedra:1}}});g.ACT.play();g.ACT.difficulty(button('normal'));
+  const card=node('#ui').innerHTML;assert.ok(card.includes('<b>Garras:</b>'));assert.ok(card.includes('<b>Pedrada:</b>'));assert.ok(card.includes('<b>Terremoto:</b>'));assert.ok(card.includes('Granito não tem dash'));
+  g.ACT.begin(button('pedra'));g.updHud();assert.equal(node('#b-dash').getAttribute('aria-label'),'Pedrada (Shift)');assert.match(node('#b-dash-n').innerHTML,/Pedrada/);assert.doesNotMatch(node('#shift-hint').innerHTML,/esquiva/i);
+  assert.equal(node('#b-sp-n').textContent,'Terremoto');g.run.sp2=3;g.run.sp2Max=6;g.run.sp=9;g.run.spMax=12;g.updHud();
+  assert.equal(node('#b-dash-cd').style.height,'50%');assert.equal(node('#b-sp-cd').style.height,'75%');
+  begin(g,'fogo');assert.equal(node('#b-dash').getAttribute('aria-label'),'Esquiva (Shift)');assert.match(node('#shift-hint').innerHTML,/esquiva/);
+});
+
+test('Terremoto usa as poses e a onda originais em preparação, golpe, explosão e recuperação',()=>{
+  const {game:g}=boot();const times=[0,.15,.27,.42,.65,.9],expected=['quake0','quake1','quake2','quake3','quake4','quake1'];
+  times.forEach((t,i)=>{const frame=g.granitoFrame({gAnim:{k:'quake',t,dur:1.02}});assert.equal(g.monSprite('pedra',1,frame).sourceId,expected[i]);});
+  g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;const e=target(g,200,0,100);g.useSpecial();g.chargeTick(.35);assert.equal(e.hp,100);g.chargeTick(.01);
+  assert.equal(e.hp,77);const wave=g.fx.find(f=>f.k==='granitoquake');assert.equal(wave.R,260);assert.equal(wave.max,.72);
+  g.run.pl.gAnim.t=.65;g.basicAttack(0,80,0);assert.equal(g.run.pl.gAnim.k,'quake');assert.equal(g.run.pl.gStrike,null);
+  g.run.pl.gAnim.t=.8;g.basicAttack(0,80,0);assert.equal(g.run.pl.gAnim.k,'claw');
+  for(let i=0;i<10;i++){g.render();g.updFx(.08);}assert.ok(!g.fx.some(f=>f.k==='granitoquake'));
+});
+
+test('Pedrada especial respeita pausa, derrota e mira automática sem conceder dash',()=>{
+  const {game:g,events}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');events.blur();assert.equal(g.useStoneSpecial(),false);assert.equal(g.run.sp2,0);g.ACT.resume();
+  g.S.aim='auto';const e=target(g,250,100,100);assert.equal(g.useStoneSpecial(),true);const shot=g.lobs[0];assert.ok(Math.abs(shot.tx-e.x)<1e-9);assert.ok(Math.abs(shot.ty-e.y)<1e-9);assert.ok(Math.hypot(shot.tx-shot.x0,shot.ty-shot.y0)<=320);
+  assert.equal(g.run.pl.dash,null);g.hurtPlayer(100000);g.run.sp2=0;assert.equal(g.useStoneSpecial(),false);assert.equal(g.run.sp2,0);
+});
+
+test('portal preserva as duas recargas de Granito e uma nova jornada zera ambas',()=>{
+  const {game:g}=boot();g.P.chars.pedra=1;begin(g,'pedra');defeatWorld(g);g.run.sp2=4.25;g.run.sp2Max=6;g.run.sp=7.5;g.run.spMax=12;g.run.pl.hp=80;
+  crossPortal(g);assert.equal(g.run.sp2,4.25);assert.equal(g.run.sp2Max,6);assert.equal(g.run.sp,7.5);assert.equal(g.run.pl.hp,80);
+  begin(g,'pedra');assert.equal(g.run.sp,0);assert.equal(g.run.sp2,0);assert.equal(g.run.pl.dash,null);
 });
