@@ -1,5 +1,16 @@
 # Histórico
 
+## 0.8.2-beta — pixels originais de Granito e dois especiais — 2026-11-04
+
+- Substituído o redesenho procedural de Granito pelos pixels da imagem fornecida. Importados 22 recortes de personagem e cinco efeitos, com cores, proporções e detalhes originais. Somente o fundo quase preto conectado às bordas vira transparência; olhos, sulcos e sombras internas são preservados. Mesma arte nas três evoluções, com seus atributos mantidos.
+- PNG original preservado em `assets/granito/reference.png`, retângulos/âncoras em `frames.json` e importador determinístico em `scripts/build-granito.cjs`. Os pixels ficam embutidos no index, preservando o HTML independente. Testes comparam todos os recortes com a origem e impedem a inclusão de títulos/linhas da prancha no jogo.
+- Ataque básico passa a ser somente garras, inclusive ao mirar longe. Mantidos dois acertos, alcance 112 × área, cadência de 1,2 s e orçamento total de dano, sem lançar pedra adicional.
+- Pedrada torna-se o segundo especial, no Shift/botão Pedrada, com recarga própria de 6 s. Mantidos alcance 320, preparação de 0,26 s, impacto total em 0,55 s, área, dano e atordoamento. Terremoto permanece no Espaço/botão direito e no botão principal, com recarga de 12 s. Ambos recebem melhorias e recuperação por abate e conservam as recargas nos portais.
+- Dash e invulnerabilidade de esquiva removidos exclusivamente de Granito. Shift/botão secundário usam Pedrada; os demais personagens mantêm esquiva, controles e habilidades. Vida 135, dano 9, velocidade 172, Carapaça de 18%, desbloqueio e save `pedra` preservados.
+- Terremoto usa a sequência original de preparação, agachar, golpe, poeira/rochas, onda de terra e recuperação. Preparação de 0,36 s, animação de 1,02 s e efeito de 0,72 s; segurar o básico não corta a fase principal de impacto. Raio 260, dano ×2,6, atordoamento/empurrão e recarga mantidos. Pedra voadora e impacto também usam os efeitos originais.
+- Seleção, ajuda, HUD, botões e prévias mostram garras e os dois especiais. Mantidos os três mundos, chefes após quatro minutos, inimigos, drops e a remoção/migração de Ventinho.
+- Validação: 116 testes aprovados, incluindo comparação de pixels, recargas independentes, garras com mira distante, teclado/botão sem dash, animação do Terremoto, portais e regressões. Prévia de combate ampliada para 34 cenários.
+
 ## 0.8.1-beta — Granito, ritmo das etapas e revisão do pântano — 2026-11-04
 
 - Granito substitui Pedrino sob o ID `pedra`, preservando desbloqueio, vida 135, dano 9, velocidade 172 e Carapaça de 18%. Topeira humanoide ereta, capa vinho rasgada, placas de areia/pedra e garras longas; 36 quadros individuais de repouso, passos, corrida, garras, dano, morte, Pedrada e Terremoto. Prancha em `tests/granito.html`; a partida usa somente cada quadro.

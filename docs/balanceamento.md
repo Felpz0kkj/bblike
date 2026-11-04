@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.8.1
+# Balanceamento — beta 0.8.2
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -8,7 +8,7 @@ Calibração inicial de alcance, dano e recuperação. Os testes verificam as re
 | Capricorn | 85 | 8 → 4 → 2 | Primeiro alvo 320; saltos 120 | 0,80 s | 18 s |
 | Sakura | 85 | 8,05 → 6,44 → 5,152 | Flecha 360 | 0,70 s | 20 s |
 | Frood | 100 | 9,45 × multiplicador do peixe | Centro da poça até 330 + raio | 1,05 s | 12 s |
-| Granito | 135 | Garras: 10 no total em dois acertos, já arredondado; Pedrada: 9,9 + atordoamento | Garras 112; Pedrada até 320 + raio 64 | 1,20 s nos dois modos | 12 s |
+| Granito | 135 | Garras: 10 no total em dois acertos, já arredondado | Garras 112 × área | 1,20 s | Terremoto 12 s; Pedrada 6 s |
 | Sombrinha | 80 | Dois orbes de 4,5 | Percurso de cada orbe 480 | 0,80 s | 8 s |
 
 Sem crítico, evoluções, aliados ou melhorias. Os danos básicos de atributo passam de 13/12/12/13/20/11 para **8/7/7/8/9/6** (Salamandra/Frood/Sakura/Capricorn/Granito/Sombrinha). A melhoria do ataque principal concede +15% por nível, em vez de +25%; o bônus de cadência de 5% foi mantido. Críticos, peixes mais fortes e melhorias ainda podem eliminar inimigos frágeis em um ataque, mas os ataques comuns iniciais precisam de mais acertos nos cenários de regressão.
@@ -27,7 +27,7 @@ Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador est
 
 Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
-## Três mundos e ciclos — beta 0.8.1
+## Três mundos e ciclos — mantidos na beta 0.8.2
 
 Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → Pântano de Frood / Serpente Branca → portal → floresta**. A primeira área permanece a floresta, conforme confirmação do autor. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. Cada chefe surge aos **240 segundos de combate da etapa**, independentemente do nível/XP. Antes, o gatilho era ganhar dez níveis e não havia tempo fixo. Pausas e escolhas suspendem o cronômetro; derrota o congela. A abertura do portal impede um segundo chefe na área vencida; somente entrar no portal reinicia `worldTime` em zero.
 
@@ -89,24 +89,29 @@ Flor: dano 2 × → 1,4 ×, raiz 1,4 → 0,8 s, recarga 14 → 20 s. Não cura a
 - **Granito:** preservados vida 135, dano 9, velocidade 172, intervalo 1,2 s, multiplicador da Pedrada 1,1, Carapaça de 18% e recarga especial 12 s. Nome/design substituem Pedrino sob o mesmo ID `pedra`; desbloqueio custa 150 e não é reiniciado.
 - **Sombrinha:** vida 90 → 80; dano 11 → 6; intervalo 0,65 → 0,8 s; crítico natural 15% → 10%; drenagem 4% → 2%, só pelo próprio dano e com reserva. Mantidos dois orbes, homing, percurso 480 e teleporte sem dano duplo ao mesmo alvo.
 
-Redução de recarga por abate e melhorias permanentes continuam com os mesmos valores. Velocidades de movimento e ações dos personagens foram preservadas.
+Redução de recarga por abate e melhorias permanentes continuam com os mesmos valores. As velocidades base permanecem iguais; as mudanças de ataque e controles desta revisão são exclusivas de Granito.
 
-## Granito: garras, Pedrada, Terremoto e salvamentos
+## Granito: imagem original, garras e dois especiais
 
-O botão principal decide pela distância do ponto mirado: até 112 × área usa dois golpes de garras, além disso usa Pedrada até 320. Os dois modos compartilham cadência e um único orçamento de dano de `ataque × 1,1`; as garras dividem o total arredondado entre dois acertos, aos 0,20/0,32 s, sem gerar pedra adicional. Disparo Extra amplia o arco das garras ou o número de pedras, conforme o modo. Não há dash nos golpes.
+O ataque básico agora é **somente garras**, mesmo com a mira distante. Tem alcance de 112 × área, cadência base de 1,2 s e dois acertos aos 0,20/0,32 s. O orçamento de dano continua sendo `ataque × 1,1`, arredondado e dividido entre os dois acertos: 5 + 5 na base, antes de crítico/armadura. Disparo Extra amplia o arco. O básico não cria pedras nem consome recarga de especial.
 
-Pedrada prepara por 0,26 s e voa por 0,29 s, mantendo o impacto total de 0,55 s da versão anterior, raio 64 × área e atordoamento de 0,4 s. Ao lançar, a origem acompanha a posição real e o destino é limitado novamente a 320; mover/esquivar na preparação não estende o alcance. Granito aliado usa a mesma sequência visual, preservando seu impacto total em 0,6 s, dano próprio e origem aliada.
+**Pedrada** é um especial próprio no **Shift** e no botão antes usado para esquiva. Recarga base de **6 s**, multiplicada por `st.cdm`, independente do Terremoto. Prepara por 0,26 s e voa por 0,29 s, mantendo impacto total de 0,55 s, alcance até 320, raio 64 × área, multiplicador ×1,1 e atordoamento de 0,4 s. Disparo Extra aumenta o número de pedras. Ao lançar, a origem acompanha o ator e o destino é limitado novamente a 320; mover-se na preparação não estende o alcance.
 
-Terremoto usa o sistema de preparação existente: 0,28 s, raio 260 × área, dano ×2,6, atordoamento de 1,4 s e empurrão de 360 nos inimigos comuns. A preparação não reduz a velocidade de Granito; os controles de especial/esquiva permanecem os atuais. O efeito de terra é curto e pixelado. Dano, armadura, colisão, morte e renascimento continuam nos sistemas compartilhados.
+**Terremoto** permanece no **Espaço/botão direito**, com recarga base de **12 s**. Usa a preparação compartilhada por 0,36 s, raio 260 × área, dano ×2,6, atordoamento de 1,4 s e empurrão de 360 nos comuns. Sua animação dura 1,02 s, percorrendo os quadros originais de repouso, agachar, apoiar as garras, golpe, explosão de terra e recuperação. O básico não corta a fase de golpe antes de 0,8 s, nem a liberação da pedra antes de 0,36 s; outro especial continua sendo uma ação deliberada. O impacto usa onda, poeira e estilhaços recortados da própria imagem.
 
-Arte em quadros individuais de 64×64 com paleta limitada, capa vinho rasgada, placas de areia/pedra, duas pernas, focinho e garras longas. O jogo escolhe poses de repouso, passos, corrida na esquiva, garras, Pedrada, Terremoto, dano e queda. A morte tem corpo tombado próprio. A prancha em `tests/granito.html` reúne 36 quadros e não é usada como sprite da partida. Colosso e Serpente usam novos quadros de 96×96, com textura de casca/raízes e escamas claras/olhos vermelhos.
+As recargas são separadas e exibidas nos dois botões. A preparação impede iniciar outra ação de carga ao mesmo tempo. A recuperação de 0,1 s por abate e as melhorias de cadência aplicam-se aos dois especiais. As transições por portal conservam ambas as recargas; uma nova jornada as reinicia.
 
-Ventinho deixa de existir em dados de ajudantes, cartas, equipe, invocação e pulso próprio. O carregamento remove os IDs antigos `normal`/`ventinho`/`ventania` da escolha inicial, coleção e desbloqueios; um personagem inválido recebe a opção válida padrão. Saves v3 e legados v2 preservam campos compatíveis de essência, coleção válida, personagens, melhorias, conquistas, estatísticas e recordes. A remoção não mexe nos controles, na dificuldade Normal ou nos efeitos de outros personagens.
+**Granito não tem dash nem invulnerabilidade de esquiva.** `doDash` o recusa; Shift e o botão secundário acionam Pedrada. Os demais personagens mantêm a esquiva e seus controles. Vida 135, dano 9, velocidade 172, Carapaça de 18%, custo 150, ID `pedra` e progresso salvo permanecem iguais. Granito aliado conserva seus valores/rotina de Pedrada automática e recebe os mesmos sprites originais.
+
+A arte foi importada diretamente de `assets/granito/reference.png`, sem redesenhar, reduzir resolução ou trocar paleta. São **27 recortes**, incluindo 22 poses de personagem e cinco efeitos. `assets/granito/frames.json` guarda os retângulos e âncoras; `scripts/build-granito.cjs` copia os pixels para o HTML. Apenas o fundo quase preto conectado às bordas fica transparente; pretos internos de olhos/sulcos e todos os RGB de personagem/efeitos são preservados. As três evoluções usam os mesmos pixels, mantendo os respectivos atributos da evolução. Não há novos brilhos, contornos ou deformações no personagem.
+
+`node scripts/build-granito.cjs --check` confere os dados embutidos. O PNG original é preservado byte a byte, com SHA-256 `4d8a6fb61786d344368f64bb395dc88b59b96a745460c44285aa21647ee3b705`. O jogo continua em um HTML independente, sem requisição ao arquivo externo durante a partida. A prancha de desenvolvimento em `tests/granito.html` mostra os mesmos recortes; nunca é usada inteira como sprite.
+
+Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Não há mudanças de mapa, inimigos, chefes, drops ou progressão nesta revisão.
 
 ## Validação
 
-108 testes cobrem consistência de versão, migração atual/legada, remoção do ajudante, desbloqueio/atributos de Granito, garras, Pedrada, Terremoto, morte, animações e origem aliada; chefes aos 240 s, pausa/escolhas, reinício pelo portal, drops, frequência de Bocarras, Mosquitos e Serpente. Incluem as regressões anteriores dos três mundos, colisões, dano periódico, heróis e salvamentos. `tests/combat.html` oferece 31 quadros do código real sem mudar o progresso principal. No Edge, um ciclo simulado de 4 minutos por mapa confirmou Colosso/Cratos/Serpente aos 240 s, portais e Bocarras nos três tamanhos, sem ultrapassar a população reservada. Não há telemetria de partidas reais suficiente para declarar equilíbrio definitivo.
-
+116 testes cobrem fidelidade de todos os recortes ao PNG original, preservação dos pretos internos, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 34 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
 
 ## Histórico: integração da versão 9 na beta 0.6.4
 

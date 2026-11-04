@@ -2,7 +2,7 @@
 <html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BaubLike · Verificação de combate</title>
 <style>body{margin:20px;background:#0b1411;color:#eee;font:15px system-ui}h1{font-size:22px;color:#f2b84b}button,select{padding:9px;margin:4px;background:#243b30;color:#fff;border:1px solid #61765e;border-radius:4px}iframe{display:block;width:min(960px,100%);height:600px;border:1px solid #61765e;margin-top:12px}p{color:#abbcaf}#status{color:#b6e4c4}</style>
-<h1>BaubLike · Beta 0.8.1 · Combate</h1>
+<h1>BaubLike · Beta 0.8.2 · Combate</h1>
 <p>Cenários reproduzíveis usando o código real, com progresso e áudio isolados. O jogo fica parado no quadro escolhido.</p>
 <label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Granito</option><option value="sombra">Sombrinha</option></select></label>
 <label>Evolução <select id="stage"><option value="1">Inicial</option><option value="2">Evolução 2</option><option value="3">Evolução 3</option></select></label>
@@ -12,6 +12,7 @@
 <button data-scene="forestadds">Colosso + reforços</button><button data-scene="dragonadds">Cratos + reforços</button>
 <button data-scene="swamp">Pântano de Frood</button><button data-scene="swampwarnings">Avisos do pântano</button><button data-scene="split">Bocarra · divisão</button><button data-scene="snakebite">Serpente · bote</button><button data-scene="snaketail">Serpente · cauda</button><button data-scene="swampadds">Serpente + reforços</button>
 <button data-scene="graniteclaws">Granito · garras</button><button data-scene="granitedig">Granito · escavação</button><button data-scene="granitethrow">Granito · Pedrada</button><button data-scene="granitequakeprep">Granito · prepara Terremoto</button><button data-scene="granitequake">Granito · Terremoto</button><button data-scene="granitehurt">Granito · dano</button><button data-scene="granitedeath">Granito · morte</button><button data-scene="bossclock">Chefe aos quatro minutos</button>
+<button data-scene="graniteboth">Granito · dois especiais</button><button data-scene="granitefar">Granito · garras com mira distante</button><button data-scene="granitenodash">Granito · Shift sem dash</button>
 <button data-scene="draconic">Bioma dracônico</button><button data-scene="warnings">Avisos dos quatro inimigos</button>
 <p id="status">Carregando…</p><iframe id="game" title="Cenário de combate isolado"></iframe>
 <script>
@@ -36,8 +37,11 @@
         });
         if(scene.startsWith('granite')){
           if(scene==='graniteclaws'){g.basicAttack(0,80,0);g.granitoStrikeTick(.22);g.tickGranito(g.run.pl,.22);}
-          else if(scene==='granitedig'||scene==='granitethrow'){g.basicAttack(0,240,0);const dt=scene==='granitedig'?.12:.32;g.tickGranito(g.run.pl,dt);g.updLobs(dt);}
-          else if(scene==='granitequakeprep'||scene==='granitequake'){g.useSpecial();const dt=scene==='granitequakeprep'?.15:.4;g.chargeTick(dt);g.tickGranito(g.run.pl,dt);g.updFx(.08);}
+          else if(scene==='granitefar'){g.enemies.length=0;const e=g.mkEnemy('catador',1,260,0,{});e.hp=e.maxhp=1000;e.spd=0;g.enemies.push(e);g.basicAttack(0,260,0);g.granitoStrikeTick(.22);g.tickGranito(g.run.pl,.22);}
+          else if(scene==='granitenodash'){g.secondaryAction();g.update(.1);}
+          else if(scene==='graniteboth'){g.useStoneSpecial();g.chargeTick(.26);g.updLobs(.26);g.useSpecial();g.chargeTick(.36);g.tickGranito(g.run.pl,.65);g.updLobs(.29);g.updFx(.08);}
+          else if(scene==='granitedig'||scene==='granitethrow'){g.useStoneSpecial();const dt=scene==='granitedig'?.12:.32;g.tickGranito(g.run.pl,dt);g.chargeTick(dt);g.updLobs(dt);}
+          else if(scene==='granitequakeprep'||scene==='granitequake'){g.useSpecial();const dt=scene==='granitequakeprep'?.22:.65;g.chargeTick(dt);g.tickGranito(g.run.pl,dt);g.updFx(.08);}
           else if(scene==='granitehurt')g.hurtPlayer(10);
           else{g.run.pl.hp=1;g.hurtPlayer(100000);g.update(.7);}
         }else if(scene==='bossclock'){

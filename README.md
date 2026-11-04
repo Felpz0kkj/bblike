@@ -1,4 +1,4 @@
-# BaubLike — Beta 0.8.1
+# BaubLike — Beta 0.8.2
 
 Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Granito e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
@@ -6,42 +6,45 @@ Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa
 
 ## Jogar
 
-Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial, Shift faz uma esquiva e Esc pausa. No celular, especial e esquiva têm botões próprios.
+Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial e Esc pausa. Shift usa Pedrada com Granito e faz esquiva com os demais personagens. No celular, especial e esquiva têm botões próprios.
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
 
-## Novidades da beta 0.8.1
+## Novidades da beta 0.8.2
 
-**Granito**, escavador de Terra, substitui Pedrino com o mesmo desbloqueio e atributos: vida 135, dano 9, velocidade 172 e Carapaça de 18%. O desenho agora é uma topeira humanoide com manto vinho rasgado, placas de pedra e areia, focinho longo e garras fortes. Há quadros individuais de repouso, movimento, corrida, ataques, dano e morte; a [prancha de referência do jogo](tests/granito.html) mostra as sequências completas.
+**Granito usa os pixels da imagem fornecida**, em vez de um redesenho: 22 recortes de personagem e cinco de efeitos, com silhueta, proporções, placas, garras e cores originais. Somente o fundo quase preto conectado às bordas é convertido em transparência; olhos, sulcos e sombras internas são preservados. A arte permanece a mesma nas três evoluções. A [prancha de verificação](tests/granito.html) mostra os quadros realmente usados no jogo.
 
-O botão de ataque usa **garras de perto e Pedrada à distância**, na mesma cadência de 1,2 s e com um único orçamento de dano. Pedrada prepara a escavação por 0,26 s e mantém o impacto total em 0,55 s, alcance 320, área e atordoamento. **Terremoto** prepara o golpe por 0,28 s e mantém raio 260, dano, atordoamento e recarga de 12 s, com empurrão. Controles dos outros personagens permanecem iguais.
+O ataque básico de Granito é **somente garras**, com dois acertos de curto alcance e cadência de 1,2 s, inclusive quando o cursor está distante. Seus dois especiais têm controles e recargas separados:
 
-**Ventinho foi removido** dos ajudantes, cartas, seleção, desbloqueios e efeitos próprios. Saves atuais e legados retiram a escolha antiga, preservando essência, coleção válida, personagens, melhorias, conquistas e recordes. O ID interno `pedra` continua sendo o de Granito, para manter seu progresso.
+| Controle de Granito | Ação | Recarga base |
+| --- | --- | --- |
+| Clique / ataque automático | Garras, alcance 112 × área | Cadência 1,2 s |
+| Shift / botão Pedrada | Escava e arremessa uma pedra até 320, com impacto em área e atordoamento | 6 s |
+| Espaço ou botão direito / botão Terremoto | Golpe no chão, raio 260 × área, dano, empurrão e atordoamento | 12 s |
 
-O ciclo continua **Floresta Sombria / Colosso da Casca → Bioma Dracônico / Cratos → Pântano de Frood / Serpente Branca → Floresta**. Agora o chefe aparece após **240 segundos de combate por mapa**, independentemente do XP. Pausas e escolhas não contam; entrar no portal reinicia o cronômetro. O HUD mostra o tempo restante. Vida, nível, XP, melhorias, aliados e recargas permanecem na passagem, sem cura automática.
+**Granito não tem dash nem a invulnerabilidade da esquiva.** Shift aciona Pedrada para ele; os demais personagens mantêm sua esquiva no Shift. Vida 135, dano 9, velocidade 172, Carapaça de 18%, desbloqueio e ID salvo `pedra` continuam iguais.
 
-O pântano recebeu trilhas de lama, poças com margens irregulares, juncos, raízes, troncos baixos, pequenos tocos e plantas aquáticas. Toda decoração fica sob o combate e não cria obstáculos. **Bocarras** aparecem mais e continuam dividindo de tamanho 3 para duas tamanho 2 e quatro tamanho 1. **Mosquitos** perseguem mais rápido, investem mais longe e tentam picar com mais frequência; a chance de sangramento passou a 35%, ainda leve, por 2 s e sem acumular.
+Terremoto agora mostra a sequência original de agachar, apoiar as garras, golpear, levantar poeira e espalhar a onda de terra. Prepara por 0,36 s e anima por 1,02 s; segurar o ataque básico não interrompe o impacto. Pedrada mantém a preparação de 0,26 s, impacto total em 0,55 s e seus efeitos originais de pedra/estilhaços. Os dois especiais recebem as melhorias de recarga e a recuperação por abate existentes.
 
-A **Serpente Branca** e o **Colosso da Casca** foram redesenhados com mais detalhes de escamas, casca, raízes e silhuetas próximas às referências. A Serpente tem vida base 3.800 (5.320 no primeiro encontro Normal), mais dano, maior bote e menor espera entre ataques, mantendo os avisos de 0,75/0,95 s. Colosso e Cratos mantêm seus ataques e vida base.
-
-XP por abate fica **18,75% menor que na beta 0.8.0**. Cura cai para 1,2% dos abates, ímã para 0,6% e baú de elite para 35%; o baú do chefe permanece garantido. Chefes deixam seis cristais, em vez de doze. O limite de 160 inimigos continua reservando espaço para as divisões das Bocarras. Mantidos os nerfs de Sakura, o bloqueio de aliados iguais ao herói e os reforços reduzidos durante os chefes.
+Continuam o ciclo **Floresta → Dragão → Pântano → Floresta**, os chefes após quatro minutos de combate por mapa, portais que preservam a partida, drops reduzidos, ajustes dos inimigos e remoção de Ventinho da revisão anterior.
 
 ## Desenvolvimento
 
 Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
 
 - Fonte principal: `index.html`.
-- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.8.1, e a próxima correção será 0.8.2. Um teste verifica a consistência das identificações ativas.
+- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.8.2, e a próxima correção será 0.8.3. Um teste verifica a consistência das identificações ativas.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
-- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (31 cenários, incluindo ações de Granito, os três mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
-- Prancha de Granito: http://127.0.0.1:4173/tests/granito.html (36 quadros do código real, com estados e habilidades).
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (34 cenários, incluindo ações de Granito, os três mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
+- Prancha de Granito: http://127.0.0.1:4173/tests/granito.html (recortes originais e sequências usadas no jogo).
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
+- Importação de Granito: `node scripts/build-granito.cjs --check` confere os pixels embutidos contra `assets/granito/reference.png` e `frames.json`; sem `--check`, atualiza o bloco de pixels no HTML.
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
 - Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
 - Comparação das versões: [docs/comparacao-versoes.md](docs/comparacao-versoes.md).
 
-Fontes externas são opcionais; os sprites são desenhados no código. O ranking funciona localmente; a integração online antiga depende do ambiente original e não oferece ranking global no GitHub Pages.
+Fontes externas são opcionais. Os sprites usam canvas; os pixels originais de Granito ficam embutidos no HTML, que continua funcionando sozinho, sem carregar a prancha ou assets externos na partida. O ranking funciona localmente; a integração online antiga depende do ambiente original e não oferece ranking global no GitHub Pages.
 
 ## GitHub Pages
 
