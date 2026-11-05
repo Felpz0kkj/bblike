@@ -1,5 +1,12 @@
 # Histórico
 
+## 0.8.4-beta — pressão dos chefes, Pedrada e otimizações — 2026-11-05
+
+- Mordida da Serpente aplica o veneno existente por 3 s apenas ao acertar; Colosso alterna raiz, impacto circular e linha de raízes com avisos e recuperação.
+- Golpes comuns um pouco mais ágeis; Esporos têm aviso de 0,55 s e nuvem de raio 72. Pedrada acompanha o alvo durante o preparo e mantém alcance 320 e destino fixo no voo.
+- Otimizada a transparência das árvores (uma lista de participantes por quadro em vez de uma por árvore); removidos `DRG` e `rnd`, sem referências. Atributos dos heróis, progressão, sprites aprovados e controles preservados.
+- Revisão com três agentes GPT-6 Luna e integração/revisão final do coordenador. Validação: 129 testes, 45 cenários de combate, recortes originais conferidos pelos importadores e uso por mouse/teclado/toque.
+
 ## 0.8.3-beta — transparência e escala de Granito; Serpente original — 2026-11-04
 
 - Corrigidos os buracos no torso/membros de Granito: máscaras internas preservam sombras pretas que encostam no fundo entre braços e pernas. RGB original mantido em todos os pixels retidos; espaços externos continuam transparentes.

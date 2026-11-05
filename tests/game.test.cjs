@@ -18,7 +18,7 @@ function boot(saved,random,legacy){
       createImageData(w,h){return{width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},
       putImageData(data){this.raster=data;ops.push(['raster',data.width,data.height,crypto.createHash('sha256').update(data.data).digest('hex')]);},
       getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}return {data:new Uint8ClampedArray(w*h*4)};},
-      drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a});},
+      drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a,alpha:this.globalAlpha});},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
     },{get:(t,k)=>k in t?t[k]:()=>{}});
@@ -491,7 +491,7 @@ test('cada mundo só usa seu elenco, com desbloqueios relativos à etapa',()=>{
 test('Catador avisa antes do porrete, sem dano por contato; alcance e recarga limitados',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'catador',40),hp=g.run.pl.hp;
   g.updEnemies(.01);assert.equal(e.attack.k,'club');assert.equal(e.tele.r,28);assert.equal(g.run.pl.hp,hp);
-  enemySteps(g,8);assert.equal(g.run.pl.hp,hp);g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.ok(e.cd>=1.2);
+  enemySteps(g,7);assert.equal(g.run.pl.hp,hp);g.updEnemies(.04);assert.ok(g.run.pl.hp<hp);assert.ok(e.cd>=1.09);
   const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,8);assert.equal(g.run.pl.hp,after);
   begin(g,'fogo');const far=dragonFoe(g,'catador',40);g.updEnemies(.01);g.run.pl.x=180;enemySteps(g,10);assert.equal(g.run.pl.hp,hp);
   assert.ok(far.cd>0);
@@ -508,16 +508,16 @@ test('Asabrasa recua, prepara a garganta e cospe uma brasa lenta de mira fixa',(
 
 test('Lagarto avisa o bote, percorre no máximo 96 e morde uma única vez',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'lagarto',150);const x=e.x;
-  g.updEnemies(.01);assert.equal(e.attack.k,'crouch');assert.ok(e.tele);enemySteps(g,6);assert.equal(e.x,x);
+  g.updEnemies(.01);assert.equal(e.attack.k,'crouch');assert.ok(e.tele);enemySteps(g,5);assert.equal(e.x,x);
   enemySteps(g,12);assert.ok(x-e.x<=96.001);assert.ok(x-e.x>90);assert.ok(e.cd>1.6);
   begin(g,'fogo');const near=dragonFoe(g,'lagarto',100);g.updEnemies(.01);const hp=g.run.pl.hp;
   enemySteps(g,15);assert.ok(g.run.pl.hp<hp);const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,6);assert.equal(g.run.pl.hp,after);assert.ok(near.cd>0);
 });
 
-test('Estufado sinaliza raio compacto por mais de um segundo e usa podridão existente',()=>{
+test('Estufado sinaliza raio compacto por 0,92 s e usa podridão existente',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'estufado',60),hp=g.run.pl.hp;
-  g.updEnemies(.01);assert.equal(e.attack.k,'swell');assert.equal(e.tele.r,72);enemySteps(g,20);assert.equal(g.run.pl.hp,hp);
-  g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.rot,2);assert.equal(g.enemies.length,0);
+  g.updEnemies(.01);assert.equal(e.attack.k,'swell');assert.equal(e.tele.r,72);enemySteps(g,18);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.03);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.rot,2);assert.equal(g.enemies.length,0);
   assert.equal(g.run.kills,1);assert.equal(g.gems.length,1);assert.ok(g.fx.some(f=>f.k==='rotcloud'&&f.max<=.4));
   g.updFx(.5);assert.ok(!g.fx.some(f=>f.k==='rotcloud'));
 });
@@ -613,7 +613,7 @@ test('Esporos sempre surgem em trios completos e respeitam o teto simultâneo',(
 
 test('nuvem dos Esporos só aparece após aviso e desaparece em menos de um segundo',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'esporo',45),hp=g.run.pl.hp;
-  g.updEnemies(.01);assert.equal(e.attack.k,'spores');assert.equal(e.tele.r,48);enemySteps(g,12);assert.equal(g.hazards.length,0);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.01);assert.equal(e.attack.k,'spores');assert.equal(e.tele.r,72);enemySteps(g,10);assert.equal(g.hazards.length,0);assert.equal(g.run.pl.hp,hp);
   g.updEnemies(.06);assert.equal(g.hazards.length,1);g.updProj(.01);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.rot,2);
   g.updProj(.9);assert.equal(g.hazards.length,0);
   begin(g,'fogo');const killed=dragonFoe(g,'esporo',45);g.updEnemies(.01);g.hitEnemy(killed,100000,{canCrit:false});enemySteps(g,20);assert.equal(g.hazards.length,0);
@@ -621,7 +621,7 @@ test('nuvem dos Esporos só aparece após aviso e desaparece em menos de um segu
 
 test('Besouro sinaliza linha, limita investida e fica vulnerável na recuperação',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'besouro',150);const x=e.x,hp=g.run.pl.hp;
-  g.updEnemies(.01);assert.equal(e.attack.k,'brace');assert.equal(e.tele.t,'lane');enemySteps(g,12);assert.equal(e.x,x);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.01);assert.equal(e.attack.k,'brace');assert.equal(e.tele.t,'lane');enemySteps(g,10);assert.equal(e.x,x);assert.equal(g.run.pl.hp,hp);
   g.run.pl.y=150;enemySteps(g,10);assert.ok(Math.abs(e.x-x)<=150.001);assert.equal(e.attack.k,'recover');assert.equal(g.run.pl.hp,hp);
   e.hp=100;g.hitEnemy(e,20,{canCrit:false});assert.equal(e.hp,75);assert.ok(e.cd>2);
 });
@@ -633,12 +633,12 @@ test('Aranha prepara a mira e lança um espinho visível sem seguir o jogador',(
   g.run.pl.x=500;g.updProj(.1);assert.ok(b.vx<0);assert.ok(e.cd>2);
 });
 
-test('Colosso mira a raiz por um segundo, permite fuga e recupera entre golpes',()=>{
+test('Colosso mira a raiz por 0,72 s, permite fuga e recupera entre golpes',()=>{
   const {game:g}=boot();begin(g,'fogo');g.run.lv=10;spawnDue(g,);const e=g.enemies[0];e.spawn=0;e.x=220;e.y=0;e.pt=0;
-  const hp=g.run.pl.hp;g.updEnemies(.01);assert.equal(e.act.k,'root');assert.equal(e.tele.r,90);enemySteps(g,18);assert.equal(g.run.pl.hp,hp);
+  const hp=g.run.pl.hp;g.updEnemies(.01);assert.equal(e.act.k,'root');assert.equal(e.tele.r,82);enemySteps(g,13);assert.equal(g.run.pl.hp,hp);
   g.run.pl.x=-180;enemySteps(g,3);assert.equal(g.run.pl.hp,hp);assert.equal(e.act.hit,true);assert.ok(g.fx.some(f=>f.k==='roots'));
-  enemySteps(g,17);assert.equal(e.act,null);assert.ok(e.pt>1.5);
-  g.run.pl.x=0;g.run.pl.inv=0;e.pt=0;g.updEnemies(.01);enemySteps(g,21);assert.ok(g.run.pl.hp<hp);
+  enemySteps(g,12);assert.equal(e.act,null);assert.ok(e.pt>1&&e.pt<=1.2);
+  g.run.pl.x=0;g.run.pl.inv=0;e.pi=0;e.pt=0;g.updEnemies(.01);enemySteps(g,15);assert.ok(g.run.pl.hp<hp);
 });
 
 test('crescimento moderado por passagem não acelera ataques nem remove limites',()=>{
@@ -797,8 +797,8 @@ test('Bocarras menores têm menos vida, raio menor e velocidade maior',()=>{
 
 test('mordida da Bocarra tem aviso curto e não causa contato instantâneo',()=>{
   const {game:g}=boot();swampRun(g);const e=dragonFoe(g,'bocarra',60),hp=g.run.pl.hp;
-  g.updEnemies(.01);assert.equal(e.attack.k,'mawbite');assert.equal(e.tele.t,'circle');enemySteps(g,6);assert.equal(g.run.pl.hp,hp);
-  g.updEnemies(.03);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,6);assert.equal(g.run.pl.hp,after);
+  g.updEnemies(.01);assert.equal(e.attack.k,'mawbite');assert.equal(e.tele.t,'circle');enemySteps(g,5);assert.equal(g.run.pl.hp,hp);
+  g.updEnemies(.04);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');const after=g.run.pl.hp;g.run.pl.inv=0;enemySteps(g,6);assert.equal(g.run.pl.hp,after);
 });
 
 test('Mosquito pica com investida limitada e pode aplicar sangramento de dois segundos',()=>{
@@ -840,7 +840,7 @@ test('flechas usam a direção real de chegada para atingir frente e costas do c
 test('Caranguejo se move lateralmente e avisa antes de dar a pinçada',()=>{
   const {game:g}=boot(undefined,()=>.5);swampRun(g);const e=dragonFoe(g,'caranguejo',120);g.updEnemies(.05);assert.ok(Math.abs(e.y)>.1);
   e.x=60;e.y=0;e.cd=0;const hp=g.run.pl.hp;g.updEnemies(.01);assert.equal(e.attack.k,'pinch');assert.ok(e.tele);
-  enemySteps(g,11);assert.equal(g.run.pl.hp,hp);g.updEnemies(.06);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');assert.equal(e.attack.dur,.7);
+  enemySteps(g,10);assert.equal(g.run.pl.hp,hp);g.updEnemies(.03);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'recover');assert.equal(e.attack.dur,.65);
 });
 
 test('Serpente avisa o bote, limita avanço e acerta no máximo uma mordida',()=>{
@@ -1184,4 +1184,116 @@ test('quadros da Serpente acompanham os dois ataques e a boca acompanha o espelh
   const box=g.spriteLayout(c,'serpente',e.sc);
   assert.equal(right.y,e.y+box.top+c.mouth.y*box.scale,'origem do bote é a boca desenhada');
   g.updEnemies(.01);assert.equal(e.tele.x,g.snakeMouth(e).x);assert.equal(e.tele.y,g.snakeMouth(e).y);
+});
+
+
+test('mordida da Serpente aplica veneno só no acerto real e sem acumular',()=>{
+  const {game:g}=boot(),e=snakeBoss(g);e.pt=0;
+  g.updEnemies(.01);assert.equal(e.act.k,'snakebite');
+  enemySteps(g,21);assert.ok(g.run.pl.hp<g.run.st.maxhp);assert.equal(g.run.pl.rot,3);
+  const rot=g.run.pl.rot;g.run.pl.inv=0;e.pt=0;enemySteps(g,40);
+  assert.ok(g.run.pl.rot<=rot,'uma mordida repetida não soma durações');
+
+  const {game:h}=boot(),blocked=snakeBoss(h);blocked.pt=0;
+  h.run.pl.inv=2;h.updEnemies(.01);enemySteps(h,21);
+  assert.ok(!(h.run.pl.rot>0),'invulnerabilidade impede veneno');
+});
+
+test('Colosso alterna raiz, impacto circular e linha de raízes com avisos e recuperação',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.lv=10;spawnDue(g,);const e=g.enemies[0];
+  e.spawn=0;e.x=220;e.y=0;e.pt=0;g.run.pl.x=0;g.run.pl.y=0;
+  g.updEnemies(.01);assert.equal(e.act.k,'root');assert.equal(e.tele.t,'circle');assert.equal(e.act.phase,'windup');
+  enemySteps(g,71,.01);assert.equal(e.act.phase,'impact');assert.ok(g.run.pl.hp<g.run.st.maxhp);assert.ok(g.fx.some(f=>f.k==='roots'));
+  enemySteps(g,19,.01);assert.equal(e.act.phase,'recover');enemySteps(g,41,.01);assert.equal(e.act,null);e.pt=0;
+
+  e.pt=0;g.run.pl.inv=0;g.run.pl.x=e.x-100;g.run.pl.y=0;const slamHp=g.run.pl.hp;g.updEnemies(.01);assert.equal(e.act.k,'slam');assert.equal(e.tele.t,'circle');
+  assert.equal(e.tele.r,138);for(let i=0;i<40&&e.act;i++)g.updEnemies(.05);assert.equal(e.act,null);assert.ok(g.run.pl.hp<slamHp,'slam acerta o jogador dentro do alcance');
+  e.pt=0;g.run.pl.x=100;g.updEnemies(.01);assert.equal(e.act.k,'rootline');assert.equal(e.tele.t,'lane');
+  const hp=g.run.pl.hp;g.run.pl.y=300;enemySteps(g,25);
+  assert.equal(g.run.pl.hp,hp,'o jogador escapa da linha avisada');enemySteps(g,1);assert.equal(e.act,null);
+  e.x=0;e.y=0;e.pi=1;e.pt=0;g.run.pl.x=300;g.run.pl.y=0;g.updEnemies(.01);
+  assert.equal(e.act.k,'rootline','o kite troca o slam fora de alcance por uma linha');assert.equal(e.tele.t,'lane');assert.equal(e.pi,0);
+});
+
+
+test('inimigos comuns de perto começam golpes mais cedo e mantêm aviso',()=>{
+  const {game:s}=boot();begin(s,'fogo');s.run.world='swamp';
+  let e=dragonFoe(s,'bocarra',42);s.updEnemies(.01);
+  assert.equal(e.attack.k,'mawbite');assert.equal(e.attack.dur,.28);
+  const {game:c}=boot();begin(c,'fogo');c.run.world='swamp';
+  e=dragonFoe(c,'caranguejo',45);c.updEnemies(.01);
+  assert.equal(e.attack.k,'pinch');assert.equal(e.attack.dur,.52);assert.equal(e.tele.t,'circle');
+
+  const {game:d}=boot();begin(d,'fogo');d.run.world='dragon';
+  e=dragonFoe(d,'catador',40);d.updEnemies(.01);
+  assert.equal(e.attack.k,'club');assert.equal(e.attack.dur,.38);assert.equal(e.tele.t,'circle');
+  const {game:a}=boot();begin(a,'fogo');a.run.world='dragon';
+  e=dragonFoe(a,'lagarto',100);a.updEnemies(.01);
+  assert.equal(e.attack.k,'crouch');assert.equal(e.attack.dur,.28);assert.equal(e.tele.t,'circle');
+  const {game:r}=boot();begin(r,'fogo');r.run.world='dragon';
+  e=dragonFoe(r,'estufado',70);r.updEnemies(.01);
+  assert.equal(e.attack.k,'swell');assert.equal(e.attack.dur,.92);assert.equal(e.tele.r,72);
+});
+
+test('Trio de Esporos alcança um pouco mais longe com nuvem pequena e breve',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=dragonFoe(g,'esporo',75),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'spores');assert.equal(e.attack.dur,.55);assert.equal(e.tele.r,72);
+  enemySteps(g,9);assert.equal(g.hazards.length,0);assert.equal(g.run.pl.hp,hp);
+  enemySteps(g,2);g.updEnemies(.001);assert.equal(g.hazards.length,1);assert.equal(g.hazards[0].r,72);
+  assert.equal(g.hazards[0].dur,.85);g.updProj(.01);assert.ok(g.run.pl.hp<hp);assert.equal(g.run.pl.rot,2);
+  g.updProj(.9);assert.equal(g.hazards.length,0);
+
+  const {game:h}=boot();begin(h,'fogo');const escaped=dragonFoe(h,'esporo',83);
+  h.updEnemies(.01);assert.ok(!escaped.attack,'fora do alcance efetivo não inicia');
+  escaped.x=75;h.updEnemies(.01);assert.equal(escaped.attack.k,'spores');h.run.pl.x=200;
+  enemySteps(h,11);h.updEnemies(.001);const safeHp=h.run.pl.hp;h.updProj(.01);
+  assert.equal(h.run.pl.hp,safeHp);assert.ok(!(h.run.pl.rot>0),'sair da nuvem evita veneno');
+});
+
+
+
+test('Pedrada mira o corpo sob o sprite e acompanha o alvo apenas durante a preparação',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;g.cam.x=g.cam.y=0;
+  const e=target(g,240,0,100);g.mouse.x=240*g.zoom;g.mouse.y=-75*g.zoom;
+  assert.equal(g.useStoneSpecial(),true);const l=g.lobs[0];assert.equal(l.tx,240);assert.equal(l.ty,0);
+  e.x=195;g.updLobs(.26);assert.equal(l.tx,195);assert.equal(l.ty,0);assert.equal(l.aimed,null);
+  e.x=150;g.updLobs(.29);assert.equal(e.hp,90,'o alvo que se aproximou ainda está na área anunciada');assert.equal(e.stun,.4);
+
+  g.run.chg=null;g.run.sp2=0;e.x=240;g.useStoneSpecial();const second=g.lobs[0];g.updLobs(.26);
+  const fixed=second.tx;e.x=240;e.y=170;g.updLobs(.1);assert.equal(second.tx,fixed);assert.equal(second.ty,0);
+  g.updLobs(.19);assert.equal(e.hp,90,'desviar para fora da área durante o voo evita o dano');
+});
+
+test('Pedrada limita alcance no lançamento e conta a borda da área de impacto uma só vez',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;g.cam.x=g.cam.y=0;g.mouse.x=320*g.zoom;g.mouse.y=0;
+  const e=target(g,320,0,100);g.useStoneSpecial();g.run.pl.x=-100;e.x=400;g.updLobs(.26);const l=g.lobs[0];
+  assert.equal(l.x0,-100);assert.equal(l.tx,220);assert.ok(Math.hypot(l.tx-l.x0,l.ty-l.y0)<=320+1e-9);
+  e.x=l.tx+l.r+e.r;const far=target(g,e.x+.01,0,100);g.updLobs(.29);
+  assert.equal(e.hp,90);assert.equal(far.hp,100);g.updLobs(1);assert.equal(e.hp,90);
+});
+
+test('Pedrada não se perde se o alvo morrer durante o preparo e preserva a mira livre',()=>{
+  const {game:g}=boot(undefined,()=>.5);g.P.chars.pedra=1;begin(g,'pedra');g.run.st.crit=0;g.cam.x=g.cam.y=0;
+  const e=target(g,200,0,100);g.mouse.x=200*g.zoom;g.mouse.y=0;g.useStoneSpecial();g.killEnemy(e);
+  const nearby=target(g,215,0,100);g.updLobs(.55);assert.equal(nearby.hp,90);assert.equal(g.lobs.length,0);
+  g.run.chg=null;g.run.sp2=0;g.mouse.x=80*g.zoom;g.mouse.y=150*g.zoom;g.useStoneSpecial();
+  assert.ok(Math.abs(g.lobs[0].tx-80)<1e-9);assert.ok(Math.abs(g.lobs[0].ty-150)<1e-9);
+});
+
+test('árvores reutilizam participantes da transparência sem ocultar o jogador',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');g.cam.x=-400;g.cam.y=-250;g.run.pl.x=-10000;
+  const trees=[],ctx=node('#cv').getContext('2d');let iterations=0;
+  const iterator=g.enemies[Symbol.iterator];g.enemies[Symbol.iterator]=function(){iterations++;return iterator.call(this);};
+  g.addTrees(trees);assert.ok(trees.length>1);for(const tree of trees)tree.f();assert.equal(iterations,1,'não copia o elenco por árvore');
+  const sample=trees[0];sample.f();const image=ctx.images.at(-1);assert.equal(image.alpha,.92);
+  g.run.pl.x=image.args[0]+image.args[2]/2;g.run.pl.y=sample.y-30;sample.f();assert.equal(ctx.images.at(-1).alpha,.18);
+});
+
+test('veneno da Serpente usa dano periódico existente e cauda/erro não aplicam veneno',()=>{
+  const {game:g}=boot(),e=snakeBoss(g);g.updEnemies(.01);enemySteps(g,21);assert.equal(g.run.pl.rot,3);
+  const bitten=g.run.pl.hp;g.tickRot(3);assert.equal(g.run.pl.hp,bitten-15);assert.equal(g.run.pl.rot,0);
+  g.tickRot(10);assert.equal(g.run.pl.hp,bitten-15);
+  const {game:h}=boot(),tail=snakeBoss(h);tail.pi=1;tail.x=100;tail.y=0;h.updEnemies(.01);enemySteps(h,21);
+  assert.ok(h.run.pl.hp<h.run.st.maxhp);assert.ok(!(h.run.pl.rot>0),'varrida não é mordida');
+  const {game:s}=boot();snakeBoss(s);s.updEnemies(.01);s.run.pl.y=400;enemySteps(s,25);assert.ok(!(s.run.pl.rot>0));
 });

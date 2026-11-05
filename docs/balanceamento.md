@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.8.3
+# Balanceamento — beta 0.8.4
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -27,7 +27,7 @@ Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador est
 
 Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
-## Três mundos e ciclos — mantidos na beta 0.8.3
+## Três mundos e ciclos — mantidos na beta 0.8.4
 
 Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → Pântano de Frood / Serpente Branca → portal → floresta**. A primeira área permanece a floresta, conforme confirmação do autor. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. Cada chefe surge aos **240 segundos de combate da etapa**, independentemente do nível/XP. Antes, o gatilho era ganhar dez níveis e não havia tempo fixo. Pausas e escolhas suspendem o cronômetro; derrota o congela. A abertura do portal impede um segundo chefe na área vencida; somente entrar no portal reinicia `worldTime` em zero.
 
@@ -35,21 +35,23 @@ Portal precisa de contato e 0,8 s de abertura. Não concede vida, XP ou melhoria
 
 | Criatura | Aviso | Ataque e limite | Recuperação / recarga |
 | --- | --- | --- | --- |
-| Esporo, sempre em trio | 0,65 s | Nuvem de raio 48, duração 0,85 s; podridão 2 s | 0,30 s / 3 s |
-| Besouro de Casca | 0,65 s em faixa | Investida até 150, velocidade 390 | 0,65 s vulnerável (+25% de dano recebido) / 2,4 s |
+| Esporo, sempre em trio | 0,55 s | Nuvem de raio 72, duração 0,85 s; podridão 2 s | 0,30 s / 3 s |
+| Besouro de Casca | 0,55 s em faixa | Investida até 150, velocidade 390 | 0,65 s vulnerável (+25% de dano recebido) / 2,4 s |
 | Aranha Sombria | 0,70 s | Espinho de velocidade 200, duração 2,8 s, mira fixa | 0,25 s / 2,7 s |
-| Catador de Ossos | 0,45 s | Porrete em círculo de raio 28 | 0,22 s / 1,25 s |
+| Catador de Ossos | 0,38 s | Porrete em círculo de raio 28 | 0,22 s / 1,10 s |
 | Asabrasa | 0,60 s na garganta | Brasa de velocidade 210, duração 2,6 s, mira fixa | 0,20 s / 2,4 s |
-| Lagarto de Cinza | 0,32 s | Bote até 96, velocidade 480, seguido de mordida | 0,28 s / 2 s |
-| Estufado da Podridão | 1,05 s | Explosão de raio 72, podridão 2 s; nuvem 0,4 s | Morre na explosão |
-| Colosso da Casca | 1 s | Raiz de raio 90 (105 abaixo de 33% de vida), alvo fixado na preparação | Recupera até 1,85 s desde o início; espera 1,65 s pelo próximo golpe |
-| Bocarra do Brejo | 0,32 s (tamanho 3), 0,26 s (menores) | Mordida de raio 28, sem dano de contato | 0,22 s / 0,85 s |
+| Lagarto de Cinza | 0,28 s | Bote até 96, velocidade 480, seguido de mordida | 0,28 s / 2 s |
+| Estufado da Podridão | 0,92 s | Explosão de raio 72, podridão 2 s; nuvem 0,4 s | Morre na explosão |
+| Colosso · raiz | 0,72 s | Círculo de raio 82, alvo fixo até 230 de distância | Impacto 0,18 s + recuperação 0,42 s; espera 1,2 s (0,95 abaixo de 33%) |
+| Colosso · impacto | 0,58 s | Círculo de raio 138 no corpo; fora do alcance escolhe a faixa | Mesma recuperação/espera |
+| Colosso · raízes em linha | 0,68 s | Faixa até 260, raio 30, direção fixada no aviso | Mesma recuperação/espera |
+| Bocarra do Brejo | 0,28 s (tamanho 3), 0,23 s (menores) | Mordida de raio 28, sem dano de contato | 0,22 s / 0,75 s |
 | Mosquito do Brejo | 0,28 s em faixa | Probóscide em investida até 175, velocidade 640; sangramento eventual | 0,22 s / 1,05 s |
-| Caranguejo de Lodo | 0,60 s | Pinçada de raio 34, centro 35 à frente | 0,70 s vulnerável (+25%) / 1,8 s |
-| Serpente Branca · bote | 0,75 s em faixa | Mordida com avanço até 260, velocidade 630, largura sinalizada 56 | 0,40 s; espera 1,15 s (0,8 s abaixo de 50% de vida) |
+| Caranguejo de Lodo | 0,52 s | Pinçada de raio 34, centro 35 à frente | 0,65 s vulnerável (+25%) / 1,6 s |
+| Serpente Branca · bote | 0,75 s em faixa | Mordida com avanço até 260, velocidade 630, largura sinalizada 56; veneno por 3 s (5/s antes da armadura) | 0,40 s; espera 1,15 s (0,8 s abaixo de 50% de vida) |
 | Serpente Branca · cauda | 0,95 s | Varredura de raio 215, um acerto por ataque | Ataque 0,25 s + recuperação 0,45 s; mesma espera do bote |
 
-Vida dos chefes: `base × (1 + 0,20 × visit) × dificuldade`. Colosso: base 2.200; dragão: base 2.400; Serpente: base **3.800**, antes 2.500. Sequência no Normal: **2.200 → 2.880 → 5.320 → 3.520 → 4.320 → 7.600**, continuando gradualmente. Colosso e Cratos mantêm vida base e padrões. A Serpente passa de 64 para 88 de velocidade e de 0,9 para 1,35 no fator de dano; começa a perseguir acima de 190 de distância. Alterna bote e cauda com mira fixada, sem dano de contato. O dano dos chefes continua usando o nível real do jogador, a dificuldade e a passagem; o novo cronômetro não força um nível artificial.
+Vida dos chefes: `base × (1 + 0,20 × visit) × dificuldade`. Colosso: base 2.200; dragão: base 2.400; Serpente: base **3.800**, antes 2.500. Sequência no Normal: **2.200 → 2.880 → 5.320 → 3.520 → 4.320 → 7.600**, continuando gradualmente. As vidas base de Colosso e Cratos são mantidas; Cratos conserva seus padrões. O Colosso alterna raiz, impacto e faixa, com aproximação até 120 durante a espera; se o impacto curto não alcançar, ele usa a faixa e segue o ciclo. Círculos e linha ficam fixos após o início do aviso. Preparação, impacto e recuperação dirigem os quadros visuais; a faixa cria raízes apenas ao longo da linha anunciada. A Serpente passa de 64 para 88 de velocidade e de 0,9 para 1,35 no fator de dano; começa a perseguir acima de 190 de distância. Alterna bote e cauda com mira fixada, sem dano de contato. A mordida aplica três segundos de veneno existente antes do dano direto, somente se acertar sem invulnerabilidade. O veneno causa 5/s antes da armadura, não soma instâncias, e usa as mesmas regras de morte/renascimento e limpeza na vitória. A cauda não aplica veneno. O dano dos chefes continua usando o nível real do jogador, a dificuldade e a passagem; o novo cronômetro não força um nível artificial.
 
 Vida comum: `12 × fator da espécie × 1,18 × 1,12 × hpMul(ameaça) × dificuldade × (1 + 0,12 × visit)`, com `ameaça = min(nível, 10) + max(0, nível − 10) × 0,25`. Dano comum: `6 × fator da espécie × 1,12 × 1,08 × (1 + 0,025 × ameaça) × dificuldade × (1 + 0,07 × visit)`. Os fatores 1,12 e 1,08 mantêm o aumento de 12% de vida e 8% de dano introduzido na beta 0.8.0, sem aplicá-los aos chefes. Catador inicial no Normal: aproximadamente 17,5 de vida e 5,95 de dano antes da armadura. Elites comuns têm 4× vida e escala visual 1,2; Esporos e Bocarras nunca viram elites isoladas.
 
@@ -95,7 +97,7 @@ Redução de recarga por abate e melhorias permanentes continuam com os mesmos v
 
 O ataque básico agora é **somente garras**, mesmo com a mira distante. Tem alcance de 112 × área, cadência base de 1,2 s e dois acertos aos 0,20/0,32 s. O orçamento de dano continua sendo `ataque × 1,1`, arredondado e dividido entre os dois acertos: 5 + 5 na base, antes de crítico/armadura. Disparo Extra amplia o arco. O básico não cria pedras nem consome recarga de especial.
 
-**Pedrada** é um especial próprio no **Shift** e no botão antes usado para esquiva. Recarga base de **6 s**, multiplicada por `st.cdm`, independente do Terremoto. Prepara por 0,26 s e voa por 0,29 s, mantendo impacto total de 0,55 s, alcance até 320, raio 64 × área, multiplicador ×1,1 e atordoamento de 0,4 s. Disparo Extra aumenta o número de pedras. Ao lançar, a origem acompanha o ator e o destino é limitado novamente a 320; mover-se na preparação não estende o alcance.
+**Pedrada** é um especial próprio no **Shift** e no botão antes usado para esquiva. Recarga base de **6 s**, multiplicada por `st.cdm`, independente do Terremoto. Prepara por 0,26 s e voa por 0,29 s, mantendo impacto total de 0,55 s, alcance até 320, raio 64 × área, multiplicador ×1,1 e atordoamento de 0,4 s. Disparo Extra aumenta o número de pedras. A mira manual reconhece o corpo desenhado, além do círculo físico; no automático continua priorizando o inimigo próximo. O alvo é acompanhado só durante a preparação; morte/desaparecimento mantém a última posição válida, e o destino fica fixo em voo. O limite inclusivo do impacto conta a borda exata do círculo, sem dano duplicado. Ao lançar, a origem acompanha o ator e o destino é limitado novamente a 320; mover-se na preparação não estende o alcance.
 
 **Terremoto** permanece no **Espaço/botão direito**, com recarga base de **12 s**. Usa a preparação compartilhada por 0,36 s, raio 260 × área, dano ×2,6, atordoamento de 1,4 s e empurrão de 360 nos comuns. Sua animação dura 1,02 s, percorrendo os quadros originais de repouso, agachar, apoiar as garras, golpe, explosão de terra e recuperação. O básico não corta a fase de golpe antes de 0,8 s, nem a liberação da pedra antes de 0,36 s; outro especial continua sendo uma ação deliberada. O impacto usa onda, poeira e estilhaços recortados da própria imagem.
 
@@ -107,11 +109,15 @@ A arte foi importada diretamente de `assets/granito/reference.png`, sem redesenh
 
 `node scripts/build-granito.cjs --check` confere os dados embutidos. O PNG original é preservado byte a byte, com SHA-256 `4d8a6fb61786d344368f64bb395dc88b59b96a745460c44285aa21647ee3b705`. O jogo continua em um HTML independente, sem requisição ao arquivo externo durante a partida. A prancha de desenvolvimento em `tests/granito.html` mostra os mesmos recortes; nunca é usada inteira como sprite.
 
-Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Não há mudanças de atributos, ataques, mapas, drops ou progressão nesta revisão. A revisão visual da Serpente usa 11 recortes originais em `assets/serpente/reference.png`, com metadados em `frames.json` e importador `scripts/build-serpente.cjs`. O desenho original aponta para a esquerda; o espelhamento acompanha a direção do combate. A boca do quadro de mordida fornece tanto a origem do aviso quanto a trajetória de acerto. Corpo, dano, vida e temporizadores do chefe continuam iguais. Fundo e legenda são descartados; olhos, escamas, musgo e contornos mantêm seus RGB. A prancha em `tests/serpente.html` permite conferir os quadros individuais.
+Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Na beta 0.8.4 os ataques dos chefes/comuns e a mira de Pedrada recebem os ajustes descritos acima; atributos dos heróis, mapas, drops e progressão permanecem iguais. A revisão visual da Serpente usa 11 recortes originais em `assets/serpente/reference.png`, com metadados em `frames.json` e importador `scripts/build-serpente.cjs`. O desenho original aponta para a esquerda; o espelhamento acompanha a direção do combate. A boca do quadro de mordida fornece tanto a origem do aviso quanto a trajetória de acerto. Corpo, dano, vida e temporizadores do chefe continuam iguais. Fundo e legenda são descartados; olhos, escamas, musgo e contornos mantêm seus RGB. A prancha em `tests/serpente.html` permite conferir os quadros individuais.
+
+## Otimizações da beta 0.8.4
+
+A lista de entidades que deixam árvores transparentes é construída uma vez em `addTrees`, em vez de ser copiada por cada árvore desenhada; mesmos participantes e mesmas regras de transparência. Removidos `DRG` (tabela de arte sem referências) e `rnd` (helper sem chamadas), preservados no histórico do Git. Mantidos os dados de sprites, fallback de arte ainda utilizado, migração de saves e ranking. A revisão foi focada em código sem uso comprovado e alocações repetidas, sem reescrever os sistemas do jogo.
 
 ## Validação
 
-120 testes cobrem fidelidade dos recortes aos dois PNGs originais, preservação dos pretos internos e das sombras abertas, tamanho de Granito no menu/jogador/aliado, quadros e espelhamento da Serpente, origem da mordida, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 38 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
+129 testes incluem veneno só no acerto, três padrões do Colosso e ausência de bloqueio à distância, avisos mais ágeis, nuvem dos Esporos, Pedrada contra alvos móveis/na borda e transparência das árvores, além de fidelidade dos recortes aos dois PNGs originais, preservação dos pretos internos e das sombras abertas, tamanho de Granito no menu/jogador/aliado, quadros e espelhamento da Serpente, origem da mordida, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 45 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
 
 ## Histórico: integração da versão 9 na beta 0.6.4
 
