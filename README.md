@@ -1,4 +1,4 @@
-# BaubLike — Beta 0.8.3
+# BaubLike — Beta 0.8.4
 
 Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Granito e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
@@ -10,11 +10,17 @@ Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WA
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
 
-## Novidades da beta 0.8.3
+## Novidades da beta 0.8.4
 
-Corrigidos os buracos no corpo de **Granito** ao andar: as máscaras protegem as sombras pretas do torso e dos membros, mesmo quando elas encostam no fundo. Os pixels e as cores continuam sendo os da imagem original. A escala de jogo foi reduzida em cerca de 30%; menu, jogador e aliado agora usam a mesma normalização do asset, impedindo a prévia gigante. A caminhada normal usa os passos, com âncora estável nos pés; a pose de corrida fica para velocidades maiores.
+A **Serpente Branca aplica veneno na mordida**: três segundos no sistema existente, cinco de dano por segundo antes da armadura. Mordidas evitadas ou bloqueadas pela invulnerabilidade não envenenam; cauda continua sendo um ataque separado.
 
-A **Serpente Branca usa recortes da própria referência enviada**, substituindo o desenho procedural: design principal, quatro quadros de movimento e sequências de preparação, mordida e cauda. Mantidos os pixels das escamas, olhos, contornos e musgo; removidos fundo e legenda. Direção do sprite e origem da mordida estão alinhadas. Vida, dano, tempos dos ataques e progressão do chefe foram mantidos. Confira a [prancha da Serpente](tests/serpente.html) e a [prancha de Granito](tests/granito.html).
+O **Colosso da Casca tem três padrões**: raiz sob o alvo (aviso de 0,72 s), impacto ao redor do corpo (0,58 s) e faixa de raízes (0,68 s). Os golpes têm alvo fixo, sinais visuais e recuperação. Fora do alcance do impacto curto ele escolhe a faixa, sem ficar preso tentando se aproximar. A vida do chefe permanece igual.
+
+Os ataques de perto ficaram moderadamente mais ágeis. O **Trio de Esporos** prepara a nuvem em 0,55 s, com raio 72 em vez de 48; ela continua durando apenas 0,85 s. A detecção respeita esse alcance, e sair da área evita o dano e o veneno.
+
+A **Pedrada** reconhece a mira sobre o corpo desenhado do inimigo e ajusta o destino durante a preparação. No lançamento, respeita o alcance 320; depois, o destino fica fixo durante o voo. Isso evita pedras caindo no ponto antigo de um inimigo que já se aproximou, sem conceder acerto automático. A borda exata do círculo também conta. A mesma correção vale para Granito aliado.
+
+A revisão removeu uma tabela de arte e um helper sem referências, e passou a montar a lista de transparência das árvores uma vez por quadro. Os sprites aprovados de Granito e Serpente continuam importados das referências; as [pranchas de Granito](tests/granito.html) e da [Serpente](tests/serpente.html) mostram esses recortes.
 
 O ataque básico de Granito é **somente garras**, com dois acertos de curto alcance e cadência de 1,2 s, inclusive quando o cursor está distante. Seus dois especiais têm controles e recargas separados:
 
@@ -35,10 +41,10 @@ Continuam o ciclo **Floresta → Dragão → Pântano → Floresta**, os chefes 
 Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
 
 - Fonte principal: `index.html`.
-- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.8.3, e a próxima correção será 0.8.4. Um teste verifica a consistência das identificações ativas.
+- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.8.4, e a próxima correção será 0.8.5. Um teste verifica a consistência das identificações ativas.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
-- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (38 cenários, incluindo ações de Granito, os três mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (45 cenários, incluindo ações de Granito, os três mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
 - Prancha de Granito: http://127.0.0.1:4173/tests/granito.html (recortes originais e sequências usadas no jogo).
 - Prancha da Serpente: http://127.0.0.1:4173/tests/serpente.html (referência e recortes realmente usados no chefe).
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
