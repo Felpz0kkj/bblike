@@ -1619,14 +1619,18 @@ test('uma jornada normal após o teste volta a conceder recompensas e recorde',(
 });
 
 
-const AMBIENT_COLORS={forest:'rgba(20,25,23,.72)',swamp:'rgba(154,177,161,.32)',dragon:'rgba(210,128,79,.32)',desert:'rgba(235,183,111,.48)'};
+const AMBIENT_COLORS={forest:'rgba(20,25,23,.72)',swamp:'rgba(154,177,161,.32)',dragon:'rgba(210,128,79,.32)',desert:'rgba(212,168,111,.76)'};
 function ambientAdvance(g,fps,seconds){for(let t=0;t<seconds-1e-10;){const dt=Math.min(1/fps,seconds-t);g.updateBiomeAmbient(dt);t+=dt;}}
 
 test('efeitos de cada bioma usam a camada anterior a atores e avisos',()=>{
   const {game:g,node}=boot();begin(g,'fogo');const ctx=node('#cv').getContext('2d');
   for(const world of Object.keys(g.WORLDS)){
-    g.run.world=world;g.updateBiomeAmbient(1/60);for(let i=0;i<18*60&&!g.biomeAmbient.particles.some(p=>p.k==='fog'||p.k==='heat'||p.u>.1&&p.u<.9);i++)g.updateBiomeAmbient(1/60);ctx.ops.length=0;ctx.images.length=0;g.render();
-    const environmental=ctx.ops.findIndex(op=>op[0]===AMBIENT_COLORS[world]);assert.ok(environmental>=0,world+' visível');
+    g.run.world=world;g.updateBiomeAmbient(1/60);
+    const visible=()=>g.biomeAmbient.particles.some(p=>p.k==='fog'||p.k==='heat'||p.k==='sand'&&p.life<p.max*.8&&p.life>p.max*.2||p.k==='bird'&&p.u>.1&&p.u<.9);
+    for(let i=0;i<18*60&&!visible();i++)g.updateBiomeAmbient(1/60);
+    ctx.ops.length=0;g.drawBiomeAmbient();const colors=new Set(ctx.ops.filter(op=>String(op[0]).startsWith('rgba(')).map(op=>op[0]));
+    ctx.ops.length=0;ctx.images.length=0;g.render();
+    const environmental=ctx.ops.findIndex(op=>colors.has(op[0]));assert.ok(environmental>=0,world+' visível');
     const player=ctx.images.find(im=>im.img===g.monSprite('fogo',1,20));assert.ok(player);assert.ok(environmental<player.opIndex,'fundo antes do jogador');
   }
 });
@@ -1648,8 +1652,8 @@ test('névoa, calor e rajadas param na pausa e reiniciam na transição',()=>{
 test('mesmo tempo produz posições ambientais equivalentes em 30 e 60 FPS',()=>{
   for(const world of Object.keys(AMBIENT_COLORS)){
     const {game:a}=boot(),{game:b}=boot();begin(a,'fogo');begin(b,'fogo');a.run.world=b.run.world=world;
-    a.updateBiomeAmbient(.0001);b.updateBiomeAmbient(.0001);const seconds=Number.isFinite(a.biomeAmbient.next)?a.biomeAmbient.next+2:6;ambientAdvance(a,30,seconds);ambientAdvance(b,60,seconds);
-    const state=g=>JSON.stringify(g.biomeAmbient.particles.map(p=>[p.k,+p.u.toFixed(7),+p.v.toFixed(5),p.life===undefined?null:+p.life.toFixed(7)]));
+    a.updateBiomeAmbient(.0001);b.updateBiomeAmbient(.0001);const seconds=world==='dragon'||world==='desert'?90:Number.isFinite(a.biomeAmbient.next)?a.biomeAmbient.next+2:6;ambientAdvance(a,30,seconds);ambientAdvance(b,60,seconds);
+    const state=g=>JSON.stringify({seed:g.biomeAmbient.seed,smokeSeed:g.biomeAmbient.smokeSeed,particles:g.biomeAmbient.particles.map(p=>[p.k,...['u','v','x','y','sx','sy','ph','life'].map(k=>Number.isFinite(p[k])?+p[k].toFixed(6):null)])});
     assert.equal(state(a),state(b),world+' independe da frequência');
   }
 });
@@ -1728,7 +1732,7 @@ test('atualização 0.9.2 mantém aves visíveis e frequentes, sem alterar limit
   assert.ok(g.biomeAmbient.particles.length<=35);
 });
 
-test('névoa é segmentada e fina, o calor tem faixas legíveis e a areia cruza mais chão',()=>{
+test('névoa é segmentada e fina e o calor preserva as faixas existentes',()=>{
   const {game:g,node}=boot();begin(g,'fogo');const ctx=node('#cv').getContext('2d');
   g.run.world='swamp';g.updateBiomeAmbient(.001);ctx.ops.length=0;g.drawBiomeAmbient();
   const fog=ctx.ops.filter(o=>o[0]===AMBIENT_COLORS.swamp);assert.ok(fog.length>=60);
@@ -1736,10 +1740,6 @@ test('névoa é segmentada e fina, o calor tem faixas legíveis e a areia cruza 
   assert.ok(fog.every(o=>o[4]<40),'a névoa permanece baixa e fina');
   g.run.world='dragon';g.updateBiomeAmbient(.001);ctx.ops.length=0;g.drawBiomeAmbient();
   const heat=ctx.ops.filter(o=>o[0]===AMBIENT_COLORS.dragon);assert.ok(heat.length>=12);assert.ok(heat.some(o=>o[4]>=2));
-  g.run.world='desert';g.updateBiomeAmbient(.001);const wait=g.biomeAmbient.next;ambientAdvance(g,60,wait+.01);
-  const gusts=g.biomeAmbient.particles.filter(p=>p.k==='sand');assert.ok(gusts.length>=3&&gusts.length<=6);assert.ok(gusts.every(p=>p.w>=.04&&Math.abs(p.vx)>=.27));
-  const before=gusts[0].u;ambientAdvance(g,60,.6);const moved=g.biomeAmbient.particles.find(p=>p.k==='sand');
-  assert.ok(moved&&moved.u>=0&&moved.u<=1,'faixas entram no campo de jogo');assert.notEqual(moved.u,before,'as faixas atravessam o chão ao longo do tempo');
 });
 
 test('efeitos 0.9.2 continuam limitados em touch e a pausa congela o relógio',()=>{
@@ -1771,4 +1771,42 @@ test('aviso de emergência do Verme mostra tremor limitado sem antecipar o impac
   g.updWorm(e,.02,1,0,100,e.spd);assert.equal(g.fx.length,2,'não cria poeira a cada quadro');
   g.updWorm(e,.3,1,0,100,e.spd);assert.equal(g.fx.length,4);assert.equal(e.wormAct.phase,'warn');
   assert.equal(g.run.pl.hp,hp,'o tremor só avisa, sem dano antecipado');
+});
+
+test('fumaça do vulcão nasce em fissuras reais, acompanha o chão e reemite após expirar',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='dragon';g.cam.x=0;g.cam.y=0;g.updateBiomeAmbient(.001);
+  const first=g.biomeAmbient.crackNext;ambientAdvance(g,60,first+.01);
+  const smoke=g.biomeAmbient.particles.filter(p=>p.k==='smoke');assert.ok(smoke.length>0&&smoke.length<=3);
+  const fissures=new Set(['348,154','1020,346']);
+  for(const p of smoke){assert.ok(fissures.has(p.sx+','+p.sy));assert.equal((p.sx-12)%48,0);assert.equal((p.sy-10)%48,0);}
+  const sources=smoke.map(p=>[p,p.sx,p.sy]);g.cam.x=80;g.cam.y=48;ambientAdvance(g,60,.1);
+  for(const [p,x,y]of sources){assert.equal(p.sx,x);assert.equal(p.sy,y);}
+  ambientAdvance(g,60,4.5);assert.ok(sources.every(([p])=>!g.biomeAmbient.particles.includes(p)));
+  const later=g.biomeAmbient.particles.filter(p=>p.k==='smoke');assert.ok(later.length>0&&later.length<=3);
+});
+
+test('fumaça e vento não consomem RNG de combate nem avançam durante pausa ou derrota',()=>{
+  let draws=0;const {game:g,events}=boot(undefined,()=>{draws++;return .5;});begin(g,'fogo');
+  for(const world of ['dragon','desert']){
+    g.run.world=world;g.cam.x=g.cam.y=0;const before=draws;
+    g.updateBiomeAmbient(.001);ambientAdvance(g,60,(world==='dragon'?g.biomeAmbient.crackNext:g.biomeAmbient.next)+.3);
+    g.drawBiomeAmbient();assert.equal(draws,before,'a ambientação usa sua própria aleatoriedade');
+    assert.ok(g.biomeAmbient.particles.some(p=>p.k===(world==='dragon'?'smoke':'sand')));
+    events.keydown({key:'Escape',preventDefault(){}});const paused=JSON.stringify(g.biomeAmbient);
+    g.updateBiomeAmbient(10);g.drawBiomeAmbient();assert.equal(JSON.stringify(g.biomeAmbient),paused);
+    g.ACT.resume();g.run.over=true;const ended=JSON.stringify(g.biomeAmbient);
+    g.updateBiomeAmbient(10);assert.equal(JSON.stringify(g.biomeAmbient),ended);g.run.over=false;
+  }
+});
+
+test('vento varia suas rajadas, se desloca pelo chão e retira os grãos expirados',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';g.updateBiomeAmbient(.001);
+  ambientAdvance(g,60,g.biomeAmbient.next+.1);
+  const wind=g.biomeAmbient.particles.filter(p=>p.k==='sand');assert.ok(wind.length>1&&wind.length<=5);
+  assert.ok(wind.every(p=>[p.x,p.y,p.vx,p.vy,p.ang,p.max].every(Number.isFinite)));
+  assert.ok(new Set(wind.map(p=>p.ang)).size>1,'as rajadas têm pequenas diferenças de direção');
+  assert.ok(new Set(wind.map(p=>p.max)).size>1,'as rajadas não desaparecem todas no mesmo instante');
+  const p=wind[0],x=p.x,y=p.y;ambientAdvance(g,60,.5);assert.ok(Math.hypot(p.x-x,p.y-y)>0);
+  ambientAdvance(g,60,Math.max(...wind.map(p=>p.life))+.1);assert.ok(wind.every(q=>!g.biomeAmbient.particles.includes(q)));
+  assert.ok(g.biomeAmbient.particles.length<=35);
 });

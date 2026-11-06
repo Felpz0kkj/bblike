@@ -6,7 +6,8 @@
 - Primeiro chefe aos 4 minutos; todas as etapas seguintes aos 2min30, inclusive novos ciclos e entradas de teste posteriores à Floresta. HUD, ajuda e desbloqueio temporal do elenco acompanham o prazo da etapa; XP e recargas permanecem no ritmo atual.
 - Verme subterrâneo deixa um rastro curto de fissuras e poeira na camada do chão. Corpo oculto no deslocamento, recolhimento visível, sem montículo duplicado ou poeira sobre a criatura. Mesma lógica de combate e colisão.
 - Ambientação reforçada: aves maiores/mais frequentes, névoa baixa segmentada, faixas de calor/brasas e rajadas de areia mais legíveis. Efeitos anteriores aos atores e avisos, independentes de FPS, pausáveis e limitados em touch.
-- Validação: 175 testes aprovados; partidas nos quatro biomas e conferência de Serpente, Verme, pausa e viewport móvel no Edge, sem erros de execução.
+- Complemento mantido na 0.9.2: fumaça cinza/marrom pixelada ancorada às fissuras quentes do vulcão; vento do Deserto em rajadas leves com linhas quebradas, grãos e variações de direção/duração. Integração na camada ambiental existente, sem usar imagens como texturas nem alterar terreno, sprites ou combate.
+- Validação: 178 testes aprovados, incluindo origem/ciclo da fumaça, vento, câmera, RNG de combate e equivalência 30/60 FPS por 90 s. Partidas reais no vulcão e deserto conferidas em computador e viewport móvel no Edge, sem erros de execução. Mantida a conferência anterior de Serpente, Verme e demais biomas.
 
 ## 0.9.1-beta — seleção de fase, chefes por código e ambientação — 2026-11-06
 

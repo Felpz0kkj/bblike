@@ -3055,13 +3055,15 @@ function drawAmbient(dark){
 }
 const BIOME_AMBIENT_LIMIT=35;
 const biomeAmbient={run:null,world:null,time:0,next:0,seed:1,serial:0,particles:[]};
-function biomeAmbientRand(){biomeAmbient.seed=(Math.imul(biomeAmbient.seed,1664525)+1013904223)>>>0;return biomeAmbient.seed/4294967296;}
+function biomeAmbientRand(stream='seed'){biomeAmbient[stream]=(Math.imul(biomeAmbient[stream],1664525)+1013904223)>>>0;return biomeAmbient[stream]/4294967296;}
 function resetBiomeAmbient(world){
   const A=biomeAmbient;A.run=run;A.world=world;A.time=0;A.serial=0;A.particles=[];
   A.seed=({forest:0x194713,dragon:0x4d9a11,swamp:0x5a4d13,desert:0xdecade}[world]||0x271828)>>>0;
   const mobile=touchOn();
   if(world==='swamp')for(let i=0,n=mobile?3:6;i<n;i++)A.particles.push({k:'fog',u:biomeAmbientRand(),v:.64+biomeAmbientRand()*.32,w:.18+biomeAmbientRand()*.18,h:.018+biomeAmbientRand()*.025,vx:(biomeAmbientRand()-.5)*.012,ph:biomeAmbientRand()*TAU});
   if(world==='dragon')for(let i=0,n=mobile?2:3;i<n;i++)A.particles.push({k:'heat',u:biomeAmbientRand(),v:.58+biomeAmbientRand()*.4,w:.12+biomeAmbientRand()*.17,vx:(biomeAmbientRand()-.5)*.01,ph:biomeAmbientRand()*TAU});
+  A.smokeSeed=(A.seed^0x6d2b79f5)>>>0;
+  A.crackNext=world==='dragon'?1.2+biomeAmbientRand('smokeSeed')*1.2:Infinity;
   A.next=world==='forest'?2+biomeAmbientRand()*4:world==='desert'?2+biomeAmbientRand()*3:world==='dragon'?2+biomeAmbientRand()*3:Infinity;
 }
 function updateBiomeAmbient(dt){
@@ -3072,6 +3074,13 @@ function updateBiomeAmbient(dt){
     const p=A.particles[i];
     if(p.k==='fog'){p.u+=p.vx*dt;p.ph+=dt;if(p.u<-.25)p.u=1.25;if(p.u>1.25)p.u=-.25;}
     else if(p.k==='heat'){p.u+=p.vx*dt;p.ph+=dt;if(p.u<-.2)p.u=1.2;if(p.u>1.2)p.u=-.2;}
+    else if(p.k==='sand'){
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.u=(p.x-cam.x)/(CW/zoom);p.v=(p.y-cam.y)/(CH_/zoom);p.life-=dt;p.ph+=dt;
+      if(p.life<=0||p.x<cam.x-80||p.x>cam.x+CW/zoom+80||p.y<cam.y-80||p.y>cam.y+CH_/zoom+80)A.particles.splice(i,1);
+    }else if(p.k==='smoke'){
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.ph+=dt;
+      if(p.life<=0||p.x<cam.x-90||p.x>cam.x+CW/zoom+90||p.y<cam.y-90||p.y>cam.y+CH_/zoom+90)A.particles.splice(i,1);
+    }
     else{p.u+=p.vx*dt;p.v+=(p.vy||0)*dt;p.life-=dt;p.ph+=dt;if(p.life<=0||p.u<-.2||p.u>1.2||p.k==='ember'&&p.v<.45)A.particles.splice(i,1);}
   }
   if(world!=='forest'&&world!=='desert'&&world!=='dragon')return;
@@ -3086,14 +3095,39 @@ function updateBiomeAmbient(dt){
         const life=1.2+biomeAmbientRand()*1.3,p={k:'ember',u:biomeAmbientRand(),v:.66+biomeAmbientRand()*.32,vx:(biomeAmbientRand()-.5)*.045,vy:-.035-biomeAmbientRand()*.04,ph:biomeAmbientRand()*TAU,life,max:life};
         p.u+=p.vx*age;p.v+=p.vy*age;p.life-=age;if(p.life>0&&p.v>.45&&A.particles.length<limit)A.particles.push(p);
       }else if(world==='desert'){
-        const count=mobile?3:6;
+        const count=(mobile?2:4)+Math.floor(biomeAmbientRand()*(mobile?2:2));
         for(let n=0;n<count&&A.particles.length<limit;n++){
-          const speed=dir*(.27+biomeAmbientRand()*.16),p={k:'sand',u:dir>0?-.04:1.04,v:.52+biomeAmbientRand()*.46,vx:speed,w:.04+biomeAmbientRand()*.13,ph:biomeAmbientRand()*TAU,life:.9+1.2/Math.abs(speed)};
-          p.u+=p.vx*age;p.ph+=age;p.life-=age;if(p.life>0&&p.u>=-.2&&p.u<=1.2)A.particles.push(p);
+          const vw=CW/zoom,vh=CH_/zoom,life=2+biomeAmbientRand(),x=cam.x+(.08+biomeAmbientRand()*.84)*vw,y=cam.y+(.32+biomeAmbientRand()*.58)*vh,len=45+biomeAmbientRand()*40,p={k:'sand',x,y,
+            u:(x-cam.x)/vw,v:(y-cam.y)/vh,w:Math.max(.04,len/vw),vx:dir*(40+biomeAmbientRand()*50),vy:(biomeAmbientRand()-.5)*12,len,ang:(dir>0?0:Math.PI)+(biomeAmbientRand()-.5)*.34,tone:biomeAmbientRand(),ph:biomeAmbientRand()*TAU,life,max:life};
+          p.x+=p.vx*age;p.y+=p.vy*age;p.u=(p.x-cam.x)/vw;p.v=(p.y-cam.y)/vh;p.ph+=age;p.life-=age;
+          if(p.life>0&&p.x>=cam.x-80&&p.x<=cam.x+vw+80&&p.y>=cam.y-80&&p.y<=cam.y+vh+80)A.particles.push(p);
         }
       }
     }
     A.next+=world==='forest'?(mobile?10:6)+biomeAmbientRand()*(mobile?6:6):world==='dragon'?(mobile?6:3.5)+biomeAmbientRand()*(mobile?5:3.5):(mobile?8:6)+biomeAmbientRand()*(mobile?7:6);
+  }
+  if(world==='dragon'){
+    A.crackNext-=dt;
+    const smokeLimit=mobile?2:3;
+    while(A.crackNext<=0){
+      const age=-A.crackNext,smokeCount=A.particles.reduce((n,p)=>n+(p.k==='smoke'),0);
+      const vw=CW/zoom,vh=CH_/zoom,x0=Math.floor(cam.x/T)-1,x1=Math.ceil((cam.x+vw)/T)+1,y0=Math.floor(cam.y/T)-1,y1=Math.ceil((cam.y+vh)/T)+1,sources=[];
+      for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++){
+        if(hash(tx*3+7,ty*5+11)>=.006)continue;
+        const x=tx*T+12,y=ty*T+10;
+        if(x<cam.x-24||x>cam.x+vw+24||y<cam.y-24||y>cam.y+vh+24)continue;
+        if(A.particles.some(p=>p.k==='smoke'&&Math.hypot(p.sx-x,p.sy-y)<48))continue;
+        sources.push({x,y});
+      }
+      if(smokeCount<smokeLimit&&A.particles.length<limit&&sources.length){
+        const src=sources[Math.floor(biomeAmbientRand('smokeSeed')*sources.length)],life=1.8+biomeAmbientRand('smokeSeed')*1.1;
+        const p={k:'smoke',x:src.x,y:src.y,sx:src.x,sy:src.y,vx:(biomeAmbientRand('smokeSeed')-.5)*2.8,vy:-8-biomeAmbientRand('smokeSeed')*7,
+          seed:biomeAmbientRand('smokeSeed')*TAU,ph:biomeAmbientRand('smokeSeed')*TAU,life,max:life};
+        p.x+=p.vx*age;p.y+=p.vy*age;p.life-=age;p.ph+=age;
+        if(p.life>0)A.particles.push(p);
+      }
+      A.crackNext+=2.1+biomeAmbientRand('smokeSeed')*2.2;
+    }
   }
 }
 function drawBiomeAmbient(){
@@ -3101,7 +3135,7 @@ function drawBiomeAmbient(){
   const A=biomeAmbient,vw=CW/zoom,vh=CH_/zoom;
   ctx.save();
   for(const p of A.particles){
-    const x=cam.x+p.u*vw,y=cam.y+p.v*vh;
+    const worldParticle=p.k==='sand'||p.k==='smoke',x=worldParticle?p.x:cam.x+p.u*vw,y=worldParticle?p.y:cam.y+p.v*vh;
     if(p.k==='bird'){
       const s=p.s,wing=Math.sin(A.time*9+p.ph)>0?-2:2;ctx.fillStyle='rgba(20,25,23,.72)';
       ctx.fillRect(x-4*s,y+wing*s,4*s,s);ctx.fillRect(x+2*s,y+wing*s,4*s,s);ctx.fillRect(x-2*s,y,6*s,2*s);ctx.fillRect(x+3*s,y-s,2*s,s);ctx.fillRect(x+3*s,y+2*s,s,s);
@@ -3118,10 +3152,31 @@ function drawBiomeAmbient(){
       ctx.globalAlpha=1;
     }else if(p.k==='ember'){
       ctx.globalAlpha=Math.min(1,p.life/p.max*1.4);ctx.fillStyle='rgba(255,151,73,.9)';ctx.fillRect(x,y,2.4,3.2);ctx.fillRect(x-2,y+2,1.5,1.2);ctx.fillStyle='rgba(255,211,132,.72)';ctx.fillRect(x+1,y-2,1,2);ctx.globalAlpha=1;
-    }else{
-      ctx.fillStyle='rgba(235,183,111,.48)';const sway=Math.sin(A.time*2+p.ph)*4;
-      for(let n=0;n<4;n++){ctx.globalAlpha=.48+.35*Math.sin(A.time*1.7+p.ph+n)**2;const sx=x+n*p.w*vw*.24;ctx.fillRect(sx,y+sway+n%2,Math.max(3,p.w*vw*.27),1.6);ctx.fillRect(sx+3,y+sway+3+n%2,Math.max(2,p.w*vw*.18),1.2);}
-      ctx.globalAlpha=.6;for(let n=0;n<10;n++)ctx.fillRect(x+(n*13%37)/37*p.w*vw,y+sway+(n*7%17)-8,1+(n%3===0?1:0),1);ctx.globalAlpha=1;
+    }else if(p.k==='sand'){
+      const age=1-p.life/p.max,fade=Math.sin(Math.max(0,Math.min(1,age))*Math.PI)**.8;
+      const base=p.len,dx=Math.cos(p.ang),dy=Math.sin(p.ang),nx=-dy,ny=dx;
+      const segments=[{u:.03,w:.18,a:.22},{u:.29,w:.24,a:.4},{u:.63,w:.16,a:.29},{u:.85,w:.1,a:.13}];
+      for(let i=0;i<segments.length;i++){
+        const q=segments[i],len=base*q.w*(.85+.15*Math.sin(p.ph+A.time*3+i));ctx.globalAlpha=fade*q.a;
+        ctx.fillStyle=i===1?(p.tone>.6?'rgba(145,82,57,.76)':'rgba(207,164,111,.72)'):'rgba(198,153,101,.72)';
+        const dash=Math.ceil(len/3),offset=(Math.sin(p.ph+i*1.7)-.5)*2;
+        for(let j=0;j<dash;j++){
+          const along=base*q.u+j*3,xx=Math.round(x+dx*along+nx*offset),yy=Math.round(y+dy*along+ny*offset+(i%2));
+          ctx.fillRect(xx,yy,2,1.5);
+          if((i===1||i===3)&&j%2===0){ctx.globalAlpha=fade*q.a*.55;ctx.fillStyle='rgba(233,189,136,.72)';ctx.fillRect(xx,yy-1,1,1);ctx.fillStyle=i===1?(p.tone>.6?'rgba(145,82,57,.76)':'rgba(207,164,111,.72)'):'rgba(198,153,101,.72)';ctx.globalAlpha=fade*q.a;}
+        }
+      }
+      for(let i=0;i<3;i++){const along=base*(.15+i*.31),offset=Math.sin(p.ph+i*2)*3,gx=Math.round(x+dx*along+nx*offset),gy=Math.round(y+dy*along+ny*offset);ctx.globalAlpha=fade*(.14+.07*i);ctx.fillStyle=i===1?'rgba(151,84,58,.76)':'rgba(204,159,104,.76)';ctx.fillRect(gx,gy,1.5,1.2);}
+      ctx.globalAlpha=1;
+    }else if(p.k==='smoke'){
+      const age=1-p.life/p.max,fade=Math.min(1,(p.max-p.life)/.25)*Math.min(1,p.life/.58)*(.72+.28*Math.sin(Math.max(0,Math.min(1,age))*Math.PI));
+      const height=38+Math.max(0,Math.min(1,age))*16,driftX=x-p.sx;
+      for(let i=0;i<10;i++){
+        const t=i/9,curve=Math.sin(p.seed+i*.7+p.ph*.45)*(1.5+t*2.2),xx=p.sx+driftX*t+curve,yy=p.sy-height*t+Math.sin(p.seed+i*1.1)*.7;
+        ctx.globalAlpha=fade*(i%3===0?.38:.34);ctx.fillStyle=i%2?'rgba(112,101,95,.78)':'rgba(126,77,62,.76)';
+        ctx.fillRect(Math.round(xx),Math.round(yy),3+(i%3),5.5);
+      }
+      ctx.globalAlpha=1;
     }
   }
   ctx.restore();
