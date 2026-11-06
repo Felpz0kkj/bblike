@@ -1,5 +1,15 @@
 # Histórico
 
+## 0.9.0-beta — Deserto da Fenda e ciclo de quatro etapas — 2026-11-06
+
+- Deserto adicionado após o Pântano, retornando à Floresta por portal. Mesma progressão por passagem, quatro minutos até o chefe e preservação de vida, XP, aliados, melhorias e recargas.
+- Escorpião com ferrão anunciado, empurrão e recuperação vulnerável; Abutre com marca de chão e mergulho único; Hiena com busca física de cristais, mordida/recuo e devolução de XP. Cristais não são reservados contra o jogador, não duplicam valor e respeitam o teto de objetos.
+- Verme da Fenda com movimento subterrâneo, fissuras/poeira, emergência, mordida, ruptura linear e gêiser em cone. Ataques fixados no aviso, um acerto por golpe, recuperação vulnerável e mergulho sem dano. A fase subterrânea é ignorada por seleção, colisão de projéteis, dano, queimadura e lentidão; a recuperação aceita dano.
+- 57 recortes extraídos da prancha original, sem alterar RGB retidos. Corpo/jato separados, pontos de apoio alinhados e escalas de render/colisão normalizadas. Prancha, PNG original e referência do mapa preservados; assets embutidos no index, mantendo o HTML independente.
+- Cenário seco em paleta quente e escura, fissuras irregulares, areia e vegetação esparsa, sem novos obstáculos. Efeitos do chefe usam recortes originais; espigões permanecem voltados para cima em todas as direções.
+- Revisão de escala e recortes dos sprites antigos e novos; preservados dados de Granito/Serpente, personagens, outros mapas, drops, saves e controles. Pedrada usa a posição visual do Abutre e ignora o Verme enterrado.
+- Validação: 149 testes de regressão, três ciclos completos de quatro mundos, comparação de RGB, 63 cenários de combate e auditoria visual dos sprites. Pranchas em `tests/deserto.html` e `tests/sprites.html`.
+
 ## 0.8.4-beta — pressão dos chefes, Pedrada e otimizações — 2026-11-05
 
 - Mordida da Serpente aplica o veneno existente por 3 s apenas ao acertar; Colosso alterna raiz, impacto circular e linha de raízes com avisos e recuperação.
