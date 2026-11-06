@@ -1,26 +1,5 @@
-<!doctype html>
-<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Serpente Branca · Pixels originais · Beta 0.9.0</title>
-<style>
-*{box-sizing:border-box}body{margin:0;padding:28px;background:#0b1812;color:#e6e3c7;font:14px monospace}main{max-width:1200px;margin:auto}h1,h2{color:#e7c970}h1{font-size:26px}h2{font-size:20px;border-bottom:1px solid #87946a;padding-bottom:8px}p{line-height:1.6;color:#a6b59c}.row{display:flex;gap:18px;align-items:end;flex-wrap:wrap}.pose{background:#19271f;border:1px solid #3e5340;padding:12px;text-align:center;flex:1;min-width:170px}.pose img{display:block;width:100%;height:230px;object-fit:contain;image-rendering:pixelated}.pose small{display:block;margin-top:10px}header{display:flex;align-items:center;gap:30px}header .pose{max-width:300px}.reference{width:100%;image-rendering:pixelated}iframe{position:absolute;left:-20000px;width:960px;height:600px;border:0}@media(max-width:650px){body{padding:14px}header{display:block}.pose img{height:180px}}
-</style>
-<main><h1>Serpente Branca · Beta 0.9.0</h1><header><div id="principal"></div><p>Recortes da própria referência enviada. Escamas, olhos vermelhos, proporções, contornos e cores são os pixels originais. O jogo espelha o personagem conforme a direção e usa cada quadro individualmente. Os vãos do pescoço ficam transparentes; a legenda da prancha é descartada.</p></header><div id="sequences"></div><h2>Referência original</h2><img class="reference" alt="Referência original da Serpente Branca" src="../assets/serpente/reference.png"><p>Mordida aplica veneno por 3 s apenas ao acertar. Dano direto, vida, recargas, alcance, colisão do corpo e portal preservados. A origem da mordida acompanha a boca do novo sprite.</p></main>
-<iframe id="game" title="Renderizador isolado da Serpente"></iframe>
-<script>
-(async()=>{
-  let src=await(await fetch('../index.html')).text();
-  src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-serpente-test';")
-    .replace('<script>','<script>window.__NSDEBUG=true;')
-    .replaceAll('requestAnimationFrame(frame);','/* Prancha estática. */')
-    .replace('applyTheme();resize();showMenu();initDb();','S.music=S.sfx=0;P.seen=1;applyTheme();resize();showMenu();');
-  const frame=document.querySelector('#game');
-  frame.onload=()=>{
-    const g=frame.contentWindow.__NS,cell=(f,label)=>'<div class="pose"><img alt="'+label+'" src="'+g.monSprite('serpente',1,f).toDataURL()+'"><small>'+label+'</small></div>';
-    document.querySelector('#principal').innerHTML=cell(30,'Design principal');
-    for(const [title,poses]of [['Movimento',[[0,'Repouso'],[1,'Passo'],[2,'Elevação'],[3,'Recuo']]],['Bote e mordida',[[10,'Aviso'],[13,'Preparação'],[11,'Mordida'],[12,'Recuperação']]],['Varrida de cauda',[[20,'Preparação'],[21,'Varrida'],[22,'Recuperação']]]]){
-      const section=document.createElement('section');section.innerHTML='<h2>'+title+'</h2><div class="row">'+poses.map(([f,label])=>cell(f,label)).join('')+'</div>';document.querySelector('#sequences').appendChild(section);
-    }
-    window.ready=true;
-  };frame.srcdoc=src;
-})().catch(e=>{document.body.append(String(e));console.error(e);});
-</script></html>
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Combate real · Serpente Branca · Beta 0.9.1</title><style>body{max-width:760px;margin:40px auto;padding:20px;background:#101a15;color:#dedfce;font:16px system-ui;line-height:1.6}h1,a{color:#efbf76}li{margin:8px 0}</style>
+<h1>Serpente Branca · Beta 0.9.1</h1><p>A arte deste chefe é desenhada por código no canvas. Esta página não gera sprites, imagens nem pranchas de referência.</p>
+<ol><li>Abra o jogo e escolha <b>Usar código</b>.</li><li>Digite <b>betatester</b>.</li><li>Entre em <b>Iniciar por fase</b> e escolha <b>Pântano de Frood</b>.</li><li>Escolha dificuldade e personagem, e jogue com os controles habituais.</li></ol>
+<p>A partida de teste não registra essência, conquistas ou ranking. O chefe mantém o tempo, ataques e balanceamento da partida normal.</p><a href="../index.html">Abrir o jogo atual</a></html>

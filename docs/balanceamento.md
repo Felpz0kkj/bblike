@@ -1,4 +1,4 @@
-# Balanceamento — beta 0.9.0
+# Balanceamento — beta 0.9.1
 
 Calibração inicial de alcance, dano e recuperação. Os testes verificam as regras; a equivalência entre personagens ainda depende de partidas e combinações de melhorias. Distâncias em unidades do mundo, antes do zoom. Colisões também consideram o tamanho do alvo. Área não aumenta o trajeto das flechas/orbes nem os saltos do raio.
 
@@ -27,7 +27,7 @@ Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador est
 
 Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
-## Quatro mundos e ciclos — beta 0.9.0
+## Quatro mundos e ciclos — beta 0.9.1
 
 Ordem fixa: **Floresta Sombria / Colosso da Casca → portal → Bioma Dracônico / Cratos → portal → Pântano de Frood / Serpente Branca → portal → Deserto da Fenda / Verme da Fenda → portal → floresta**. A primeira área permanece a floresta, conforme confirmação do autor. `visit` começa em zero e aumenta em cada portal, sem reiniciar o nível ou a evolução do personagem. Cada chefe surge aos **240 segundos de combate da etapa**, independentemente do nível/XP. Antes, o gatilho era ganhar dez níveis e não havia tempo fixo. Pausas e escolhas suspendem o cronômetro; derrota o congela. A abertura do portal impede um segundo chefe na área vencida; somente entrar no portal reinicia `worldTime` em zero.
 
@@ -109,13 +109,13 @@ A arte foi importada diretamente de `assets/granito/reference.png`, sem redesenh
 
 `node scripts/build-granito.cjs --check` confere os dados embutidos. O PNG original é preservado byte a byte, com SHA-256 `4d8a6fb61786d344368f64bb395dc88b59b96a745460c44285aa21647ee3b705`. O jogo continua em um HTML independente, sem requisição ao arquivo externo durante a partida. A prancha de desenvolvimento em `tests/granito.html` mostra os mesmos recortes; nunca é usada inteira como sprite.
 
-Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Na beta 0.8.4 os ataques dos chefes/comuns e a mira de Pedrada recebem os ajustes descritos acima; atributos dos heróis, mapas, drops e progressão permanecem iguais. A revisão visual da Serpente usa 11 recortes originais em `assets/serpente/reference.png`, com metadados em `frames.json` e importador `scripts/build-serpente.cjs`. O desenho original aponta para a esquerda; o espelhamento acompanha a direção do combate. A boca do quadro de mordida fornece tanto a origem do aviso quanto a trajetória de acerto. Corpo, dano, vida e temporizadores do chefe continuam iguais. Fundo e legenda são descartados; olhos, escamas, musgo e contornos mantêm seus RGB. A prancha em `tests/serpente.html` permite conferir os quadros individuais.
+Mantida a remoção anterior de Ventinho e a migração dos saves v3/v2. Na beta 0.8.4 os ataques dos chefes/comuns e a mira de Pedrada recebem os ajustes descritos acima; atributos dos heróis, mapas, drops e progressão permanecem iguais. Até a beta 0.9.0 a Serpente usava quadros extraídos da referência; isso foi substituído por arte procedural na 0.9.1. Os PNGs continuam apenas como referência visual. O ponto de origem da mordida segue a mesma coordenada numérica do sistema anterior; corpo, dano, vida e temporizadores não foram alterados. A página `tests/serpente.html` agora orienta a conferência dentro da partida, sem gerar uma prancha de sprites.
 
 ## Otimizações da beta 0.8.4
 
 A lista de entidades que deixam árvores transparentes é construída uma vez em `addTrees`, em vez de ser copiada por cada árvore desenhada; mesmos participantes e mesmas regras de transparência. Removidos `DRG` (tabela de arte sem referências) e `rnd` (helper sem chamadas), preservados no histórico do Git. Mantidos os dados de sprites, fallback de arte ainda utilizado, migração de saves e ranking. A revisão foi focada em código sem uso comprovado e alocações repetidas, sem reescrever os sistemas do jogo.
 
-## Deserto da Fenda — beta 0.9.0
+## Deserto da Fenda — beta 0.9.1
 
 A nova etapa só entra após o portal da Serpente. Nenhuma tabela global de dano, XP, herói ou chefe anterior foi alterada. A passagem inicial é `visit=3`; o Verme tem 7.200 de vida no Normal. Os novos dados ficam em `DESERT_FOES`, `DESERT_FOE_BAL` e `DESERT_BOSS_BAL`.
 
@@ -133,13 +133,23 @@ O Verme permanece enterrado enquanto viaja e se recolhe. O aviso de emergência/
 
 Hiena procura cristais a até 155 (scan de 0,125 s), caminha até o alvo e só pega a até 20. Leva um objeto por vez, por até 6 s; morte, remoção silenciosa, portal ou reposicionamento distante devolvem o objeto. Recaptura só após 2 s. O jogador pode coletar enquanto ela se aproxima. Valor de XP é conservado; o limite 380 continua agregando valores quando necessário. XP base dos novos abates, após `xpDrop=0,65`: Escorpião 0,8125; Abutre 0,8775; Hiena 0,8125, além do cristal que ela devolver.
 
-Sprites: 57 recortes em `assets/deserto/frames.json`, derivados byte a byte de `reference.png` (SHA-256 `933d209532bfb44cb53d20d4d40f14e4f31b081bb93aee880232566935bc00bf`). O importador remove fundo e apresentação e separa corpo/jato para orientar o ataque; não redesenha, recolore ou reduz os pixels dos personagens. Os quadros de movimento, preparo, impacto, recuperação e mergulho usam os pixels originais e âncoras comuns. A colisão também aplica `unitScale`, evitando áreas gigantes em sprites extraídos em maior resolução. Os três importadores têm `--check`; o jogo não carrega PNG externo.
+Artes mantidas: Escorpião, Abutre e Hiena continuam com os dados raster já aprovados do conjunto anterior; nenhum PNG foi alterado. A Serpente e o Verme deixam de usar essa origem na revisão 0.9.1 e passam às funções de desenho procedural no index. Os arquivos de referência continuam guardados, sem participação no render desses chefes. A colisão permanece nos valores existentes e os pontos de boca foram mantidos numericamente.
 
 O cenário é procedural e determinístico: argila rachada, areia, pequenas pedras e vegetação seca, paleta quente e escura. Os detalhes não adicionam colisores e não alteram câmera, controles ou dimensão do mundo. Transparência/escala das criaturas antigas continuam nos sistemas atuais; a auditoria em `tests/sprites.html` usa o renderizador real com zoom 1.
 
+## Revisão 0.9.1: arte e testes de fase
+
+A Serpente e o Verme usam o rasterizador pixelPainter e funções procedurais de poses/efeitos. Não usam as antigas pranchas como sprites. A arte mantém a identidade das referências e é conferida dentro do combate; quantidade de imagens extraídas não é validação da aparência.
+
+A geometria de combate permanece: boca da Serpente na pose de mordida = deslocamentos `+58 × escala × direção` e `−37 × escala` a partir da linha de apoio; no Verme, mordida com `+72, −57` e gêiser com `+14, −57`, antes dos mesmos deslocamentos e escalas do renderer. IA, dano, vida, avisos, velocidades, alcances e recargas não foram alterados. Os arquivos de imagem permanecem intactos. O importador do Deserto só mantém os três inimigos comuns; Granito preserva sua arte anterior conforme decisão do autor.
+
+O código betatester libera um modo de entrada direta em cada mapa. A sessão começa em nível 1, com melhorias permanentes e índice de passagem correspondente à fase. O perfil é clonado durante o teste e o save sempre grava o original; ao sair ou morrer ele é restaurado. Não há registro de essência, coleção, conquistas ou ranking da sessão de teste. Isso não modifica a economia nem os valores da partida normal.
+
+A ambientação ocupa a camada imediatamente após o chão e antes de árvores/atores/avisos. Partículas e faixas são só desenho: não entram nas listas de inimigos, colisores ou perigos. Há pássaros ocasionais no forest, névoa no swamp, linhas de calor no dragon (bioma vulcânico atual) e rajadas no desert. O clock segue dt de jogo, para na pausa e morte, reinicia por partida/bioma e limita até 35 itens no desktop ou 18 em touch. Renderizar não avança os efeitos. As demais partículas existentes também usam timeNow para respeitar a pausa.
+
 ## Validação
 
-149 testes incluem veneno só no acerto, três padrões do Colosso e ausência de bloqueio à distância, avisos mais ágeis, nuvem dos Esporos, Pedrada contra alvos móveis/na borda e transparência das árvores, além de fidelidade dos recortes aos dois PNGs originais, preservação dos pretos internos e das sombras abertas, tamanho de Granito no menu/jogador/aliado, quadros e espelhamento da Serpente, origem da mordida, ausência de textos da prancha nos sprites, arte idêntica entre evoluções, básico exclusivamente de garras, recargas separadas, teclas/botões, ausência de dash/invulnerabilidade, fases do Terremoto e conservação dos especiais nos portais. Incluem todas as regressões dos demais heróis, mapas, chefes, colisões, sangramento, drops, salvamentos e cronômetros. `tests/combat.html` oferece 63 cenários reproduzíveis. A prévia e as verificações do navegador usam progresso isolado.
+165 testes cobrem isolamento da sessão beta, liberação/navegação, restauração do perfil, retorno das recompensas normais, ordenação das camadas, pausa, equivalência ambiental em 30/60 FPS e coordenadas das bocas. As regressões dos ataques, danos, invulnerabilidade, XP, portais, salvamentos e outros personagens continuam sendo executadas. A aparência dos novos chefes e a presença da ambientação são conferidas em partidas reais; contagem de recortes não é critério de aprovação visual. A galeria legada só mantém as artes que não foram redesenhadas.
 
 ## Histórico: integração da versão 9 na beta 0.6.4
 

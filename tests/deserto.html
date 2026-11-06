@@ -1,18 +1,5 @@
-<!doctype html>
-<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Deserto da Fenda · Referência e recortes · Beta 0.9.0</title>
-<style>
-*{box-sizing:border-box}body{margin:0;padding:24px;background:#171412;color:#e8cfac;font:14px monospace}main{max-width:1440px;margin:auto}h1,h2{color:#efbc72}h2{margin-top:30px;border-bottom:1px solid #70503b;padding-bottom:8px}p{color:#bfa68e;line-height:1.6}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.pose{width:calc(20% - 10px);min-width:170px;text-align:center;background:#30262a;padding:8px;border:1px solid #554039}.pose img{display:block;width:100%;height:150px;object-fit:contain;image-rendering:pixelated}.pose small{display:block;margin:6px;font-size:11px}#reference{width:100%;image-rendering:pixelated}iframe{position:absolute;left:-20000px;width:1040px;height:700px;border:0}
-</style>
-<main><h1>Deserto da Fenda · Beta 0.9.0</h1><p>Quadros extraídos da imagem fornecida, sem redesenho ou alteração dos RGB retidos. Removidos fundo e elementos de apresentação. Os pontos de apoio e a escala do asset alinham a animação no jogo. A prancha abaixo é apenas uma ferramenta de revisão; cada quadro é usado separadamente na partida.</p><div id="groups"></div><h2>Referência original</h2><img id="reference" alt="Bestiário original do Deserto da Fenda" src="../assets/deserto/reference.png"></main>
-<iframe id="game" title="Renderizador isolado"></iframe><script>
-(async()=>{
- let src=await(await fetch('../index.html')).text();src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-deserto-preview';").replace('<script>','<script>window.__NSDEBUG=true;').replaceAll('requestAnimationFrame(frame);','/* Prévia estática. */').replace('applyTheme();resize();showMenu();initDb();','S.music=S.sfx=0;P.seen=1;applyTheme();resize();showMenu();');
- const iframe=document.querySelector('#game');iframe.onload=()=>{
-  const g=iframe.contentWindow.__NS,names={scorpion:'Escorpião de Fenda',vulture:'Abutre das Dunas',hyena:'Hiena Saqueadora',worm:'Verme da Fenda'};
-  for(const [prefix,title]of Object.entries(names)){
-   const section=document.createElement('section');section.innerHTML='<h2>'+title+'</h2><div class="row">'+Object.keys(g.DESERTO_ART.frames).filter(id=>id.startsWith(prefix+'_')).map(id=>'<div class="pose"><img alt="'+id+'" src="'+g.desertAsset(id).toDataURL()+'"><small>'+id+'</small></div>').join('')+'</div>';document.querySelector('#groups').appendChild(section);
-  }window.ready=true;
- };iframe.srcdoc=src;
-})().catch(e=>{document.body.append(String(e));console.error(e);});
-</script></html>
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Combate real · Verme da Fenda · Beta 0.9.1</title><style>body{max-width:760px;margin:40px auto;padding:20px;background:#101a15;color:#dedfce;font:16px system-ui;line-height:1.6}h1,a{color:#efbf76}li{margin:8px 0}</style>
+<h1>Verme da Fenda · Beta 0.9.1</h1><p>A arte deste chefe é desenhada por código no canvas. Esta página não gera sprites, imagens nem pranchas de referência.</p>
+<ol><li>Abra o jogo e escolha <b>Usar código</b>.</li><li>Digite <b>betatester</b>.</li><li>Entre em <b>Iniciar por fase</b> e escolha <b>Deserto da Fenda</b>.</li><li>Escolha dificuldade e personagem, e jogue com os controles habituais.</li></ol>
+<p>A partida de teste não registra essência, conquistas ou ranking. O chefe mantém o tempo, ataques e balanceamento da partida normal.</p><a href="../index.html">Abrir o jogo atual</a></html>

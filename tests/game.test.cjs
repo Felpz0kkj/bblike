@@ -17,9 +17,13 @@ function boot(saved,random,legacy){
     const context=new Proxy({ops,images:[],fillRect(...a){ops.push([this.fillStyle,...a]);},
       createImageData(w,h){return{width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},
       putImageData(data){this.raster=data;ops.push(['raster',data.width,data.height,crypto.createHash('sha256').update(data.data).digest('hex')]);},
-      getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}return {data:new Uint8ClampedArray(w*h*4)};},
+      getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}const data=new Uint8ClampedArray(w*h*4);
+        for(const op of ops){if(typeof op[0]!=='string'||!/^#[0-9a-f]{6}$/i.test(op[0]))continue;
+          const color=op[0].slice(1),rgb=[parseInt(color.slice(0,2),16),parseInt(color.slice(2,4),16),parseInt(color.slice(4,6),16)];
+          const [_,X,Y,W,H]=op;for(let row=Math.max(y,Math.floor(Y));row<Math.min(y+h,Math.ceil(Y+H));row++)for(let col=Math.max(x,Math.floor(X));col<Math.min(x+w,Math.ceil(X+W));col++){const i=((row-y)*w+col-x)*4;data[i]=rgb[0];data[i+1]=rgb[1];data[i+2]=rgb[2];data[i+3]=255;}}
+        return {data};},
       beginPath(){ops.push(['path']);},moveTo(...a){ops.push(['move',...a]);},lineTo(...a){ops.push(['line',...a]);},stroke(){ops.push(['stroke',this.strokeStyle,this.lineWidth]);},
-      drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a,alpha:this.globalAlpha});},
+      drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a,alpha:this.globalAlpha,opIndex:ops.length-1});},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
     },{get:(t,k)=>k in t?t[k]:()=>{}});
@@ -879,7 +883,7 @@ test('pântano procedural deixa áreas secas e molhadas, sem árvores densas nem
 test('arte do pântano tem silhuetas distintas e quadros de movimento, aviso e ataque',()=>{
   const {game:g}=boot();const all=[];
   for(const type of ['bocarra','mosquito','caranguejo','serpente']){
-    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?g.SERPENTE_ART.frames.move0.w:40);
+    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?128:40);
     assert.notEqual(frames[0].toDataURL(),frames[1].toDataURL());assert.notEqual(frames[0].toDataURL(),frames[2].toDataURL());assert.notEqual(frames[2].toDataURL(),frames[3].toDataURL());
   }
   assert.equal(new Set(all).size,4);
@@ -1149,36 +1153,17 @@ test('escala de Granito é consistente no menu, na partida e como aliado',()=>{
   assert.ok(ally.args[3]>50&&ally.args[3]<70,'o aliado também usa a escala do asset uma vez');
 });
 
-test('a Serpente usa os recortes da referência sem redesenho ou prancha inteira',()=>{
-  const importer=require('../scripts/build-serpente.cjs'),source=importer.readSource(),{game:g}=boot();
-  assert.equal(source.sha256,'d7153f6a059bbd5540a1f149039c62129f43afd32a0c80fd3f5203a79dd7525f');
-  assert.equal(g.SERPENTE_ART.sourceSha256,source.sha256);assert.equal(Object.keys(g.SERPENTE_ART.frames).length,11);
-  assert.equal(JSON.stringify(g.SERPENTE_ART),JSON.stringify(importer.build()));
-  for(const [frame,id]of Object.entries(g.SERPENTE_POSES)){
-    const c=g.monSprite('serpente',1,+frame),r=importer.manifest.frames[id],rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
-    assert.equal(c.sourceId,id);assert.ok(c.width<=176&&c.height<=182);let count=0;
-    for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const at=(y*c.width+x)*4;if(!rgba[at+3])continue;count++;
-      const orig=((r[1]+y)*source.width+r[0]+x)*4;
-      assert.equal(Buffer.compare(Buffer.from(rgba.subarray(at,at+3)),source.data.subarray(orig,orig+3)),0,id+' mantém RGB');
-    }
-    assert.ok(count>1000,id+' tem o corpo completo');assert.equal(rgba[3],0,'sem retângulo verde da prancha');
-  }
-  const c=g.monSprite('serpente',1,30),rgba=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
-  assert.equal(rgba[(54*c.width+4)*4+3],0,'a legenda à esquerda não é importada');
-  assert.equal(rgba[(56*c.width+89)*4+3],0,'o vão interno do pescoço também fica transparente');
-});
-
 test('quadros da Serpente acompanham os dois ataques e a boca acompanha o espelhamento',()=>{
   const {game:g}=boot(),e=snakeBoss(g);
   const pose=(act)=>g.monSprite('serpente',1,g.serpentFrame({...e,t:0,act})).sourceId;
-  assert.equal(pose(null),'move0');
-  assert.equal(pose({k:'snakebite',phase:'windup',t:.1,dur:.75}),'biteWarn');
-  assert.equal(pose({k:'snakebite',phase:'windup',t:.6,dur:.75}),'biteReady');
-  assert.equal(pose({k:'snakebite',phase:'dash'}),'bite');
-  assert.equal(pose({k:'snakebite',phase:'recover'}),'biteReady');
-  assert.equal(pose({k:'snaketail',phase:'windup'}),'tailReady');
-  assert.equal(pose({k:'snaketail',phase:'sweep'}),'tailSweep');
-  assert.equal(pose({k:'snaketail',phase:'recover'}),'tailRecover');
+  assert.equal(pose(null),'procedural-0');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.1,dur:.75}),'procedural-10');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.6,dur:.75}),'procedural-13');
+  assert.equal(pose({k:'snakebite',phase:'dash'}),'procedural-11');
+  assert.equal(pose({k:'snakebite',phase:'recover'}),'procedural-12');
+  assert.equal(pose({k:'snaketail',phase:'windup'}),'procedural-20');
+  assert.equal(pose({k:'snaketail',phase:'sweep'}),'procedural-21');
+  assert.equal(pose({k:'snaketail',phase:'recover'}),'procedural-22');
   const c=g.monSprite('serpente',1,11);assert.equal(c.facing,-1);
   e.x=200;e.y=80;e.face=1;const right=g.snakeMouth(e);e.face=-1;const left=g.snakeMouth(e);
   assert.ok(right.x>e.x&&left.x<e.x);assert.ok(Math.abs((right.x-e.x)-(e.x-left.x))<1e-9);assert.equal(right.y,left.y);
@@ -1419,8 +1404,8 @@ test('desenhar o mapa do Deserto não cria colisores nem altera entidades',()=>{
 test('recortes do Deserto conservam os pixels originais e retiram só a apresentação',()=>{
   const imp=require('../scripts/build-deserto.cjs'),source=imp.readSource(),{game:g}=boot();
   assert.equal(source.sha256,'933d209532bfb44cb53d20d4d40f14e4f31b081bb93aee880232566935bc00bf');
-  assert.equal(JSON.stringify(g.DESERTO_ART),JSON.stringify(imp.build()));assert.equal(Object.keys(g.DESERTO_ART.frames).length,57);
-  for(const [id,r]of Object.entries(imp.manifest.frames)){
+  assert.equal(JSON.stringify(g.DESERTO_ART),JSON.stringify(imp.build()));assert.equal(Object.keys(g.DESERTO_ART.frames).length,27);
+  for(const [id,r]of Object.entries(imp.manifest.frames)){if(id.startsWith('worm_'))continue;
     const c=g.desertAsset(id),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let visible=0;
     for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const at=(y*c.width+x)*4;if(!d[at+3])continue;visible++;
       const i=((r[1]+y)*source.width+r[0]+x)*4;assert.equal(Buffer.compare(Buffer.from(d.subarray(at,at+3)),source.data.subarray(i,i+3)),0,id+' RGB fiel');
@@ -1428,8 +1413,8 @@ test('recortes do Deserto conservam os pixels originais e retiram só a apresent
     assert.ok(visible>100,id+' não está vazio');assert.ok(c.width<=302&&c.height<=338,id+' não inclui a prancha inteira');
   }
   const point=(id,x,y)=>{const c=g.desertAsset(id);return c.getContext('2d').getImageData(0,0,c.width,c.height).data[(y*c.width+x)*4+3];};
-  assert.equal(point('worm_main',60,70),0,'legenda removida');
-  assert.equal(point('worm_emerge',65,27),255,'interior escuro da boca preservado');
+  assert.ok(!Object.keys(g.DESERTO_ART.frames).some(id=>id.startsWith('worm_')),'Verme não usa dados recortados');
+
   assert.equal(point('scorpion_move0',50,54),255,'placas do escorpião preservadas');
 });
 
@@ -1443,8 +1428,8 @@ test('escala visual e colisão dos novos inimigos usam a mesma normalização',(
       assert.ok(Math.abs(box.top+c.fy*box.scale-6.04*e.sc)<1e-8,'ponto de apoio estável');
     }
   }
-  for(const f of Object.keys(g.DESERTO_POSES.verme)){
-    const c=g.monSprite('verme',1,+f),box=g.spriteLayout(c,'verme',2.7);assert.ok(box.w<520&&box.h<340,'Verme em escala de chefe');
+  for(const f of [0,1,2,3,10,11,12,20,21,22,23,30,31,32,33,34,35,40,41,42,50,51,52,53,54,60]){
+    const c=g.monSprite('verme',1,+f),box=g.spriteLayout(c,'verme',2.7);assert.ok(box.w<520&&box.h<360,'Verme em escala de chefe');
   }
 });
 
@@ -1500,10 +1485,10 @@ test('Verme enterrado não recebe lentidão nem prende o alvo da Salamandra alia
   const ally=g.mkAlly('fogo',1);ally.tgt=e;ally.tre=10;g.run.allies.push(ally);g.updAllies(.01);assert.notEqual(ally.tgt,e);
 });
 
-test('recolhimento do Verme percorre os recortes originais sem causar dano',()=>{
+test('recolhimento do Verme percorre poses procedurais sem causar dano',()=>{
   const {game:g}=boot();begin(g,'fogo');const e=wormActor(g);e.wormInit=true;e.wormAct={k:'emerge',phase:'retract',t:0};e.underground=true;
-  const hp=g.run.pl.hp,poses=[];for(let i=0;i<6;i++){poses.push(g.monSprite('verme',1,g.wormFrame(e)).sourceId);wormStep(g,e,.05);}
-  assert.ok(poses.includes('worm_diveUp'));assert.ok(poses.includes('worm_diveDown'));assert.ok(poses.includes('worm_diveCrack'));assert.equal(g.run.pl.hp,hp);
+  const hp=g.run.pl.hp,poses=[];for(let i=0;i<6;i++){poses.push(g.wormFrame(e));wormStep(g,e,.05);}
+  assert.ok(poses.includes(22));assert.ok(poses.includes(21));assert.ok(poses.includes(23));assert.equal(g.run.pl.hp,hp);
 });
 
 test('Pedrada reconhece a posição visual do Abutre ao subir da recuperação',()=>{
@@ -1520,4 +1505,167 @@ test('reforços não deslocam o Verme nem a área fixada durante o aviso',()=>{
   const x=e.x,y=e.y,T=JSON.parse(JSON.stringify(e.tele));dragonFoe(g,'escorpiao',x+10,y).cd=100;
   for(let i=0;i<8;i++)g.updEnemies(.025);
   assert.equal(e.x,x);assert.equal(e.y,y);assert.equal(e.tele.x,T.x);assert.equal(e.tele.y,T.y);assert.equal(e.tele.a,T.a);
+});
+
+
+test('Serpente procedural cria quadros retangulares cacheados sem assets externos',()=>{
+  const {game:g}=boot();begin(g,'fogo');
+  for(const frame of [0,1,2,3,10,11,12,13,20,21,22,30]){
+    const c=g.serpentSprite(frame);assert.equal(c.width,128);assert.equal(c.height,112);
+    assert.equal(c,g.serpentSprite(frame),'cada pose é cacheada');
+    assert.equal(c.unitScale,1);assert.equal(c.facing,-1);assert.equal(c.ax,80);assert.equal(c.fy,100);
+    assert.ok(c.getContext('2d').ops.some(o=>typeof o[0]==='string'&&o[0].startsWith('#')),'desenho por células de cor');assert.ok(!c.getContext('2d').ops.some(o=>o[0]==='raster'||o[0]==='image'),'não decodifica bitmap recortado');
+  }
+});
+
+test('boca aberta mantém exatamente o deslocamento do hitbox da Serpente',()=>{
+  const {game:g}=boot(),e=snakeBoss(g),c=g.serpentSprite(11);e.face=1;
+  assert.equal(c.mouth.x,22);assert.equal(c.mouth.y,63);
+  assert.equal((c.mouth.x-c.ax)*c.facing*c.unitScale,58);
+  assert.equal((c.mouth.y-c.fy)*c.unitScale,-37);
+  const m=g.snakeMouth(e);assert.equal(m.x-e.x,58*e.sc);
+  const box=g.spriteLayout(c,'serpente',e.sc);
+  assert.equal(m.y,e.y+box.top+c.mouth.y*box.scale);
+});
+
+
+test('boca procedural do Verme mantém os pontos exatos usados pela colisão',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=wormActor(g,0,40,70);e.sc=2.7;e.face=1;
+  for(const [frame,mx]of [[32,160],[51,102]]){
+    const c=g.monSprite('verme',1,frame),box=g.spriteLayout(c,'verme',e.sc),hit=g.wormMouth(e,frame);
+    assert.equal(c.ax,88);assert.equal(c.fy,116);assert.equal(c.bw,86);
+    assert.equal(c.mouth.x,mx);assert.equal(c.mouth.y,59);
+    assert.ok(Math.abs(hit.x-(e.x+(mx-88)*box.scale))<1e-9);
+    assert.ok(Math.abs(hit.y-(e.y+(6.04-57)*e.sc))<1e-9);
+    const rgba=c.getContext('2d').getImageData(mx,59,1,1).data;
+    assert.deepEqual([...rgba],[33,23,32,255],'o centro da hitbox coincide com o interior escuro da boca');
+    e.face=-1;const mirrored=g.wormMouth(e,frame);
+    assert.ok(Math.abs(mirrored.x-(e.x-(mx-88)*box.scale))<1e-9,'o ponto de acerto espelha com a direção');
+    e.face=1;
+  }
+  for(const [frame,point]of [[12,{x:113,y:59}],[31,{x:115,y:49}],[33,{x:115,y:56}],[34,{x:113,y:59}],[35,{x:113,y:59}]])
+    assert.equal(JSON.stringify(g.monSprite('verme',1,frame).mouth),JSON.stringify(point),'a cabeça recua e retorna com o corpo');
+});
+
+test('efeitos procedurais do Verme usam cache e a origem do jato fica na boca',()=>{
+  const {game:g}=boot();
+  const spray=g.wormEffectSprite('worm_spray',.2);
+  assert.equal(g.wormEffectSprite('worm_spray',.2),spray);
+  assert.equal(spray.ax,0);assert.equal(spray.fy,64);assert.equal(spray.bw,128);
+  assert.equal(spray.width,128);assert.equal(spray.height,128);
+  const origin=spray.getContext('2d').getImageData(0,64,1,1).data;
+  assert.equal(origin[3],255,'o jato começa no ponto de emissão antes da rotação');
+  const spikes=g.wormEffectSprite('worm_spikes0',.1);
+  assert.equal(g.wormEffectSprite('worm_spikes0',.1),spikes);
+  assert.equal(spikes.ax,64);assert.equal(spikes.fy,84);
+  assert.equal(spikes.width,128);assert.equal(spikes.height,96);
+});
+
+function enterBetaPhase(g,world='forest',diff='normal',character='fogo'){
+  g.ACT.testplay();g.ACT.phase(button(world));g.ACT.difficulty(button(diff));g.ACT.begin(button(character));
+}
+
+test('código beta aceita entrada normalizada, rejeita erro e sobrevive ao reload',()=>{
+  const {game:g,node,store}=boot();g.ACT.betacode();node('#beta-code').value='errado';g.ACT.betaunlock();
+  assert.equal(g.P.betaTester,false);assert.match(node('#beta-code-note').textContent,/inválido/i);
+  node('#beta-code').value=' BetaTester ';g.ACT.betaunlock();assert.equal(g.P.betaTester,true);
+  const persisted=JSON.parse(store.get('nevoa-selvagem-v3'));const reloaded=boot(persisted);
+  assert.equal(reloaded.game.P.betaTester,true);reloaded.game.ACT.menu();assert.match(reloaded.node('#ui').innerHTML,/Iniciar por fase/);
+});
+
+test('segredo do teclado libera o modo sem abrir o campo de código',()=>{
+  const {game:g,events,node}=boot();g.ACT.menu();for(const key of 'betaTester')events.keydown({key,preventDefault(){}});
+  assert.equal(g.P.betaTester,true);assert.match(node('#ui').innerHTML,/Iniciar por fase/);
+});
+
+test('a fase pode voltar a dificuldade, seletor e menu sem iniciar uma partida',()=>{
+  const {game:g,node}=boot();g.unlockTester('betatester');g.ACT.testplay();assert.equal(node('#ui').dataset.scr,'phase');
+  g.ACT.phase(button('desert'));assert.equal(node('#ui').dataset.scr,'difficulty');g.ACT.difficulty(button('feroz'));
+  assert.equal(node('#ui').dataset.scr,'character');g.ACT.difficultyback();assert.equal(node('#ui').dataset.scr,'difficulty');
+  g.ACT.testplay();assert.equal(node('#ui').dataset.scr,'phase');g.ACT.menu();assert.equal(node('#ui').dataset.scr,'menu');
+  assert.equal(g.run,null);assert.equal(g.P.betaTester,true);
+});
+
+test('partida de teste começa em qualquer um dos quatro mapas e reinicia outra fase',()=>{
+  const {game:g,node,store}=boot();g.unlockTester('betatester');
+  for(const [i,world] of Object.keys(g.WORLDS).entries()){
+    enterBetaPhase(g,world,'feroz','fogo');assert.equal(g.run.test,true);assert.equal(g.run.world,world);assert.equal(g.run.visit,i);
+    assert.equal(JSON.parse(store.get('nevoa-selvagem-v3')).P.st.played.fogo,undefined,'o perfil normal não deve receber dados da sessão');
+    g.endRun();assert.equal(node('#ui').dataset.scr,'testover');assert.equal(g.run.test,true);
+  }
+});
+
+test('configurações de teste persistem e menu restaura todo o perfil original',()=>{
+  const {game:g,node,store}=boot();g.unlockTester('betatester');
+  g.P.ess=321;g.P.nick='Original';g.P.st.kills=17;g.P.rank=[{ch:'fogo',lv:12,time:90,score:1200090}];g.P.ach.keep=1;g.save();
+  const original=JSON.parse(JSON.stringify(g.P));enterBetaPhase(g,'swamp','feroz','fogo');
+  g.P.ess+=900;g.P.st.kills=9999;g.P.ach.boss=1;g.P.rank.push({ch:'fogo',lv:99,time:999,score:99999999});
+  g.ACT.opts({dataset:{from:'pause'}});g.ACT.set({dataset:{k:'aim',v:'auto'}});
+  const persisted=JSON.parse(store.get('nevoa-selvagem-v3'));assert.equal(persisted.S.aim,'auto');assert.deepEqual(persisted.P,original);
+  g.ACT.menu();assert.equal(node('#ui').dataset.scr,'menu');assert.equal(g.run,null);assert.deepEqual(JSON.parse(JSON.stringify(g.P)),original);
+});
+
+test('morte em teste não grava essência, conquistas, recordes nem estatísticas',()=>{
+  const {game:g,store}=boot();g.unlockTester('betatester');g.P.ess=75;g.P.st.kills=4;g.P.st.runs=2;g.P.rank=[{ch:'fogo',lv:7,time:80,score:700080}];g.save();
+  const original=JSON.parse(JSON.stringify(g.P));enterBetaPhase(g,'desert','normal','fogo');
+  g.P.ess+=500;g.P.st.kills+=1000;g.P.st.boss+=1;g.P.ach.boss=1;g.P.rank.push({ch:'fogo',lv:80,time:900,score:80000900});
+  g.run.lv=80;g.run.time=900;g.run.kills=1000;g.run.bossKills=1;g.run.over=true;g.endRun();
+  assert.deepEqual(JSON.parse(JSON.stringify(g.P)),original);assert.deepEqual(JSON.parse(store.get('nevoa-selvagem-v3')).P,original);
+});
+
+test('uma jornada normal após o teste volta a conceder recompensas e recorde',()=>{
+  const {game:g}=boot();g.unlockTester('betatester');g.P.ess=40;const before=g.P.ess;
+  enterBetaPhase(g,'dragon','normal','fogo');g.run.over=true;g.endRun();
+  begin(g,'fogo','normal');g.run.time=125;g.run.lv=8;g.run.kills=20;g.run.bossKills=1;g.endRun();
+  assert.ok(g.P.ess>before);assert.equal(g.P.st.runs,1);assert.equal(g.P.rank.length,1);assert.equal(g.P.rank[0].time,125);
+});
+
+
+const AMBIENT_COLORS={forest:'rgba(20,25,23,.5)',swamp:'rgba(154,177,161,.08)',dragon:'rgba(210,128,79,.12)',desert:'rgba(235,183,111,.23)'};
+function ambientAdvance(g,fps,seconds){for(let t=0;t<seconds-1e-10;){const dt=Math.min(1/fps,seconds-t);g.updateBiomeAmbient(dt);t+=dt;}}
+
+test('efeitos de cada bioma usam a camada anterior a atores e avisos',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');const ctx=node('#cv').getContext('2d');
+  for(const world of Object.keys(g.WORLDS)){
+    g.run.world=world;g.updateBiomeAmbient(1/60);for(let i=0;i<18*60&&!g.biomeAmbient.particles.some(p=>p.k==='fog'||p.k==='heat'||p.u>.1&&p.u<.9);i++)g.updateBiomeAmbient(1/60);ctx.ops.length=0;ctx.images.length=0;g.render();
+    const environmental=ctx.ops.findIndex(op=>op[0]===AMBIENT_COLORS[world]);assert.ok(environmental>=0,world+' visível');
+    const player=ctx.images.find(im=>im.img===g.monSprite('fogo',1,20));assert.ok(player);assert.ok(environmental<player.opIndex,'fundo antes do jogador');
+  }
+});
+
+test('ambientação não altera gameplay e desenhar não avança sua animação',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='swamp';
+  const original=JSON.stringify({time:g.run.time,pl:g.run.pl,st:g.run.st,enemies:g.enemies,gems:g.gems,hazards:g.hazards});
+  ambientAdvance(g,60,10);assert.equal(JSON.stringify({time:g.run.time,pl:g.run.pl,st:g.run.st,enemies:g.enemies,gems:g.gems,hazards:g.hazards}),original);
+  const before=JSON.stringify(g.biomeAmbient);g.drawBiomeAmbient();g.drawBiomeAmbient();assert.equal(JSON.stringify(g.biomeAmbient),before);
+});
+
+test('névoa, calor e rajadas param na pausa e reiniciam na transição',()=>{
+  const {game:g,events}=boot();begin(g,'fogo');g.run.world='swamp';ambientAdvance(g,60,2);
+  events.keydown({key:'Escape',preventDefault(){}});const before=JSON.stringify(g.biomeAmbient);g.updateBiomeAmbient(5);g.frame(12000);g.frame(18000);assert.equal(JSON.stringify(g.biomeAmbient),before);
+  g.ACT.resume();g.updateBiomeAmbient(.05);assert.ok(g.biomeAmbient.time>2);
+  g.run.world='dragon';g.updateBiomeAmbient(.05);assert.equal(g.biomeAmbient.world,'dragon');assert.equal(g.biomeAmbient.time,.05);assert.ok(g.biomeAmbient.particles.every(p=>p.k==='heat'));
+});
+
+test('mesmo tempo produz posições ambientais equivalentes em 30 e 60 FPS',()=>{
+  for(const world of Object.keys(AMBIENT_COLORS)){
+    const {game:a}=boot(),{game:b}=boot();begin(a,'fogo');begin(b,'fogo');a.run.world=b.run.world=world;
+    a.updateBiomeAmbient(.0001);b.updateBiomeAmbient(.0001);const seconds=Number.isFinite(a.biomeAmbient.next)?a.biomeAmbient.next+2:6;ambientAdvance(a,30,seconds);ambientAdvance(b,60,seconds);
+    const state=g=>JSON.stringify(g.biomeAmbient.particles.map(p=>[p.k,+p.u.toFixed(7),+p.v.toFixed(5),p.life===undefined?null:+p.life.toFixed(7)]));
+    assert.equal(state(a),state(b),world+' independe da frequência');
+  }
+});
+
+test('ambientação limita partículas no celular e não persiste no save',()=>{
+  const {game:desk}=boot(),{game:phone}=boot();begin(desk,'fogo');begin(phone,'fogo');phone.S.touch='on';desk.run.world=phone.run.world='swamp';
+  desk.updateBiomeAmbient(.05);phone.updateBiomeAmbient(.05);assert.ok(phone.biomeAmbient.particles.length<desk.biomeAmbient.particles.length);
+  for(const world of ['forest','desert']){phone.run.world=world;ambientAdvance(phone,30,120);assert.ok(phone.biomeAmbient.particles.length<=18);}
+});
+
+
+test('seleção direta permanece bloqueada sem código e rejeita fases inválidas',()=>{
+  const {game:g,node}=boot();g.ACT.menu();assert.doesNotMatch(node('#ui').innerHTML,/data-a="testplay"/);
+  assert.equal(g.startRun('fogo','normal','desert',true),false);g.ACT.testplay();assert.equal(g.run,null);
+  g.unlockTester('betatester');assert.equal(g.startRun('fogo','normal','__proto__',true),false);
+  assert.equal(g.startRun('fogo','normal','desert',false),false);assert.equal(g.run,null);
 });
