@@ -2,7 +2,7 @@
 <html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BaubLike · Verificação de combate</title>
 <style>body{margin:20px;background:#0b1411;color:#eee;font:15px system-ui}h1{font-size:22px;color:#f2b84b}button,select{padding:9px;margin:4px;background:#243b30;color:#fff;border:1px solid #61765e;border-radius:4px}iframe{display:block;width:min(960px,100%);height:600px;border:1px solid #61765e;margin-top:12px}p{color:#abbcaf}#status{color:#b6e4c4}</style>
-<h1>BaubLike · Beta 0.9.1 · Combate</h1>
+<h1>BaubLike · Beta 0.9.2 · Combate</h1>
 <p>Cenários reproduzíveis usando o código real, com progresso e áudio isolados. O jogo fica parado no quadro escolhido.</p>
 <label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Granito</option><option value="sombra">Sombrinha</option></select></label>
 <label>Evolução <select id="stage"><option value="1">Inicial</option><option value="2">Evolução 2</option><option value="3">Evolução 3</option></select></label>
@@ -41,7 +41,7 @@
         if(scene.startsWith('desert')||scene.startsWith('worm')||['scorpionimpact','vultureimpact','hyenasteal','hyenabite'].includes(scene)){
           g.run.world='desert';g.run.visit=3;g.run.lv=31;g.run.need=g.xpNeed(31);g.run.worldStartLv=31;g.enemies.length=0;
           if(scene.startsWith('worm')||['desertportal','desertadds'].includes(scene)){
-            g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=220;e.y=35;
+            g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=220;e.y=35;
             e.wormPi=scene.includes('bite')?1:scene.includes('rupture')?2:scene.includes('geyser')?3:0;
             const phase=scene.endsWith('warn')?'warn':scene==='wormtravel'?'travel':scene==='wormrecover'?'recover':scene==='wormretract'?'retract':scene==='wormbite'?'lunge':'impact';
             if(scene==='desertportal'){e.underground=false;g.hitEnemy(e,100000000,{canCrit:false});}
@@ -78,12 +78,12 @@
           g.enemies.length=0;g.run.worldTime=239.9;g.run.time=239.9;g.run.pl.inv=10;g.update(.1);
         }else if(scene==='forestadds'||scene==='dragonadds'||scene==='swampadds'){
           g.enemies.length=0;g.run.world={forestadds:'forest',dragonadds:'dragon',swampadds:'swamp'}[scene];g.run.visit={forestadds:0,dragonadds:1,swampadds:2}[scene];g.run.lv=10;g.run.pl.inv=100;
-          g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=220;boss.y=40;
+          g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=220;boss.y=40;
           for(let i=0;i<400;i++)g.update(.05);
         }else if(['swamp','swampwarnings','split','snakebite','snaketail','snakehit','snakesweep','snakevenom'].includes(scene)){
           g.run.world='swamp';g.run.visit=2;g.run.lv=21;g.run.worldStartLv=21;g.enemies.length=0;
           if(scene.startsWith('snake')){
-            g.run.lv=30;g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=190;boss.y=100;boss.pt=0;boss.pi=scene==='snaketail'||scene==='snakesweep'?1:0;
+            g.run.lv=30;g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=190;boss.y=100;boss.pt=0;boss.pi=scene==='snaketail'||scene==='snakesweep'?1:0;
             for(let i=0;i<7;i++)g.updEnemies(.05);
             if(scene==='snakehit'||scene==='snakesweep')for(let i=0;i<40;i++){g.updEnemies(.025);if(boss.act?.phase===(scene==='snakehit'?'dash':'sweep'))break;}
             if(scene==='snakevenom'){for(let i=0;i<40;i++){g.updEnemies(.025);if(g.run.pl.rot>0)break;}g.tickRot(1);}
@@ -102,7 +102,7 @@
             for(const e of g.enemies)e.cd=warning?0:2;
             if(warning)for(let i=0;i<6;i++)g.updEnemies(.05);
           }else{
-            g.run.lv=10;g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=200;boss.y=30;boss.pt=0;
+            g.run.lv=10;g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const boss=g.enemies[0];boss.spawn=0;boss.x=200;boss.y=30;boss.pt=0;
             if(scene.startsWith('colossus')){
               if(scene==='colossusslam'){boss.x=110;boss.pi=1;}
               else if(scene.startsWith('colossusline'))boss.pi=2;
@@ -110,10 +110,10 @@
             }
             else{g.hitEnemy(boss,100000,{canCrit:false});if(scene==='cycle'){
               g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);
-              g.run.lv=20;g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const cr=g.enemies[0];cr.spawn=0;cr.x=200;cr.y=30;g.hitEnemy(cr,100000,{canCrit:false});
+              g.run.lv=20;g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const cr=g.enemies[0];cr.spawn=0;cr.x=200;cr.y=30;g.hitEnemy(cr,100000,{canCrit:false});
               g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);
-              g.run.lv=30;g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const snake=g.enemies[0];snake.spawn=0;snake.x=200;snake.y=30;g.hitEnemy(snake,100000,{canCrit:false});
-              g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const worm=g.enemies[0];worm.spawn=0;worm.underground=false;g.hitEnemy(worm,100000000,{canCrit:false});g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);g.cam.x=g.run.pl.x-400;g.cam.y=g.run.pl.y-250;g.run.fade=0;
+              g.run.lv=30;g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const snake=g.enemies[0];snake.spawn=0;snake.x=200;snake.y=30;g.hitEnemy(snake,100000,{canCrit:false});
+              g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const worm=g.enemies[0];worm.spawn=0;worm.underground=false;g.hitEnemy(worm,100000000,{canCrit:false});g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(1);g.cam.x=g.run.pl.x-400;g.cam.y=g.run.pl.y-250;g.run.fade=0;
             }}
           }
         }else if(scene==='draconic'||scene==='warnings'){
@@ -124,7 +124,7 @@
           if(scene==='warnings')for(let i=0;i<5;i++)g.updEnemies(.05);
           else g.run.lv=7;
         }else if(scene.startsWith('boss')){
-          g.run.world='dragon';g.run.visit=1;g.run.lv=10;g.run.worldTime=g.BAL.bossTime;g.spawnBoss();const boss=g.enemies.find(e=>e.boss);boss.spawn=0;boss.x=250;boss.y=10;
+          g.run.world='dragon';g.run.visit=1;g.run.lv=10;g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const boss=g.enemies.find(e=>e.boss);boss.spawn=0;boss.x=250;boss.y=10;
           boss.hp=boss.maxhp*({boss1:.9,boss2:.5,boss3:.2}[scene]);boss.pt=0;g.run.pl.inv=10;
           const d=Math.hypot(boss.x,boss.y);for(let i=0;i<7;i++){boss.t+=.05;g.updBoss(boss,.05,-boss.x/d,-boss.y/d,d,92);}
         }else if(scene==='defeat'){g.run.time=125.5;g.run.pl.hp=1;g.hurtPlayer(100000);g.update(2.2);}

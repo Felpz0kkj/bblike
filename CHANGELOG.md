@@ -1,5 +1,13 @@
 # Histórico
 
+## 0.9.2-beta — tempos de etapa, Serpente anterior e efeitos visíveis — 2026-11-06
+
+- Serpente Branca volta aos mesmos sprites, pixels, âncoras e animações da beta 0.9.0; ataques, veneno, hitboxes e balanceamento mantidos. Nenhum PNG foi alterado.
+- Primeiro chefe aos 4 minutos; todas as etapas seguintes aos 2min30, inclusive novos ciclos e entradas de teste posteriores à Floresta. HUD, ajuda e desbloqueio temporal do elenco acompanham o prazo da etapa; XP e recargas permanecem no ritmo atual.
+- Verme subterrâneo deixa um rastro curto de fissuras e poeira na camada do chão. Corpo oculto no deslocamento, recolhimento visível, sem montículo duplicado ou poeira sobre a criatura. Mesma lógica de combate e colisão.
+- Ambientação reforçada: aves maiores/mais frequentes, névoa baixa segmentada, faixas de calor/brasas e rajadas de areia mais legíveis. Efeitos anteriores aos atores e avisos, independentes de FPS, pausáveis e limitados em touch.
+- Validação: 175 testes aprovados; partidas nos quatro biomas e conferência de Serpente, Verme, pausa e viewport móvel no Edge, sem erros de execução.
+
 ## 0.9.1-beta — seleção de fase, chefes por código e ambientação — 2026-11-06
 
 - Código `betatester` no menu libera Iniciar por fase, com entrada por campo ou teclado. Os quatro mapas usam dificuldade e personagem existentes. Perfil de teste isolado: recompensas, coleção, conquistas e ranking não passam ao save normal; configurações permanecem, e o perfil original é restaurado ao sair/morrer.

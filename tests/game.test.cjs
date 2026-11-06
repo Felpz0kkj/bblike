@@ -55,7 +55,7 @@ function begin(game,type='planta',diff='normal'){
   game.ACT.play();game.ACT.difficulty(button(diff));game.ACT.begin(button(type));
 }
 
-function spawnDue(g,L=g.run.lv){g.run.worldTime=g.BAL.bossTime;return g.spawnBoss(L);}
+function spawnDue(g,L=g.run.lv){g.run.worldTime=g.bossTimeLimit();return g.spawnBoss(L);}
 
 test('versão beta acompanha manifesto, jogo, documentação e prévias',()=>{
   const root=path.join(__dirname,'..'),version=fs.readFileSync(path.join(root,'VERSION'),'utf8').trim();
@@ -883,7 +883,7 @@ test('pântano procedural deixa áreas secas e molhadas, sem árvores densas nem
 test('arte do pântano tem silhuetas distintas e quadros de movimento, aviso e ataque',()=>{
   const {game:g}=boot();const all=[];
   for(const type of ['bocarra','mosquito','caranguejo','serpente']){
-    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?128:40);
+    const frames=[0,1,10,11,12].map(f=>g.monSprite(type,3,f));all.push(frames[0].toDataURL());assert.equal(frames[0].width,type==='serpente'?87:40);
     assert.notEqual(frames[0].toDataURL(),frames[1].toDataURL());assert.notEqual(frames[0].toDataURL(),frames[2].toDataURL());assert.notEqual(frames[2].toDataURL(),frames[3].toDataURL());
   }
   assert.equal(new Set(all).size,4);
@@ -977,17 +977,17 @@ test('Granito aliado prepara a mesma Pedrada e mantém origem, alcance e dano pr
   g.updLobs(.25);assert.equal(e.hp,100);g.updLobs(.35);assert.equal(e.hp,90);assert.equal(e.stun,.5);assert.equal(g.run.pl.hp,20);
 });
 
-test('cada mapa anuncia seu chefe aos 240 segundos, independentemente do nível e do XP',()=>{
+test('chefe chega aos 240 s na primeira etapa e 150 s nas demais, sem depender de nível/XP',()=>{
   const {game:g}=boot(undefined,()=>.5);
-  for(const [world,boss]of [['forest','colosso'],['dragon','cratos'],['swamp','serpente'],['desert','verme']])for(const level of [1,100]){
-    begin(g,'fogo');g.run.world=world;g.run.lv=level;g.run.need=1e9;g.run.pl.inv=100;g.onLevel();assert.equal(g.bossAlive(),false);
-    g.run.worldTime=239.99;assert.equal(g.spawnBoss(),false);g.update(.005);assert.equal(g.bossAlive(),false);g.update(.005);
+  for(const [visit,world,boss]of [[0,'forest','colosso'],[1,'dragon','cratos'],[2,'swamp','serpente'],[3,'desert','verme'],[4,'forest','colosso']])for(const level of [1,100]){
+    begin(g,'fogo');g.run.world=world;g.run.visit=visit;g.run.lv=level;g.run.need=1e9;g.run.pl.inv=100;g.onLevel();assert.equal(g.bossAlive(),false);
+    g.run.worldTime=(visit===0?240:150)-.01;assert.equal(g.spawnBoss(),false);g.update(.005);assert.equal(g.bossAlive(),false);g.update(.006);
     const active=g.enemies.filter(e=>e.boss);assert.equal(active.length,1);assert.equal(active[0].boss.id,boss);assert.equal(g.run.lv,level);assert.equal(g.run.xp,0);
     g.update(.2);assert.equal(g.enemies.filter(e=>e.boss).length,1);
   }
 });
 
-test('pausa, escolhas e derrota não contam tempo para o chefe; portal reinicia os quatro minutos',()=>{
+test('pausa, escolhas e derrota não contam tempo para o chefe; portal reinicia o prazo da próxima etapa',()=>{
   const {game:g,events}=boot(undefined,()=>.5);begin(g,'fogo');g.run.worldTime=239;g.frame(1000);const before=g.run.worldTime;
   events.blur();g.frame(100000);assert.equal(g.run.worldTime,before);g.ACT.resume();
   g.run.pend=1;g.showLevelUp();g.frame(200000);assert.equal(g.run.worldTime,before);g.ACT.card(button(0));g.frame(200050);assert.ok(g.run.worldTime>before);
@@ -1156,14 +1156,14 @@ test('escala de Granito é consistente no menu, na partida e como aliado',()=>{
 test('quadros da Serpente acompanham os dois ataques e a boca acompanha o espelhamento',()=>{
   const {game:g}=boot(),e=snakeBoss(g);
   const pose=(act)=>g.monSprite('serpente',1,g.serpentFrame({...e,t:0,act})).sourceId;
-  assert.equal(pose(null),'procedural-0');
-  assert.equal(pose({k:'snakebite',phase:'windup',t:.1,dur:.75}),'procedural-10');
-  assert.equal(pose({k:'snakebite',phase:'windup',t:.6,dur:.75}),'procedural-13');
-  assert.equal(pose({k:'snakebite',phase:'dash'}),'procedural-11');
-  assert.equal(pose({k:'snakebite',phase:'recover'}),'procedural-12');
-  assert.equal(pose({k:'snaketail',phase:'windup'}),'procedural-20');
-  assert.equal(pose({k:'snaketail',phase:'sweep'}),'procedural-21');
-  assert.equal(pose({k:'snaketail',phase:'recover'}),'procedural-22');
+  assert.equal(pose(null),'move0');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.1,dur:.75}),'biteWarn');
+  assert.equal(pose({k:'snakebite',phase:'windup',t:.6,dur:.75}),'biteReady');
+  assert.equal(pose({k:'snakebite',phase:'dash'}),'bite');
+  assert.equal(pose({k:'snakebite',phase:'recover'}),'biteReady');
+  assert.equal(pose({k:'snaketail',phase:'windup'}),'tailReady');
+  assert.equal(pose({k:'snaketail',phase:'sweep'}),'tailSweep');
+  assert.equal(pose({k:'snaketail',phase:'recover'}),'tailRecover');
   const c=g.monSprite('serpente',1,11);assert.equal(c.facing,-1);
   e.x=200;e.y=80;e.face=1;const right=g.snakeMouth(e);e.face=-1;const left=g.snakeMouth(e);
   assert.ok(right.x>e.x&&left.x<e.x);assert.ok(Math.abs((right.x-e.x)-(e.x-left.x))<1e-9);assert.equal(right.y,left.y);
@@ -1508,19 +1508,17 @@ test('reforços não deslocam o Verme nem a área fixada durante o aviso',()=>{
 });
 
 
-test('Serpente procedural cria quadros retangulares cacheados sem assets externos',()=>{
+test('Serpente restaura os pixels da beta 0.9.0 sem alterar âncoras ou cache',()=>{
   const {game:g}=boot();begin(g,'fogo');
-  for(const frame of [0,1,2,3,10,11,12,13,20,21,22,30]){
-    const c=g.serpentSprite(frame);assert.equal(c.width,128);assert.equal(c.height,112);
-    assert.equal(c,g.serpentSprite(frame),'cada pose é cacheada');
-    assert.equal(c.unitScale,1);assert.equal(c.facing,-1);assert.equal(c.ax,80);assert.equal(c.fy,100);
-    assert.ok(c.getContext('2d').ops.some(o=>typeof o[0]==='string'&&o[0].startsWith('#')),'desenho por células de cor');assert.ok(!c.getContext('2d').ops.some(o=>o[0]==='raster'||o[0]==='image'),'não decodifica bitmap recortado');
-  }
+  assert.equal(crypto.createHash('sha256').update(JSON.stringify(g.SERPENTE_ART)).digest('hex'),'214e47ed374625ce4d0b83b4ac184d8cb49fa097465f87ead6964ccca59476ba');
+  const c=g.serpentSprite(11);assert.equal(c,g.serpentSprite(11));
+  assert.equal(c.width,132);assert.equal(c.height,96);assert.equal(c.ax,87);assert.equal(c.fy,91);
+  assert.equal(c.unitScale,1);assert.equal(c.facing,-1);
 });
 
 test('boca aberta mantém exatamente o deslocamento do hitbox da Serpente',()=>{
   const {game:g}=boot(),e=snakeBoss(g),c=g.serpentSprite(11);e.face=1;
-  assert.equal(c.mouth.x,22);assert.equal(c.mouth.y,63);
+  assert.equal(c.mouth.x,29);assert.equal(c.mouth.y,54);
   assert.equal((c.mouth.x-c.ax)*c.facing*c.unitScale,58);
   assert.equal((c.mouth.y-c.fy)*c.unitScale,-37);
   const m=g.snakeMouth(e);assert.equal(m.x-e.x,58*e.sc);
@@ -1621,7 +1619,7 @@ test('uma jornada normal após o teste volta a conceder recompensas e recorde',(
 });
 
 
-const AMBIENT_COLORS={forest:'rgba(20,25,23,.5)',swamp:'rgba(154,177,161,.08)',dragon:'rgba(210,128,79,.12)',desert:'rgba(235,183,111,.23)'};
+const AMBIENT_COLORS={forest:'rgba(20,25,23,.72)',swamp:'rgba(154,177,161,.32)',dragon:'rgba(210,128,79,.32)',desert:'rgba(235,183,111,.48)'};
 function ambientAdvance(g,fps,seconds){for(let t=0;t<seconds-1e-10;){const dt=Math.min(1/fps,seconds-t);g.updateBiomeAmbient(dt);t+=dt;}}
 
 test('efeitos de cada bioma usam a camada anterior a atores e avisos',()=>{
@@ -1668,4 +1666,109 @@ test('seleção direta permanece bloqueada sem código e rejeita fases inválida
   assert.equal(g.startRun('fogo','normal','desert',true),false);g.ACT.testplay();assert.equal(g.run,null);
   g.unlockTester('betatester');assert.equal(g.startRun('fogo','normal','__proto__',true),false);
   assert.equal(g.startRun('fogo','normal','desert',false),false);assert.equal(g.run,null);
+});
+
+test('primeira visita usa quatro minutos e toda visita posterior usa dois e meio',()=>{
+  const {game:g}=boot();begin(g,'fogo');
+  assert.equal(g.BAL.bossTime,240);assert.equal(g.BAL.bossTimeNext,150);
+  g.run.world='forest';g.run.visit=0;g.run.worldTime=239.99;assert.equal(g.spawnBoss(),false);
+  assert.equal(spawnDue(g),true);assert.ok(g.bossAlive());
+
+  begin(g,'fogo');g.run.world='desert';g.run.visit=1;g.run.worldTime=149.99;
+  assert.equal(g.spawnBoss(),false);g.run.worldTime=150;assert.equal(g.spawnBoss(),true);
+  assert.ok(g.bossAlive());
+
+  begin(g,'fogo');g.run.world='forest';g.run.visit=4;g.run.worldTime=150;
+  assert.equal(g.spawnBoss(),true,'o ciclo seguinte da Floresta continua com a duração curta');
+});
+
+test('elenco progride na mesma proporção temporal e mantém o avanço por nível',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.lv=1;g.run.worldStartLv=1;
+  g.run.visit=0;g.run.worldTime=180;assert.equal(g.worldLevel(),7);
+  g.run.visit=1;g.run.worldTime=112.5;assert.equal(g.worldLevel(),7);
+  g.run.worldTime=150;assert.equal(g.worldLevel(),9);
+  g.run.worldTime=0;g.run.lv=4;assert.equal(g.worldLevel(),4,'níveis reais continuam valendo');
+});
+
+test('HUD e ajuda anunciam a duração da etapa atual e os dois prazos',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');g.run.visit=1;g.run.worldTime=100;g.updHud();
+  assert.match(node('#stat').textContent,/Chefe em 0:50/);
+  g.ACT.how();assert.match(node('#ui').innerHTML,/4 minutos na primeira etapa e 2 minutos e 30 segundos nas seguintes/);
+});
+
+test('poses subterrâneas do Verme não desenham o montículo junto da trilha',()=>{
+  const {game:g}=boot();begin(g,'fogo');
+  for(const frame of [0,1,2,3,23]){
+    const c=g.wormSprite(frame);assert.equal(c.width,192);assert.equal(c.height,128);
+    assert.equal(c.getContext('2d').ops.length,0,'pose enterrada fica transparente');
+  }
+  assert.ok(g.wormSprite(12).getContext('2d').ops.length>100,'a pose de superfície continua desenhada');
+});
+
+test('rachaduras do Verme são uma FX de chão curta, sem corpo ou dano enquanto enterrado',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');g.run.world='desert';
+  const e=wormActor(g,0,0,0);e.wormInit=true;e.underground=true;
+  e.wormAct={k:'emerge',phase:'travel',t:.2,fxT:0,startX:e.x,startY:e.y,x:30,y:0,dx:1,dy:0};g.enemies.push(e);
+  const hp=g.run.pl.hp;g.updWorm(e,.05,1,0,180,e.spd);
+  const crack=g.fx.find(f=>f.k==='desert'&&f.id==='worm_crack');
+  assert.ok(crack?.ground);assert.ok(crack.scale<1,'rachadura usa escala curta no espaço do chão');
+  g.render();const images=node('#cv').getContext('2d').images;
+  assert.ok(images.some(x=>x.img.assetGroup==='worm-fx'&&x.img.effectId==='worm_crack0'));
+  assert.ok(!images.some(x=>x.img.assetGroup==='worm'),'o corpo não aparece enquanto enterrado');
+  const life=crack.life;g.updFx(.1);assert.ok(crack.life<life,'a trilha avança com o delta de tempo');
+  assert.equal(images.filter(x=>x.img.assetGroup==='worm-fx'&&x.img.effectId==='worm_crack0').length,1,'a rachadura é desenhada uma vez');
+  assert.equal(g.run.pl.hp,hp,'a trilha subterrânea não causa dano');
+});
+
+test('atualização 0.9.2 mantém aves visíveis e frequentes, sem alterar limites',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='forest';g.updateBiomeAmbient(.0001);
+  assert.ok(g.biomeAmbient.next>=2&&g.biomeAmbient.next<=6);
+  ambientAdvance(g,60,8);const birds=g.biomeAmbient.particles.filter(p=>p.k==='bird');
+  assert.ok(birds.length>0&&birds.length<=2);assert.ok(birds.every(p=>p.s>=1.5&&p.s<=1.95));
+  assert.ok(g.biomeAmbient.particles.length<=35);
+});
+
+test('névoa é segmentada e fina, o calor tem faixas legíveis e a areia cruza mais chão',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');const ctx=node('#cv').getContext('2d');
+  g.run.world='swamp';g.updateBiomeAmbient(.001);ctx.ops.length=0;g.drawBiomeAmbient();
+  const fog=ctx.ops.filter(o=>o[0]===AMBIENT_COLORS.swamp);assert.ok(fog.length>=60);
+  assert.ok(Math.max(...fog.map(o=>o[3]))<100,'a névoa usa tiras curtas em vez de blocos largos');
+  assert.ok(fog.every(o=>o[4]<40),'a névoa permanece baixa e fina');
+  g.run.world='dragon';g.updateBiomeAmbient(.001);ctx.ops.length=0;g.drawBiomeAmbient();
+  const heat=ctx.ops.filter(o=>o[0]===AMBIENT_COLORS.dragon);assert.ok(heat.length>=12);assert.ok(heat.some(o=>o[4]>=2));
+  g.run.world='desert';g.updateBiomeAmbient(.001);const wait=g.biomeAmbient.next;ambientAdvance(g,60,wait+.01);
+  const gusts=g.biomeAmbient.particles.filter(p=>p.k==='sand');assert.ok(gusts.length>=3&&gusts.length<=6);assert.ok(gusts.every(p=>p.w>=.04&&Math.abs(p.vx)>=.27));
+  const before=gusts[0].u;ambientAdvance(g,60,.6);const moved=g.biomeAmbient.particles.find(p=>p.k==='sand');
+  assert.ok(moved&&moved.u>=0&&moved.u<=1,'faixas entram no campo de jogo');assert.notEqual(moved.u,before,'as faixas atravessam o chão ao longo do tempo');
+});
+
+test('efeitos 0.9.2 continuam limitados em touch e a pausa congela o relógio',()=>{
+  const desk=boot(),phone=boot();begin(desk.game,'fogo');begin(phone.game,'fogo');phone.game.S.touch='on';
+  desk.game.run.world=phone.game.run.world='swamp';desk.game.updateBiomeAmbient(.01);phone.game.updateBiomeAmbient(.01);
+  assert.ok(phone.game.biomeAmbient.particles.length<desk.game.biomeAmbient.particles.length);
+  phone.game.run.world='desert';ambientAdvance(phone.game,30,120);assert.ok(phone.game.biomeAmbient.particles.length<=18);
+  desk.events.keydown({key:'Escape',preventDefault(){}});const frozen=JSON.stringify(desk.game.biomeAmbient);
+  desk.game.updateBiomeAmbient(10);assert.equal(JSON.stringify(desk.game.biomeAmbient),frozen);
+});
+
+test('Verme recolhe o corpo antes de sumir e a poeira permanece abaixo dele',()=>{
+  const {game:g,node}=boot();begin(g,'fogo');g.run.world='desert';
+  const e=wormActor(g,0,100,50);e.wormInit=true;e.underground=true;e.wormAct={phase:'retract',t:.12};g.enemies.push(e);
+  g.fx.push({k:'desert',id:'worm_dust',ground:true,x:e.x,y:e.y,scale:.5,life:.3,max:.4});
+  const ctx=node('#cv').getContext('2d');ctx.images.length=0;g.render();
+  const ground=ctx.images.findIndex(x=>x.img.assetGroup==='worm-fx'),body=ctx.images.findIndex(x=>x.img.assetGroup==='worm');
+  assert.ok(ground>=0&&body>ground,'a poeira é desenhada antes do corpo em recolhimento');
+  e.wormAct.t=.25;ctx.images.length=0;g.render();assert.ok(!ctx.images.some(x=>x.img.assetGroup==='worm'));
+});
+
+test('aviso de emergência do Verme mostra tremor limitado sem antecipar o impacto',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';
+  const e=wormActor(g,0,100,50);e.wormInit=true;e.underground=true;
+  e.wormAct={k:'emerge',phase:'warn',t:.1,warn:g.DESERT_BOSS_BAL.emergeWarn,x:100,y:50,r:g.DESERT_BOSS_BAL.emergeRadius};
+  const hp=g.run.pl.hp;g.updWorm(e,.01,1,0,100,e.spd);
+  assert.equal(e.tele.t,'circle');assert.equal(e.tele.x,100);assert.equal(e.tele.y,50);
+  assert.equal(g.fx.length,2);assert.ok(g.fx.every(f=>f.ground&&f.life<=.28));
+  g.updWorm(e,.02,1,0,100,e.spd);assert.equal(g.fx.length,2,'não cria poeira a cada quadro');
+  g.updWorm(e,.3,1,0,100,e.spd);assert.equal(g.fx.length,4);assert.equal(e.wormAct.phase,'warn');
+  assert.equal(g.run.pl.hp,hp,'o tremor só avisa, sem dano antecipado');
 });
