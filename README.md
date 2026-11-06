@@ -1,4 +1,4 @@
-# BaubLike — Beta 0.9.1
+# BaubLike — Beta 0.9.2
 
 Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Granito e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
 
@@ -10,15 +10,17 @@ Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WA
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
 
-## Novidades da beta 0.9.1
+## Novidades da beta 0.9.2
+
+**Chefes com tempo por etapa:** o primeiro mapa da partida dura 4 minutos até o chefe. Todas as etapas seguintes duram 2min30, inclusive o retorno à Floresta em novos ciclos. Pausas e escolhas suspendem o relógio. A liberação dos tipos de inimigo acompanha proporcionalmente o prazo mais curto; XP, recargas e atributos não são acelerados.
 
 **Iniciar por fase:** no menu, escolha **Usar código**, digite **betatester** e confirme. Também é possível digitar a palavra diretamente no menu com o teclado. A liberação fica salva neste navegador. A nova opção permite escolher Floresta, Bioma Dracônico, Pântano ou Deserto, depois dificuldade e personagem.
 
 Essa partida começa no nível 1, usando as melhorias permanentes do seu perfil; a dificuldade por passagem considera a posição da fase no ciclo. É uma sessão de teste: nenhuma essência, conquista, coleção ou pontuação é adicionada ao save normal. Configurações de som/tela/controles continuam sendo salvas. Sair, morrer ou escolher outra fase restaura o perfil original. A partida normal mantém sua entrada e suas recompensas habituais.
 
-**Serpente Branca e Verme da Fenda agora são desenhados e animados por código**, na mesma grade pixel art do canvas. As referências orientam silhueta, paleta e características: Serpente clara, escamas lavanda, ventre oliva e olhos vermelhos; Verme terracota em anéis, espinhos de areia e boca circular com presas radiais. Os chefes e os efeitos do Verme deixaram de carregar quadros recortados. Não houve mudança de IA, ataques, hitboxes, vida, dano ou recargas. A conferência visual é feita durante as partidas, em escala de jogo.
+**Serpente Branca restaurada:** usa novamente os sprites e animações da beta 0.9.0, preservando os pixels e pontos de apoio anteriores. O Verme continua desenhado por código; seu rastro subterrâneo usa fissuras e poeira pequenas na camada do chão, sem repetir montículos sobre o corpo. O recolhimento permanece visível antes de desaparecer. IA, ataques, hitboxes, vida, dano e recargas dos chefes continuam iguais.
 
-**Ambientação leve no fundo:** pássaros ocasionais na Floresta, névoa baixa no Pântano, ondas discretas de calor no bioma dracônico/vulcânico e rajadas de areia no Deserto. O desenho acontece antes de atores, projéteis e avisos. A animação usa o tempo de atualização do jogo, pausa junto com ele e limita os efeitos no celular; não cria colisões nem altera o combate.
+**Ambientação mais visível:** pássaros maiores e mais frequentes na Floresta, névoa baixa em faixas no Pântano, calor e pequenas brasas no bioma dracônico/vulcânico e rajadas mais legíveis de areia no Deserto. O desenho acontece antes de atores, projéteis e avisos. A animação usa o tempo de atualização do jogo, pausa junto com ele e limita os efeitos no celular; não cria colisões nem altera o combate.
 
 Conforme a decisão do autor, **Granito, Escorpião, Abutre e Hiena preservam suas artes aprovadas**, inclusive os dados raster já existentes. Os arquivos de imagem não foram alterados. Os demais personagens, mapas, chefes, controles, progressão e salvamentos continuam no sistema atual.
 
@@ -34,14 +36,14 @@ O ataque básico de Granito é **somente garras**, com dois acertos de curto alc
 
 Terremoto mantém a sequência original de agachar, apoiar as garras, golpear, levantar poeira e espalhar a onda de terra. Prepara por 0,36 s e anima por 1,02 s; segurar o ataque básico não interrompe o impacto. Pedrada mantém a preparação de 0,26 s, impacto total em 0,55 s e seus efeitos originais de pedra/estilhaços. Os dois especiais recebem as melhorias de recarga e a recuperação por abate existentes.
 
-Continuam o ciclo **Floresta → Dragão → Pântano → Deserto → Floresta**, os chefes após quatro minutos de combate por mapa, portais que preservam a partida, drops reduzidos, ajustes dos inimigos e remoção de Ventinho da revisão anterior.
+Continuam o ciclo **Floresta → Dragão → Pântano → Deserto → Floresta**, portais que preservam a partida, drops reduzidos, ajustes dos inimigos e remoção de Ventinho da revisão anterior.
 
 ## Desenvolvimento
 
 Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
 
 - Fonte principal: `index.html`.
-- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.9.1, e a próxima correção será 0.9.2. Um teste verifica a consistência das identificações ativas.
+- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.9.2, e a próxima correção será 0.9.3. Um teste verifica a consistência das identificações ativas.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
 - Cenários de combate: http://127.0.0.1:4173/tests/combat.html (63 cenários, incluindo ações de Granito, os quatro mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
@@ -51,12 +53,12 @@ Use sempre o `index.html` da versão mais recente da branch `main` como base. An
 - Galeria legada das artes mantidas (não valida os novos chefes): http://127.0.0.1:4173/tests/sprites.html.
 - Galeria de arte: http://127.0.0.1:4173/tests/visual.html (progresso isolado).
 - Importação de Granito: `node scripts/build-granito.cjs --check` confere os pixels embutidos contra `assets/granito/reference.png` e `frames.json`; a conferência é somente das artes mantidas.
-- Verificação dos três inimigos comuns do Deserto: `node scripts/build-deserto.cjs --check` confere o PNG original e seus recortes. Serpente e Verme são desenhados por código e não têm etapa de recorte/importação. A referência do mapa é preservada em `assets/deserto/map-reference.png`.
+- Verificação dos três inimigos comuns do Deserto: `node scripts/build-deserto.cjs --check` confere o PNG original e seus recortes. O Verme é desenhado por código; a Serpente usa os dados embutidos restaurados da beta 0.9.0. A referência do mapa é preservada em `assets/deserto/map-reference.png`.
 - Histórico: [CHANGELOG.md](CHANGELOG.md).
 - Números e decisões de balanceamento: [docs/balanceamento.md](docs/balanceamento.md).
 - Comparação das versões: [docs/comparacao-versoes.md](docs/comparacao-versoes.md).
 
-Fontes externas são opcionais. Os sprites usam canvas; os dados raster mantidos de Granito e dos três inimigos comuns do Deserto ficam embutidos no HTML; Serpente e Verme usam geometria e paletas em código, que continua funcionando sozinho, sem carregar a prancha ou assets externos na partida. O ranking funciona localmente; a integração online antiga depende do ambiente original e não oferece ranking global no GitHub Pages.
+Fontes externas são opcionais. Os sprites usam canvas; os dados raster de Granito, Serpente e dos três inimigos comuns do Deserto ficam embutidos no HTML. O Verme usa geometria e paletas em código. O HTML continua funcionando sozinho, sem carregar pranchas ou assets externos na partida. O ranking funciona localmente; a integração online antiga depende do ambiente original e não oferece ranking global no GitHub Pages.
 
 ## GitHub Pages
 
