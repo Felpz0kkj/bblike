@@ -18,6 +18,7 @@ function boot(saved,random,legacy){
       createImageData(w,h){return{width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},
       putImageData(data){this.raster=data;ops.push(['raster',data.width,data.height,crypto.createHash('sha256').update(data.data).digest('hex')]);},
       getImageData(x,y,w,h){if(this.raster?.data){const src=this.raster,out=new Uint8ClampedArray(w*h*4);for(let row=0;row<h;row++)out.set(src.data.subarray(((y+row)*src.width+x)*4,((y+row)*src.width+x+w)*4),row*w*4);return{data:out};}return {data:new Uint8ClampedArray(w*h*4)};},
+      beginPath(){ops.push(['path']);},moveTo(...a){ops.push(['move',...a]);},lineTo(...a){ops.push(['line',...a]);},stroke(){ops.push(['stroke',this.strokeStyle,this.lineWidth]);},
       drawImage(img,...a){ops.push(['image',img.width,...a]);this.images.push({img,args:a,alpha:this.globalAlpha});},
       createRadialGradient(){return {addColorStop(){}};},
       createLinearGradient(){return {addColorStop(){}};},measureText(t){return {width:String(t).length*7};}
@@ -63,7 +64,7 @@ test('versão beta acompanha manifesto, jogo, documentação e prévias',()=>{
   }
   const latest=fs.readFileSync(path.join(root,'CHANGELOG.md'),'utf8').split('\n').find(line=>line.startsWith('## '));
   assert.ok(latest.startsWith('## '+version+' —'));
-  for(const file of ['combat.html','visual.html','granito.html','serpente.html']){
+  for(const file of ['combat.html','visual.html','granito.html','serpente.html','deserto.html','sprites.html']){
     const preview=fs.readFileSync(path.join(__dirname,file),'utf8');
     for(const label of preview.match(/Beta \d+\.\d+\.\d+/g)||[])assert.equal(label,'Beta '+number,file);
     assert.ok(preview.includes('Beta '+number),file);
@@ -430,7 +431,7 @@ test('Colosso inicia o ciclo e a vitória só muda o mundo por contato com o por
   const {game:g}=boot();begin(g,'fogo');target(g,100);g.run.lv=10;spawnDue(g,);
   assert.equal(g.enemies.length,1);const boss=g.enemies[0];assert.equal(boss.boss.id,'colosso');assert.equal(boss.maxhp,2200);
   g.spawnTick(10);assert.equal(g.enemies.length,1);assert.equal(spawnDue(g,20),false);
-  boss.spawn=0;g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.run.world,'forest');assert.equal(g.run.worldCleared,true);
+  boss.spawn=0;boss.underground=false;g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.run.world,'forest');assert.equal(g.run.worldCleared,true);
   assert.equal(g.run.portal.to,'dragon');g.spawnTick(100);spawnDue(g,30);assert.equal(g.enemies.length,0);
   g.updPortal(2);assert.equal(g.run.world,'forest');assert.equal(g.enterPortal(),false);
   g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;g.updPortal(.01);
@@ -479,7 +480,7 @@ function enemySteps(g,n,dt=.05){for(let i=0;i<n;i++)g.updEnemies(dt);}
 
 test('cada mundo só usa seu elenco, com desbloqueios relativos à etapa',()=>{
   const {game:g}=boot();begin(g,'fogo');
-  for(const world of ['forest','dragon','swamp']){
+  for(const world of ['forest','dragon','swamp','desert']){
     g.run.world=world;const ids=Object.keys(g.WORLDS[world].foes);
     for(const level of [1,3,5,7,9,13,20])for(let i=0;i<100;i++){const type=g.pickType(level);assert.ok(ids.includes(type));assert.ok(g.EN[type].unlock<=level);}
     g.run.lv=9;g.enemies.length=0;g.spawnRing(35);assert.ok(g.enemies.length<=35);assert.ok(g.enemies.every(e=>ids.includes(e.type)));
@@ -568,18 +569,18 @@ test('cada criatura tem silhueta e quadros próprios cacheados; cenário é deco
 });
 
 function crossPortal(g){g.run.portal.t=1;g.run.pl.x=g.run.portal.x;g.run.pl.y=g.run.portal.y;assert.equal(g.enterPortal(),true);}
-function defeatWorld(g){g.run.lv=Math.floor(g.run.lv/10+1)*10;g.run.need=g.xpNeed(g.run.lv);spawnDue(g,);const e=g.enemies.find(e=>e.boss);e.spawn=0;g.hitEnemy(e,100000000,{canCrit:false});return e;}
+function defeatWorld(g){g.run.lv=Math.floor(g.run.lv/10+1)*10;g.run.need=g.xpNeed(g.run.lv);spawnDue(g,);const e=g.enemies.find(e=>e.boss);e.spawn=0;e.underground=false;g.hitEnemy(e,100000000,{canCrit:false});return e;}
 
-test('o ciclo alterna floresta, dragão e pântano por três voltas completas',()=>{
-  const {game:g}=boot();begin(g,'fogo');assert.deepEqual(Object.keys(g.WORLDS),['forest','dragon','swamp']);
-  for(let visit=0;visit<9;visit++){
-    assert.equal(g.run.visit,visit);const world=['forest','dragon','swamp'][visit%3];assert.equal(g.run.world,world);
-    const boss=defeatWorld(g);assert.equal(boss.boss.id,{forest:'colosso',dragon:'cratos',swamp:'serpente'}[world]);
-    assert.equal(g.run.world,world);assert.equal(g.run.worldCleared,true);assert.equal(g.run.portal.to,{forest:'dragon',dragon:'swamp',swamp:'forest'}[world]);
+test('o ciclo alterna floresta, dragão, pântano e deserto por três voltas completas',()=>{
+  const {game:g}=boot();begin(g,'fogo');assert.deepEqual(Object.keys(g.WORLDS),['forest','dragon','swamp','desert']);
+  for(let visit=0;visit<12;visit++){
+    assert.equal(g.run.visit,visit);const world=['forest','dragon','swamp','desert'][visit%4];assert.equal(g.run.world,world);
+    const boss=defeatWorld(g);assert.equal(boss.boss.id,{forest:'colosso',dragon:'cratos',swamp:'serpente',desert:'verme'}[world]);
+    assert.equal(g.run.world,world);assert.equal(g.run.worldCleared,true);assert.equal(g.run.portal.to,{forest:'dragon',dragon:'swamp',swamp:'desert',desert:'forest'}[world]);
     const kills=g.run.bossKills;spawnDue(g,g.run.lv+30);assert.equal(g.enemies.length,0);assert.equal(g.run.bossKills,kills);
     crossPortal(g);assert.equal(g.run.portal,null);assert.equal(g.run.worldCleared,false);
   }
-  assert.equal(g.run.world,'forest');assert.equal(g.run.bossKills,9);
+  assert.equal(g.run.world,'forest');assert.equal(g.run.bossKills,12);
 });
 
 test('portal preserva vida, nível, XP, melhorias, aliados, recargas e coletas',()=>{
@@ -608,7 +609,7 @@ test('Esporos sempre surgem em trios completos e respeitam o teto simultâneo',(
   assert.ok(g.enemies.length>=9);assert.equal(g.enemies.length%3,0);
   const groups=new Map();for(const e of g.enemies){assert.equal(e.type,'esporo');if(!groups.has(e.pack))groups.set(e.pack,[]);groups.get(e.pack).push(e);}
   for(const group of groups.values()){assert.equal(group.length,3);assert.equal(new Set(group.map(e=>e.slot)).size,3);assert.ok(Math.hypot(group[0].x-group[1].x,group[0].y-group[1].y)<50);}
-  for(const world of ['forest','dragon','swamp']){g.run.world=world;g.run.lv=100;g.run.visit=30;g.enemies.length=0;g.spawnRing(1000);assert.ok(g.enemies.length<=160);assert.equal(g.enemyCap(),160);for(let i=0;i<100;i++)g.spawnTick(.1);assert.ok(g.enemies.length<=160);}
+  for(const world of ['forest','dragon','swamp','desert']){g.run.world=world;g.run.lv=100;g.run.visit=30;g.enemies.length=0;g.spawnRing(1000);assert.ok(g.enemies.length<=160);assert.equal(g.enemyCap(),160);for(let i=0;i<100;i++)g.spawnTick(.1);assert.ok(g.enemies.length<=160);}
 });
 
 test('nuvem dos Esporos só aparece após aviso e desaparece em menos de um segundo',()=>{
@@ -645,7 +646,7 @@ test('crescimento moderado por passagem não acelera ataques nem remove limites'
   const {game:g}=boot();begin(g,'fogo');const first=g.mkEnemy('catador',1,100,0,{}),pressure=g.worldPressure();
   g.run.visit=1;const second=g.mkEnemy('catador',1,100,0,{});assert.ok(Math.abs(second.maxhp/first.maxhp-1.12)<1e-10);assert.ok(Math.abs(second.dmg/first.dmg-1.07)<1e-10);
   assert.ok(g.worldPressure()>pressure);g.run.visit=100;assert.ok(g.worldPressure()<=1.8);assert.ok(g.enemyCap()<=160);
-  begin(g,'fogo');const forestHp=defeatWorld(g).maxhp;crossPortal(g);defeatWorld(g);crossPortal(g);defeatWorld(g);crossPortal(g);const forestAgain=defeatWorld(g);assert.ok(Math.abs(forestAgain.maxhp/forestHp-1.6)<1e-10);
+  begin(g,'fogo');const forestHp=defeatWorld(g).maxhp;crossPortal(g);defeatWorld(g);crossPortal(g);defeatWorld(g);crossPortal(g);defeatWorld(g);crossPortal(g);const forestAgain=defeatWorld(g);assert.ok(Math.abs(forestAgain.maxhp/forestHp-1.8)<1e-10);
 });
 
 test('XP evolui mais devagar: requisitos maiores e drops dracônicos reduzidos',()=>{
@@ -733,7 +734,7 @@ test('ataques básicos iniciais sem crítico precisam de mais de um acerto contr
 
 test('reforços de chefe surgem devagar, priorizam distância e têm teto de oito',()=>{
   const {game:g}=boot(undefined,()=>.1);
-  for(const world of ['forest','dragon','swamp']){
+  for(const world of ['forest','dragon','swamp','desert']){
     begin(g,'fogo');g.run.world=world;g.run.lv=10;spawnDue(g,);const boss=g.enemies[0];
     g.spawnTick(20);assert.equal(g.enemies.length,1);boss.spawn=0;
     g.spawnTick(1);assert.equal(g.enemies.length,1);g.spawnTick(.7);assert.equal(g.enemies.length,2);
@@ -742,7 +743,7 @@ test('reforços de chefe surgem devagar, priorizam distância e têm teto de oit
     for(let i=0;i<600;i++)g.spawnTick(.05);
     const helpers=g.enemies.filter(e=>!e.boss);assert.equal(helpers.length,8);assert.ok(helpers.every(e=>e.type===helper.type));
     g.enemies.splice(1,1);g.spawnTick(.1);assert.equal(g.enemies.filter(e=>!e.boss).length,7);
-    boss.spawn=0;g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.gems.length,6);
+    boss.spawn=0;boss.underground=false;g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.gems.length,6);
     g.spawnTick(100);assert.equal(g.enemies.length,0);assert.ok(g.run.portal);assert.equal(g.run.bossSpawnAcc,0);
   }
 });
@@ -786,7 +787,7 @@ test('limpeza de Bocarras em chefe ou transição não gera divisão nem recompe
   const {game:g}=boot();swampRun(g);g.spawnGroup('bocarra',21,200,0);const root=g.enemies[0];g.killEnemy(root,true);g.killEnemy(root);
   assert.equal(g.enemies.length,0);assert.equal(g.run.kills,0);assert.equal(g.gems.length,0);
   g.spawnGroup('bocarra',21,200,0);g.run.lv=30;spawnDue(g,);assert.equal(g.enemies.length,1);const boss=g.enemies[0];boss.spawn=0;
-  g.spawnGroup('bocarra',30,300,0);g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.run.kills,1);assert.equal(g.gems.length,6);assert.equal(g.run.portal.to,'forest');
+  g.spawnGroup('bocarra',30,300,0);g.hitEnemy(boss,100000,{canCrit:false});assert.equal(g.enemies.length,0);assert.equal(g.run.kills,1);assert.equal(g.gems.length,6);assert.equal(g.run.portal.to,'desert');
 });
 
 test('Bocarras menores têm menos vida, raio menor e velocidade maior',()=>{
@@ -862,10 +863,10 @@ test('cauda causa dano uma vez e segunda metade da vida reduz só o intervalo',(
   const after=g.run.pl.hp;g.run.pl.inv=0;for(let i=0;i<30&&e.act;i++)g.updEnemies(.05);assert.equal(g.run.pl.hp,after);assert.equal(e.pt,.8);
 });
 
-test('pântano usa o mesmo portal e conserva a partida ao retornar à floresta',()=>{
-  const {game:g}=boot();swampRun(g);defeatWorld(g);assert.equal(g.run.portal.to,'forest');assert.equal(g.run.world,'swamp');
+test('pântano usa o mesmo portal e conserva a partida ao entrar no deserto',()=>{
+  const {game:g}=boot();swampRun(g);defeatWorld(g);assert.equal(g.run.portal.to,'desert');assert.equal(g.run.world,'swamp');
   g.run.pl.hp=31.5;g.run.xp=17;g.run.pk.dmg=3;g.run.sp=5;g.run.cd=.4;g.run.allies.push(g.mkAlly('planta',3));const ally=g.run.allies[0],lv=g.run.lv;
-  crossPortal(g);assert.equal(g.run.world,'forest');assert.equal(g.run.visit,3);assert.equal(g.run.pl.hp,31.5);assert.equal(g.run.xp,17);assert.equal(g.run.pk.dmg,3);assert.equal(g.run.sp,5);assert.equal(g.run.cd,.4);assert.equal(g.run.lv,lv);assert.equal(g.run.allies[0],ally);
+  crossPortal(g);assert.equal(g.run.world,'desert');assert.equal(g.run.visit,3);assert.equal(g.run.pl.hp,31.5);assert.equal(g.run.xp,17);assert.equal(g.run.pk.dmg,3);assert.equal(g.run.sp,5);assert.equal(g.run.cd,.4);assert.equal(g.run.lv,lv);assert.equal(g.run.allies[0],ally);
 });
 
 test('pântano procedural deixa áreas secas e molhadas, sem árvores densas nem colisores',()=>{
@@ -974,7 +975,7 @@ test('Granito aliado prepara a mesma Pedrada e mantém origem, alcance e dano pr
 
 test('cada mapa anuncia seu chefe aos 240 segundos, independentemente do nível e do XP',()=>{
   const {game:g}=boot(undefined,()=>.5);
-  for(const [world,boss]of [['forest','colosso'],['dragon','cratos'],['swamp','serpente']])for(const level of [1,100]){
+  for(const [world,boss]of [['forest','colosso'],['dragon','cratos'],['swamp','serpente'],['desert','verme']])for(const level of [1,100]){
     begin(g,'fogo');g.run.world=world;g.run.lv=level;g.run.need=1e9;g.run.pl.inv=100;g.onLevel();assert.equal(g.bossAlive(),false);
     g.run.worldTime=239.99;assert.equal(g.spawnBoss(),false);g.update(.005);assert.equal(g.bossAlive(),false);g.update(.005);
     const active=g.enemies.filter(e=>e.boss);assert.equal(active.length,1);assert.equal(active[0].boss.id,boss);assert.equal(g.run.lv,level);assert.equal(g.run.xp,0);
@@ -1296,4 +1297,227 @@ test('veneno da Serpente usa dano periódico existente e cauda/erro não aplicam
   const {game:h}=boot(),tail=snakeBoss(h);tail.pi=1;tail.x=100;tail.y=0;h.updEnemies(.01);enemySteps(h,21);
   assert.ok(h.run.pl.hp<h.run.st.maxhp);assert.ok(!(h.run.pl.rot>0),'varrida não é mordida');
   const {game:s}=boot();snakeBoss(s);s.updEnemies(.01);s.run.pl.y=400;enemySteps(s,25);assert.ok(!(s.run.pl.rot>0));
+});
+
+
+test('Escorpião avisa a estocada fixa, permite fuga e fica exposto na recuperação',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';g.run.st.crit=0;
+  const e=dragonFoe(g,'escorpiao',65),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'scorpion-windup');assert.equal(e.tele.t,'circle');
+  enemySteps(g,12);assert.ok(g.run.pl.hp<hp);assert.equal(e.attack.k,'scorpion-impact');
+  enemySteps(g,4);assert.equal(e.attack.k,'recover');
+  e.hp=e.maxhp=1000;const before=e.hp;g.hitEnemy(e,20,{canCrit:false});assert.equal(before-e.hp,25);
+
+  const {game:h}=boot();begin(h,'fogo');h.run.world='desert';const escaped=dragonFoe(h,'escorpiao',65),safeHp=h.run.pl.hp;
+  h.updEnemies(.01);h.run.pl.x=300;enemySteps(h,12);
+  assert.equal(h.run.pl.hp,safeHp,'a estocada usa o ponto marcado e não acompanha a fuga');
+});
+
+test('Abutre mergulha uma vez no ponto marcado e não causa dano por contato contínuo',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';
+  const e=dragonFoe(g,'abutre',150),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'vulture-windup');assert.equal(e.tele.t,'circle');
+  g.run.pl.x=300;for(let i=0;i<45&&e.attack?.k!=='vulture-impact';i++)g.updEnemies(.05);
+  assert.equal(g.run.pl.hp,hp,'sair do círculo avisado evita o mergulho');
+  assert.ok(Math.abs(e.x)<1,'o voo termina no ponto fixo marcado apesar da fuga');
+  assert.equal(e.attack.k,'vulture-impact');
+});
+
+test('Hiena rouba uma gema por vez e a devolve intacta ao morrer',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';g.run.pl.x=300;
+  const e=dragonFoe(g,'hiena',0),xp=7;g.dropGem(140,0,xp);const stolen=g.gems[0],value=stolen.v;
+  g.updEnemies(.13);assert.equal(g.gems.length,1);assert.equal(e.gemTarget,stolen);
+  enemySteps(g,20);
+  assert.equal(g.gems.length,0);assert.equal(e.carriedGem,stolen);assert.ok(!e.attack);
+  assert.equal(e.carriedGem.v,value);g.killEnemy(e,true);
+  assert.equal(g.gems.length,1);assert.equal(g.gems[0],stolen);assert.equal(g.gems[0].v,value);
+});
+
+test('Hiena permite ao jogador pegar a gema antes de ela chegar e morde enquanto carrega',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';g.run.pl.x=300;
+  const seeker=dragonFoe(g,'hiena',0);g.dropGem(140,0,7);const gem=g.gems[0];
+  g.updEnemies(.13);assert.equal(seeker.gemTarget,gem);
+  g.run.pl.x=gem.x;g.run.pl.y=gem.y;g.updPick(.016);assert.equal(g.gems.length,0);
+  g.updEnemies(.13);assert.equal(seeker.carriedGem,null,'a gema coletada pelo jogador não é roubada');
+
+  const {game:h}=boot();begin(h,'fogo');h.run.world='desert';h.run.pl.x=60;
+  const carrier=dragonFoe(h,'hiena',0);carrier.carriedGem={x:-20,y:0,v:5,t:0,mag:false};carrier.gemTime=1;
+  const hp=h.run.pl.hp;h.updEnemies(.01);
+  assert.ok(carrier.gemTime>1);assert.equal(carrier.attack.k,'hyena-windup');
+  enemySteps(h,12);assert.ok(h.run.pl.hp<hp);assert.equal(carrier.carriedGem.v,5);
+});
+
+test('Mordida da Hiena avança e recua após um único acerto',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';
+  const e=dragonFoe(g,'hiena',60),hp=g.run.pl.hp;
+  g.updEnemies(.01);assert.equal(e.attack.k,'hyena-windup');
+  enemySteps(g,12);assert.ok(g.run.pl.hp<hp);const afterBite=g.run.pl.hp;
+  for(let i=0;i<30&&e.attack;i++)g.updEnemies(.05);assert.equal(g.run.pl.hp,afterBite);assert.ok(!e.attack);assert.ok(Math.abs(e.x-60)<1e-8,'retorna à origem do bote');
+});
+
+function wormActor(g,pi=0,x=0,y=0){
+  return {x,y,type:'verme',stage:1,kind:'boss',boss:{id:'verme'},hp:4500,maxhp:4500,
+    dmg:28,spd:68,sc:2.7,r:72,face:1,pi,wormPi:pi,ph:1,stun:0,root:0,kx:0,ky:0,mvx:0,mvy:0,underground:true};
+}
+function wormStep(g,e,dt=.05,sp=e.spd){
+  const p=g.run.pl,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
+  g.updBoss(e,dt,ux,uy,d,sp);e.x+=(e.mvx||0)*dt;e.y+=(e.mvy||0)*dt;
+}
+function wormUntil(g,e,pred,n=180,dt=.05){for(let i=0;i<n&&!pred(e);i++)wormStep(g,e,dt);assert.ok(pred(e),'estado do Verme esperado');}
+
+test('Verme avisa sob a areia, pausa com sp zero e emerge causando um único impacto',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.pl.x=0;g.run.pl.y=0;const e=wormActor(g);
+  wormUntil(g,e,x=>x.wormAct?.phase==='warn'&&x.tele);assert.equal(e.underground,true);assert.equal(e.tele.t,'circle');
+  const t=e.wormAct.t;wormStep(g,e,1,0);assert.equal(e.wormAct.t,t,'stun/raiz pausa a fase de ataque');assert.equal(e.underground,true);
+  g.run.pl.inv=0;const hp=g.run.pl.hp;wormUntil(g,e,x=>x.wormAct?.phase==='impact');
+  assert.equal(e.underground,false);assert.ok(g.run.pl.hp<hp);
+  const after=g.run.pl.hp;g.run.pl.inv=0;wormUntil(g,e,x=>x.wormAct?.phase==='recover');
+  assert.equal(g.run.pl.hp,after,'a emersão não repete o acerto durante recuperação');
+});
+
+test('Verme avisa mordida, ruptura e gêiser com geometrias fixas',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.pl.x=180;g.run.pl.y=0;
+  for(const [pi,tele] of [[1,'lane'],[2,'lane'],[3,'cone']]){
+    const e=wormActor(g,pi,0,0);wormUntil(g,e,x=>x.wormAct?.phase==='warn'&&x.tele);
+    assert.equal(e.wormAct.pi,pi);assert.equal(e.underground,pi===1);assert.equal(e.tele.t,tele);
+    const fixed=JSON.stringify(e.tele);wormStep(g,e,.1);assert.notEqual(e.tele,null);
+    if(pi===1)assert.equal(e.underground,true,'mordida começa sob a areia');
+    if(pi===3)assert.equal(e.tele.x,e.wormAct.coneX,'o cone mantém a origem da boca');
+    if(pi===1||pi===2)assert.equal(JSON.parse(fixed).X,e.tele.X,'a faixa permanece fixa durante o aviso');
+  }
+});
+
+test('bote de mordida alcança o alvo parado e pode ser esquivado antes do impacto',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.pl.x=92;g.run.pl.y=0;const e=wormActor(g,1,0,0);
+  wormUntil(g,e,x=>x.wormAct?.k==='bite'&&x.wormAct.phase==='lunge');
+  const hp=g.run.pl.hp;wormUntil(g,e,x=>x.wormAct?.phase==='recover');assert.ok(g.run.pl.hp<hp);
+
+  const {game:h}=boot();begin(h,'fogo');h.run.pl.x=92;h.run.pl.y=0;const dodger=wormActor(h,1,0,0);
+  wormUntil(h,dodger,x=>x.wormAct?.k==='bite'&&x.wormAct.phase==='warn'&&x.tele);
+  const safe=h.run.pl.hp;h.run.pl.y=400;wormUntil(h,dodger,x=>x.wormAct?.phase==='recover');
+  assert.equal(h.run.pl.hp,safe,'sair da faixa antes da mordida evita o dano');
+});
+
+test('texturas e detalhes do Deserto são determinísticos',()=>{
+  const {game:a}=boot(),{game:b}=boot();
+  for(const mask of [0,1,3,5,10,15])assert.equal(a.tileCanvas(3,2,mask).toDataURL(),b.tileCanvas(3,2,mask).toDataURL());
+  for(let kind=0;kind<6;kind++)assert.equal(a.desertDecorCanvas(kind,3).toDataURL(),b.desertDecorCanvas(kind,3).toDataURL());
+  assert.notEqual(a.tileCanvas(3,2,0).toDataURL(),a.tileCanvas(3,2,15).toDataURL(),'as fissuras devem acompanhar os vértices compartilhados');
+});
+
+test('desenhar o mapa do Deserto não cria colisores nem altera entidades',()=>{
+  const {game:g}=boot();g.ACT.play();g.ACT.difficulty(button('normal'));g.ACT.begin(button('fogo'));
+  g.run.world='desert';
+  const marker={x:12,y:34,hp:7};g.enemies.push(marker);
+  const lists=[g.enemies,g.gems,g.picks,g.hazards,g.lobs,g.pbul,g.ebul],before=lists.map(a=>a.length);
+  g.drawGround();
+  assert.deepEqual(lists.map(a=>a.length),before);
+  assert.equal(g.enemies[0],marker);
+});
+
+
+test('recortes do Deserto conservam os pixels originais e retiram só a apresentação',()=>{
+  const imp=require('../scripts/build-deserto.cjs'),source=imp.readSource(),{game:g}=boot();
+  assert.equal(source.sha256,'933d209532bfb44cb53d20d4d40f14e4f31b081bb93aee880232566935bc00bf');
+  assert.equal(JSON.stringify(g.DESERTO_ART),JSON.stringify(imp.build()));assert.equal(Object.keys(g.DESERTO_ART.frames).length,57);
+  for(const [id,r]of Object.entries(imp.manifest.frames)){
+    const c=g.desertAsset(id),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let visible=0;
+    for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const at=(y*c.width+x)*4;if(!d[at+3])continue;visible++;
+      const i=((r[1]+y)*source.width+r[0]+x)*4;assert.equal(Buffer.compare(Buffer.from(d.subarray(at,at+3)),source.data.subarray(i,i+3)),0,id+' RGB fiel');
+    }
+    assert.ok(visible>100,id+' não está vazio');assert.ok(c.width<=302&&c.height<=338,id+' não inclui a prancha inteira');
+  }
+  const point=(id,x,y)=>{const c=g.desertAsset(id);return c.getContext('2d').getImageData(0,0,c.width,c.height).data[(y*c.width+x)*4+3];};
+  assert.equal(point('worm_main',60,70),0,'legenda removida');
+  assert.equal(point('worm_emerge',65,27),255,'interior escuro da boca preservado');
+  assert.equal(point('scorpion_move0',50,54),255,'placas do escorpião preservadas');
+});
+
+test('escala visual e colisão dos novos inimigos usam a mesma normalização',()=>{
+  const {game:g}=boot();begin(g,'fogo');
+  for(const type of Object.keys(g.DESERT_FOES)){
+    const e=g.mkEnemy(type,31,200,0,{});assert.ok(e.r>=12&&e.r<30,type+' sem colisão gigante');
+    for(const frame of [0,1,2,3,10,11,12,13,30]){
+      const c=g.monSprite(type,1,frame),box=g.spriteLayout(c,type,e.sc);
+      assert.ok(box.w<125&&box.h<125,type+' sem recorte gigante');
+      assert.ok(Math.abs(box.top+c.fy*box.scale-6.04*e.sc)<1e-8,'ponto de apoio estável');
+    }
+  }
+  for(const f of Object.keys(g.DESERTO_POSES.verme)){
+    const c=g.monSprite('verme',1,+f),box=g.spriteLayout(c,'verme',2.7);assert.ok(box.w<520&&box.h<340,'Verme em escala de chefe');
+  }
+});
+
+test('Verme subterrâneo não recebe dano direto, queimadura ou flechas nem serve para cura',()=>{
+  const {game:g}=boot(undefined,()=>.5);begin(g,'planta');g.run.world='desert';g.run.visit=3;spawnDue(g);const e=g.enemies[0];e.spawn=0;e.x=100;e.y=0;e.underground=true;e.stun=10;
+  e.hp=e.maxhp=10000;g.run.st.crit=0;g.run.pl.hp=20;g.hitEnemy(e,100,{burn:true});assert.equal(e.hp,10000);assert.equal(g.run.pl.hp,20);
+  g.useSpecial();assert.equal(g.run.pl.hp,20,'alvo enterrado não ativa a Flor');
+  const target=g.mkEnemy('hiena',1,180,0,{});target.hp=target.maxhp=100;target.spd=0;g.enemies.push(target);
+  g.basicAttack(0,180,0);g.updProj(.6);assert.equal(e.hp,10000);assert.ok(target.hp<100,'projétil ignora o corpo subterrâneo e continua');
+  e.burn=2;e.burnD=100;e.bt2=.49;g.updEnemies(.1);assert.equal(e.hp,10000);
+  e.underground=false;g.updEnemies(.5);assert.equal(e.hp,9950,'o mesmo sistema de queimadura volta a causar dano na superfície');
+  e.wormAct={phase:'recover'};g.hitEnemy(e,20,{canCrit:false});assert.equal(e.hp,9925,'recuperação vulnerável');
+});
+
+test('Hiena devolve XP em tempo limitado, limpeza, portal e reposicionamento distante',()=>{
+  for(const removal of ['timeout','kill','silent','portal','far']){
+    const {game:g}=boot();begin(g,'fogo');g.run.world='desert';g.run.visit=3;const e=dragonFoe(g,'hiena',100);e.carriedGem={x:0,y:0,v:7.5,t:1,mag:false};e.gemTime=0;
+    if(removal==='timeout')g.updDesertFoe(e,6,1,0,500,e.spd);
+    if(removal==='kill'||removal==='silent')g.killEnemy(e,removal==='silent');
+    if(removal==='portal'){g.run.worldCleared=true;g.run.portal={x:0,y:0,r:30,t:1,to:'forest'};g.updPortal(.01);}
+    if(removal==='far'){e.x=10000;g.updEnemies(.01);}
+    assert.equal(e.carriedGem,null,removal);assert.ok(g.gems.some(x=>x.v>=7.5),removal+' conserva o cristal');
+    assert.equal(g.returnHyenaGem(e),false,'devolve apenas uma vez');
+  }
+  const {game:g}=boot();begin(g,'fogo');for(let i=0;i<380;i++)g.dropGem(i,0,1);
+  const e=dragonFoe(g,'hiena',100);e.carriedGem={x:0,y:0,v:7,t:0,mag:false};g.returnHyenaGem(e);
+  assert.equal(g.gems.length,380);assert.equal(g.gems.reduce((n,x)=>n+x.v,0),387,'limite de objetos não perde valor de XP');
+});
+
+test('ruptura e gêiser têm direção fixa e acertam só no impacto anunciado',()=>{
+  for(const pi of [2,3]){
+    const {game:g}=boot();begin(g,'fogo');g.run.pl.x=180;const e=wormActor(g,pi);
+    wormUntil(g,e,x=>x.wormAct?.phase==='warn'&&x.tele);const tele=JSON.parse(JSON.stringify(e.tele)),hp=g.run.pl.hp;
+    if(pi===2){g.run.pl.x=(tele.x+tele.X)/2;g.run.pl.y=(tele.y+tele.Y)/2;}
+    else{g.run.pl.x=tele.x+Math.cos(tele.a)*tele.r*.5;g.run.pl.y=tele.y+Math.sin(tele.a)*tele.r*.5;}
+    wormStep(g,e,.1);assert.equal(g.run.pl.hp,hp);assert.equal(pi===2?e.tele.X:e.tele.a,pi===2?tele.X:tele.a);
+    wormUntil(g,e,x=>x.wormAct?.phase==='impact');assert.ok(g.run.pl.hp<hp);
+    const hitHp=g.run.pl.hp;g.run.pl.inv=0;wormUntil(g,e,x=>x.wormAct?.phase==='recover');assert.equal(g.run.pl.hp,hitHp);
+  }
+});
+
+test('Deserto completa o ciclo sem alterar saves, chefes anteriores ou duração das etapas',()=>{
+  const {game:g}=boot({P:{ess:99,chars:{pedra:1},start:['agua'],st:{bestLv:40}}});begin(g,'fogo');
+  assert.equal(g.P.ess,99);assert.equal(g.P.st.bestLv,40);assert.equal(g.P.chars.pedra,1);
+  const expected=[['forest','colosso',2200],['dragon','cratos',2880],['swamp','serpente',5320],['desert','verme',7200]];
+  for(const [world,boss,hp]of expected){assert.equal(g.run.world,world);assert.equal(g.BAL.bossTime,240);const e=defeatWorld(g);assert.equal(e.boss.id,boss);assert.equal(e.maxhp,hp);crossPortal(g);}
+  assert.equal(g.run.world,'forest');assert.equal(g.run.visit,4);
+});
+
+test('Verme enterrado não recebe lentidão nem prende o alvo da Salamandra aliada',()=>{
+  const {game:g}=boot();begin(g,'agua');g.run.world='desert';spawnDue(g);const e=g.enemies[0];e.spawn=0;e.x=100;e.y=0;e.underground=true;
+  const hp=e.hp;g.useSpecial();assert.equal(e.slow,0);assert.equal(e.hp,hp);
+  const ally=g.mkAlly('fogo',1);ally.tgt=e;ally.tre=10;g.run.allies.push(ally);g.updAllies(.01);assert.notEqual(ally.tgt,e);
+});
+
+test('recolhimento do Verme percorre os recortes originais sem causar dano',()=>{
+  const {game:g}=boot();begin(g,'fogo');const e=wormActor(g);e.wormInit=true;e.wormAct={k:'emerge',phase:'retract',t:0};e.underground=true;
+  const hp=g.run.pl.hp,poses=[];for(let i=0;i<6;i++){poses.push(g.monSprite('verme',1,g.wormFrame(e)).sourceId);wormStep(g,e,.05);}
+  assert.ok(poses.includes('worm_diveUp'));assert.ok(poses.includes('worm_diveDown'));assert.ok(poses.includes('worm_diveCrack'));assert.equal(g.run.pl.hp,hp);
+});
+
+test('Pedrada reconhece a posição visual do Abutre ao subir da recuperação',()=>{
+  const {game:g}=boot();g.P.chars.pedra=1;begin(g,'pedra');g.cam.x=g.cam.y=0;
+  const e=dragonFoe(g,'abutre',240);e.attack={k:'recover',t:.3,dur:.65};e.visualOffset=-25;
+  const c=g.monSprite('abutre',1,12),box=g.spriteLayout(c,'abutre',e.sc);
+  g.mouse.x=e.x*g.zoom;g.mouse.y=(e.y+e.visualOffset+box.top+box.h*.1)*g.zoom;
+  g.useStoneSpecial();assert.equal(g.lobs[0].aimed,e);assert.equal(g.lobs[0].ty,0);
+});
+
+test('reforços não deslocam o Verme nem a área fixada durante o aviso',()=>{
+  const {game:g}=boot();begin(g,'fogo');g.run.world='desert';spawnDue(g);const e=g.enemies[0];e.spawn=0;e.x=200;e.y=0;e.wormPi=3;g.run.pl.inv=1000;
+  for(let i=0;i<200&&!(e.wormAct?.phase==='warn'&&e.tele);i++)g.updEnemies(.025);
+  const x=e.x,y=e.y,T=JSON.parse(JSON.stringify(e.tele));dragonFoe(g,'escorpiao',x+10,y).cd=100;
+  for(let i=0;i<8;i++)g.updEnemies(.025);
+  assert.equal(e.x,x);assert.equal(e.y,y);assert.equal(e.tele.x,T.x);assert.equal(e.tele.y,T.y);assert.equal(e.tele.a,T.a);
 });

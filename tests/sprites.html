@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auditoria de sprites · Beta 0.9.0</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#111714;color:#e2dfce;font:14px monospace}h1,h2{color:#edbf76}.row{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:20px}.pose{padding:8px;background:#30352f;border:1px solid #536052;text-align:center}.pose img{display:block;image-rendering:pixelated;max-width:100%}p{color:#9eada0;line-height:1.6}iframe{position:absolute;left:-20000px;width:1040px;height:700px;border:0}#result{color:#bae0b0}
+</style>
+<h1>Sprites em escala de jogo · Beta 0.9.0</h1><p>O renderizador real desenha os recortes com zoom 1. Os quadros estão em tamanho de mundo; cada caixa tem margem para evitar cortes. Ataques maiores podem incluir seus próprios efeitos. Fissuras do Verme representam a fase subterrânea.</p><p id="result">Carregando…</p><main id="groups"></main><iframe id="game" title="Jogo isolado"></iframe>
+<script>
+(async()=>{
+ let src=await(await fetch('../index.html')).text();src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-sprite-audit';").replace('<script>','<script>window.__NSDEBUG=true;').replaceAll('requestAnimationFrame(frame);','/* Auditoria estática. */').replace('applyTheme();resize();showMenu();initDb();','S.music=S.sfx=0;P.seen=1;applyTheme();resize();showMenu();');
+ const iframe=document.querySelector('#game');iframe.onload=()=>{
+  const g=iframe.contentWindow.__NS,cv=iframe.contentDocument.querySelector('#cv'),ctx=cv.getContext('2d'),checks=[];
+  const row=(name,type,stage,frames,scale)=>{
+   const section=document.createElement('section');section.innerHTML='<h2>'+name+'</h2><div class="row"></div>';
+   for(const f of frames){
+    const c=g.monSprite(type,stage,f),box=g.spriteLayout(c,type,scale),w=Math.ceil(box.w+48),h=Math.ceil(box.h+48);
+    cv.width=w;cv.height=h;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);ctx.imageSmoothingEnabled=false;g.drawSprite(type,stage,f,((c.facing||1)<0?box.w-box.left:box.left)+24,24-box.top,scale,1,1,0);
+    const native=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let pixels=0;for(let i=3;i<native.length;i+=4)if(native[i])pixels++;
+    const painted=ctx.getImageData(0,0,w,h).data;let clipped=false;for(let x=0;x<w;x++)if(painted[x*4+3]||painted[((h-1)*w+x)*4+3])clipped=true;for(let y=0;y<h;y++)if(painted[(y*w)*4+3]||painted[(y*w+w-1)*4+3])clipped=true;checks.push({type,stage,frame:f,w:box.w,h:box.h,pixels,clipped});
+    const cell=document.createElement('div');cell.className='pose';cell.innerHTML='<img alt="'+name+' · quadro '+f+'" src="'+cv.toDataURL()+'"><small>Quadro '+f+' · '+Math.round(box.w)+'×'+Math.round(box.h)+'</small>';section.querySelector('.row').appendChild(cell);
+   }document.querySelector('#groups').appendChild(section);
+  };
+  for(const type of g.TYPES)for(const st of [1,2,3])row(g.NM[type][st>1?1:0]+' · evolução '+st,type,st,type==='pedra'?[20,10,30,50,63,74,84]:type==='sombra'?[0,1,2,3]:type==='agua'?[20,10,4,5,6]:[20,10,30,31,32,50],(3.3+st*.15)*(['fogo','planta'].includes(type)?.9:type==='eletrico'?.92:1));
+  for(const [type,data]of Object.entries({...g.FOREST_FOES,...g.DRAGON_FOES,...g.SWAMP_FOES,...g.DESERT_FOES}))row(data.n,type,type==='bocarra'?3:1,[0,1,2,3,10,11,12],data.sc);
+  for(const type of ['colosso','cratos','serpente','verme'])row(g.EN[type].n,type,1,type==='verme'?Object.keys(g.DESERTO_POSES.verme).map(Number):type==='cratos'?[0,2,4]:[0,1,10,11,12],g.EN[type].sc);
+  window.audit=checks;window.ready=true;const empty=checks.filter(x=>!x.pixels);document.querySelector('#result').textContent=checks.length+' quadros auditados · '+empty.length+' recortes vazios · '+checks.filter(x=>x.clipped).length+' quadros cortados.';
+ };iframe.srcdoc=src;
+})().catch(e=>{document.body.append(String(e));console.error(e);});
+</script></html>
