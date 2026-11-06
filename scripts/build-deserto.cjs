@@ -1,4 +1,5 @@
-// Recortes sem redesenho: cada RGB retido vem do PNG fornecido pelo autor.
+// Verificação legada das três artes comuns mantidas por decisão do autor.
+// O Verme e seus efeitos são procedurais e não passam por este importador.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {readPng,crop,pack}=require('./build-granito.cjs');
 const root=path.join(__dirname,'..'),folder=path.join(root,'assets/deserto');
@@ -38,7 +39,7 @@ function frame(source,id,rect){
   const group=Object.values(manifest.groups).find(g=>id.startsWith(g.prefix));
   return {...pack(f),unitScale:id.endsWith('_main')?group.mainScale:group.scale,facing:group.facing,...(manifest.mouths[id]?{mouth:{x:manifest.mouths[id][0],y:manifest.mouths[id][1]}}:{})};
 }
-function build(){const source=readSource(),frames={};for(const [id,rect]of Object.entries(manifest.frames))frames[id]=frame(source,id,rect);return {sourceSha256:source.sha256,frames};}
+function build(){const source=readSource(),frames={};for(const [id,rect]of Object.entries(manifest.frames))if(!id.startsWith('worm_'))frames[id]=frame(source,id,rect);return {sourceSha256:source.sha256,frames};}
 if(require.main===module){
   const data=build(),file=path.join(root,'index.html'),html=fs.readFileSync(file,'utf8'),nl=html.includes('\r\n')?'\r\n':'\n';
   const block='/* DESERTO_ASSET_BEGIN */'+nl+'const DESERTO_ART='+JSON.stringify(data)+';'+nl+'/* DESERTO_ASSET_END */',pattern=/\/\* DESERTO_ASSET_BEGIN \*\/[\s\S]*?\/\* DESERTO_ASSET_END \*\//;

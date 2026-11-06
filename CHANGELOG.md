@@ -1,5 +1,13 @@
 # Histórico
 
+## 0.9.1-beta — seleção de fase, chefes por código e ambientação — 2026-11-06
+
+- Código `betatester` no menu libera Iniciar por fase, com entrada por campo ou teclado. Os quatro mapas usam dificuldade e personagem existentes. Perfil de teste isolado: recompensas, coleção, conquistas e ranking não passam ao save normal; configurações permanecem, e o perfil original é restaurado ao sair/morrer.
+- Serpente e Verme recriados em pixel art por funções de desenho e poses próprias no canvas. Os recortes desses chefes e dos efeitos do Verme saíram do HTML; importador obsoleto da Serpente retirado. Preservadas IA, vida, dano, colisões, posições de boca e temporizadores. Referências permanecem apenas como orientação de design.
+- Pássaros na Floresta, névoa baixa no Pântano, calor discreto no bioma dracônico e rajadas de areia no Deserto. Camada anterior a atores/avisos, sem efeitos de gameplay, com atualização por dt, pausa e limites menores em touch. Partículas antigas também usam o relógio do jogo.
+- Granito e os três inimigos comuns do Deserto mantidos conforme confirmação do autor. Nenhum arquivo de imagem foi modificado. A extensão retangular e a limitação de polígonos do rasterizador preservam os pixels dos demais desenhos.
+- 165 testes de isolamento do perfil, navegação, equivalência em 30/60 FPS, pausa, ordenação das camadas, coordenadas de colisão e regressões. A aprovação da arte ocorre em combate real, sem usar contagem de recortes como critério visual.
+
 ## 0.9.0-beta — Deserto da Fenda e ciclo de quatro etapas — 2026-11-06
 
 - Deserto adicionado após o Pântano, retornando à Floresta por portal. Mesma progressão por passagem, quatro minutos até o chefe e preservação de vida, XP, aliados, melhorias e recargas.
