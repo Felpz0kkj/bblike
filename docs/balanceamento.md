@@ -9,11 +9,11 @@ Calibração inicial de alcance, dano e recuperação. Os testes verificam as re
 | Sakura | 85 | 8,05 → 6,44 → 5,152 | Flecha 360 | 0,70 s | 20 s |
 | Frood | 100 | 9,45 × multiplicador do peixe | Centro da poça até 330 + raio | 1,05 s | 12 s |
 | Granito | 135 | Garras: 10 no total em dois acertos, já arredondado | Garras 112 × área | 1,20 s | Terremoto 12 s; Pedrada 6 s |
-| Sombrinha | 80 | Dois orbes de 4,5 | Percurso de cada orbe 480 | 0,80 s | 8 s |
+| Kantaro | 85 | Poção verde: 1,54 por tick de veneno; roxa: impacto 11,2 | Centro do impacto até 300 | 0,95 s | 28 s, mínimo 20 s |
 
-Sem crítico, evoluções, aliados ou melhorias. Os danos básicos de atributo passam de 13/12/12/13/20/11 para **8/7/7/8/9/6** (Salamandra/Frood/Sakura/Capricorn/Granito/Sombrinha). A melhoria do ataque principal concede +15% por nível, em vez de +25%; o bônus de cadência de 5% foi mantido. Críticos, peixes mais fortes e melhorias ainda podem eliminar inimigos frágeis em um ataque, mas os ataques comuns iniciais precisam de mais acertos nos cenários de regressão.
+Sem crítico, evoluções, aliados ou melhorias. Os danos básicos de atributo passam de 13/12/12/13/20/11 para **8/7/7/8/9/7** (Salamandra/Frood/Sakura/Capricorn/Granito/Kantaro). A melhoria do ataque principal concede +15% por nível, em vez de +25%; o bônus de cadência de 5% foi mantido. Críticos, peixes mais fortes e melhorias ainda podem eliminar inimigos frágeis em um ataque, mas os ataques comuns iniciais precisam de mais acertos nos cenários de regressão.
 
-Área concede até +50% por melhorias, somando o bônus natural de Frood (+10%); Tempestade tem limite próprio de +25%. Alcances, controles e esquiva defensiva foram mantidos.
+Área concede até +50% por melhorias, somando o bônus natural de Frood (+10%); Tempestade tem limite próprio de +25%. Os demais alcances e controles foram mantidos; Kantaro não tem esquiva defensiva.
 
 ## Aliados e cura — revisão de balanceamento
 
@@ -25,7 +25,7 @@ Aliados usam base 6 (antes 12), crescendo +25% por nível (antes +35%). Salamand
 
 Sakura aliada cura somente quando há um alvo em alcance e a vida do jogador está abaixo de 80%. A cura tem recarga própria de **10 s**, sem redução por melhorias de cadência; não fica sorteando novas tentativas a cada quadro. A flecha recupera `1,5% + 0,3% × (nível do aliado − 1)` da vida máxima: 1,5% no nível 1 até 2,7% no 5, antes 5%–9%. Não há cura passiva fora de combate.
 
-Drenagem própria: Sakura 1% do dano (antes 4%), Sombrinha 2% (antes 4%). A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
+Drenagem própria atual: Sakura 1% do dano (antes 4%). Kantaro não tem drenagem; substitui Sombrinha, que tinha 2%. A cura considera apenas dano efetivamente retirado do alvo. Há uma reserva máxima de 1% da vida máxima, reposta à razão de 1% por segundo, sem acumular reservas maiores; vários alvos/disparos compartilham esse orçamento.
 
 ## Quatro mundos e ciclos — beta 0.9.2
 
@@ -89,7 +89,6 @@ Flor: dano 2 × → 1,4 ×, raiz 1,4 → 0,8 s, recarga 14 → 20 s. Não cura a
 - **Salamandra:** vida 90 → 85; dano 13 → 8; intervalo 0,4 → 0,48 s. Queimadura por segundo passa de 25% para 12% do dano do golpe, com duração de 3 s. Fúria preserva 6 s, dano por golpe ×0,8 e dash a cada três golpes; intervalo passa a ×0,7 (antes ×0,6). Dois golpes normais alternados, sem avanço.
 - **Frood:** vida 110 → 100; dano 12 → 7; intervalo 0,85 → 1,05 s; multiplicador dos peixes 2,3 → 1,35. Regeneração 1 → 0,35/s. Onda e funções dos peixes preservadas, com menor dano devido ao novo atributo base.
 - **Granito:** preservados vida 135, dano 9, velocidade 172, intervalo 1,2 s, multiplicador da Pedrada 1,1, Carapaça de 18% e recarga especial 12 s. Nome/design substituem Pedrino sob o mesmo ID `pedra`; desbloqueio custa 150 e não é reiniciado.
-- **Sombrinha:** vida 90 → 80; dano 11 → 6; intervalo 0,65 → 0,8 s; crítico natural 15% → 10%; drenagem 4% → 2%, só pelo próprio dano e com reserva. Mantidos dois orbes, homing, percurso 480 e teleporte sem dano duplo ao mesmo alvo.
 
 Redução de recarga por abate e melhorias permanentes continuam com os mesmos valores. As velocidades base permanecem iguais; as mudanças de ataque e controles desta revisão são exclusivas de Granito.
 
@@ -164,3 +163,22 @@ Chefes entram nas fases 2 e 3 abaixo de 66% e 33% de vida. Mantidos ataques/avis
 O sopro aplica até 5 s de podridão, renovados enquanto o jogador permanecer exposto. Uma nova aplicação é evitada durante invulnerabilidade; a podridão já adquirida causa 5 de dano base a cada segundo, mitigado pela armadura, mesmo durante invulnerabilidade posterior. Usa o fluxo de dano/morte/segunda chance, sem curas ou coletas depois de um efeito fatal. Reviver ou derrotar o chefe remove a podridão.
 
 A horda normal e os anéis de cinco níveis ficam suspensos durante encontros. A entrada remove inimigos comuns sem recompensas, mas mantém itens já existentes no chão. Marcos de chefes alcançados durante um encontro entram numa fila, sem substituir o chefe ativo. A animação de derrota não soma tempo nem recompensas à jornada.
+
+
+## Kantaro — complemento mantido na beta 0.9.2
+
+Origem: `BaubLike · pers novo.html`, ramificação identificada internamente como 0.8.3. Foram incorporados apenas dados/frames do personagem, efeitos, poções e corvos. O mapa Vale, mudanças globais de animação e código antigo da ramificação não substituem os quatro mundos, cronômetros e correções atuais.
+
+Kantaro ocupa `sombra`, mantendo custo 200 e o progresso de Sombrinha. Vida 85, velocidade 215, dano 7, crítico 8%, sem armadura, regeneração ou drenagem. Sem dash no teclado/botão/API e sem teleporte ou invulnerabilidade de esquiva. As melhorias permanentes de vida/armadura/regeneração e a segunda chance continuam funcionando.
+
+Poção normal alterna deterministicamente verde e roxa, com intervalo 0,95 s (antes 0,85). Centro do impacto limitado a 300 (antes 340), inclusive na dispersão de disparos extras e nos aliados. A verde tem raio 64 × área, nuvem de 2,4 s e veneno inicialmente por 3 s: dano por tick de 0,22 × ataque a cada 0,5 s (antes 0,5 ×). O arredondamento comum do jogo dá 2 por tick na base. A permanência na nuvem renova uma cauda curta de 0,9 s; não soma instâncias de dano. Só o veneno mais forte prevalece até sua duração expirar, e um veneno mais fraco não perpetua o dano de um mais forte. A poção roxa tem raio 52 × área, multiplicador 1,6 (antes 1,9), e não aplica veneno adicional.
+
+Aliado: base atual 6 e escala de nível preservadas; intervalo 2,2 s, uma poção ou duas a partir do nível 4, multiplicador adicional 0,85 e raios 60/48 × área. Alterna os tipos; não usa ultimate. Veneno guarda a origem do aliado e não aciona drenagem do jogador.
+
+Revoada: recarga 12 → 28 s; melhorias de cadência reduzem até o piso de 20 s. Abates não reduzem a recarga. Invocação anima/bloqueia o ataque normal por 0,95 s; não concede invulnerabilidade. São sempre três corvos (verde/roxo/verde), mesmo com Disparo Extra. Cada nível dessa melhoria aumenta a potência em 8%, até 24%.
+
+Busca limitada a alvos vivos, já surgidos e expostos, num raio de 420 do lançamento (antes 780 da posição de cada corvo). Os corvos tentam escolher alvos distintos e podem procurar outro se o anterior morrer ou se esconder. Voo máximo de 4 s e orçamento de percurso: expirar causa explosão na posição real, sem teletransportar dano ao alvo distante.
+
+Potência de cada corvo: 1,5 × ataque (antes 2,4). Explosão de raio 90 × área (antes 125). Corvo verde causa impacto de 40% da potência e nuvem por 2,8 s, com tick de 22% da potência; corvo roxo causa 1,6 × potência em impacto único. Nuvens sobrepostas continuam sem somar veneno. No atributo base e sem crítico, o impacto roxo vale 17 e cada verde vale 4, antes do veneno compartilhado. Limite de 24 nuvens para a equipe.
+
+Dano periódico respeita as defesas existentes e não acerta o Verme enterrado. A duração expira mesmo no subsolo, sem acumular dano para a emergência. Portais descartam nuvens/corvos e preservam recarga; derrotas suspendem dano e efeitos. Nenhuma regra de XP, drops, chefes, ciclo ou cronômetro foi alterada nesta integração.

@@ -131,10 +131,10 @@ test('vida fracionária, cura, zero e renascimento preservam o preenchimento pro
   begin(g);g.updHud();assert.equal(node('#hp-i').style.width,'100%');
 });
 
-test('Sombrinha mantém arte e evoluções; Granito usa os mesmos pixels originais em todas as evoluções',()=>{
+test('Kantaro usa a arte importada e evoluções; Granito usa os mesmos pixels originais em todas as evoluções',()=>{
   const {game:g}=boot();const frames=[];
   for(let stage=1;stage<=3;stage++)for(let frame=0;frame<4;frame++){
-    const c=g.monSprite('sombra',stage,frame);assert.equal(c.width,32);assert.equal(c.fy,30);assert.ok(c.getContext('2d').ops.length>100);frames.push(c.toDataURL());assert.equal(c,g.monSprite('sombra',stage,frame));
+    const c=g.monSprite('sombra',stage,frame);assert.equal(c.width,80);assert.equal(c.fy,70);assert.ok(c.getContext('2d').ops.length>100);frames.push(c.toDataURL());assert.equal(c,g.monSprite('sombra',stage,frame));
   }
   assert.notEqual(frames[0],frames[1]);assert.notEqual(frames[0],frames[4]);assert.notEqual(frames[4],frames[8]);
   for(const pose of [0,10,20,30,50,63,73,84])assert.equal(g.monSprite('pedra',1,pose),g.monSprite('pedra',3,pose));
@@ -327,18 +327,18 @@ test('arremessos extras respeitam a distância máxima do ponto de impacto',()=>
   }
 });
 
-test('orbes sombrios têm orçamento de percurso mesmo quando perseguem',()=>{
-  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.crit=0;
-  const far=target(g,600,0);g.basicAttack(0,600,0);const orbs=[...g.pbul];
-  for(let i=0;i<50;i++)g.updProj(.05);
-  assert.equal(g.pbul.length,0);assert.equal(far.hp,1000);
-  assert.ok(orbs.every(b=>Math.hypot(b.x,b.y)<=480+1e-8));
+test('poções de Kantaro alternam e respeitam o alcance mesmo com área e múltiplos disparos',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.crit=0;g.run.st.multi=4;g.run.st.area=3;
+  g.basicAttack(.3,3000,3000);assert.equal(g.lobs.length,4);assert.equal(g.lobs[0].pt,'psn');
+  assert.ok(g.lobs.every(l=>Math.hypot(l.tx,l.ty)<=300+1e-9));
+  g.basicAttack(.3,3000,3000);assert.equal(g.lobs[4].pt,'plg');assert.equal(g.pbul.length,0);
 });
 
-test('Salto Sombrio não causa dano duplo no mesmo alvo',()=>{
-  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.S.aim='manual';g.run.st.crit=0;
-  g.mouse.x=0;g.mouse.y=0;g.cam.x=0;g.cam.y=0;
-  const e=target(g,40);g.useSpecial();assert.equal(1000-e.hp,13);assert.equal(g.run.sp,8);
+test('Revoada não teleporta, não dá invulnerabilidade e mantém três corvos',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.multi=4;g.run.st.crit=0;
+  const e=target(g,100);g.useSpecial();assert.equal(e.hp,1000);assert.equal(g.run.sp,28);assert.equal(g.run.crows.length,3);
+  assert.equal(g.run.pl.x,0);assert.equal(g.run.pl.y,0);assert.equal(g.run.pl.inv,0);assert.equal(g.run.pl.dash,null);
+  g.useSpecial();assert.equal(g.run.crows.length,3);g.basicAttack(0,100,0);assert.equal(g.lobs.length,0);
 });
 
 test('mira automática não gasta o ataque em alvos fora do alcance',()=>{
@@ -695,7 +695,7 @@ test('dano de aliados não ativa drenagem, incluindo projéteis, poças e corren
   for(const hero of ['planta','sombra'])for(const ally of ['fogo','agua','planta','eletrico','pedra','sombra']){
     if(hero===ally)continue;const {game:g}=boot(undefined,()=>.5);g.P.chars[hero]=1;begin(g,hero);g.run.st.crit=0;g.run.pl.hp=20;
     const e=target(g,ally==='fogo'?30:100,0,100000),a=g.mkAlly(ally,1);a.x=0;a.y=0;a.cd=0;g.run.allies.push(a);
-    g.updAllies(.01);g.updProj(1);g.updLobs(2);g.updPools(2);
+    g.updAllies(.01);g.updProj(1);g.updLobs(2);g.updPools(2);if(ally==='sombra')g.tickPlague(e,1);
     assert.ok(e.hp<100000,hero+' / '+ally+' deve atingir o alvo');assert.equal(g.run.pl.hp,20,hero+' não drena dano de '+ally);
   }
 });
@@ -731,7 +731,7 @@ test('ataques básicos iniciais sem crítico precisam de mais de um acerto contr
     const {game:g}=boot(undefined,()=>.5);
     g.P.chars[hero]=1;begin(g,hero);g.run.st.crit=0;const e=g.mkEnemy(foe,1,60,0,{});e.spd=0;e.cd=10;g.enemies.push(e);
     g.basicAttack(0,60,0);g.updProj(.6);g.updLobs(2);g.updPools(2);
-    if(hero==='fogo')enemySteps(g,61);if(hero==='pedra')g.granitoStrikeTick(.42);
+    if(hero==='fogo')enemySteps(g,61);if(hero==='sombra')g.tickPlague(e,1);if(hero==='pedra')g.granitoStrikeTick(.42);
     assert.ok(e.hp>0,hero+' não elimina '+foe+' com um ataque inicial');assert.ok(e.hp<e.maxhp,hero+' atinge '+foe);
   }
 });
@@ -893,7 +893,7 @@ test('inimigos resistem mais e dão pouco mais de dano, com XP menor e heróis p
   const {game:g}=boot();begin(g,'fogo');const e=g.mkEnemy('catador',1,100,0,{});
   assert.ok(e.maxhp>17&&e.maxhp<18);assert.ok(e.dmg>5.8&&e.dmg<6.1);assert.equal(e.xp,.5525);
   const boss=defeatWorld(g);assert.equal(boss.maxhp,2200);assert.ok(Math.abs(g.gems.reduce((n,e)=>n+e.v,0)-62.4)<1e-9);
-  assert.deepEqual(Object.values(g.CH).map(c=>c.dmg),[8,7,7,8,9,6]);assert.equal(g.CH.planta.regen,0);assert.equal(g.CH.planta.life,.01);
+  assert.deepEqual(Object.values(g.CH).map(c=>c.dmg),[8,7,7,8,9,7]);assert.equal(g.CH.planta.regen,0);assert.equal(g.CH.planta.life,.01);
 });
 
 test('saves atuais e legados retiram o ajudante removido sem perder Granito ou progresso',()=>{
@@ -1809,4 +1809,84 @@ test('vento varia suas rajadas, se desloca pelo chão e retira os grãos expirad
   const p=wind[0],x=p.x,y=p.y;ambientAdvance(g,60,.5);assert.ok(Math.hypot(p.x-x,p.y-y)>0);
   ambientAdvance(g,60,Math.max(...wind.map(p=>p.life))+.1);assert.ok(wind.every(q=>!g.biomeAmbient.particles.includes(q)));
   assert.ok(g.biomeAmbient.particles.length<=35);
+});
+
+
+test('Kantaro herda desbloqueio e aliado de Sombrinha, mantendo versão e perfil',()=>{
+  const saved={P:{seen:1,char:'sombra',chars:{sombra:1},coll:{sombra:3},ess:438,up:{vida:2}}};
+  const {game:g,node,store}=boot(saved);g.ACT.team();assert.match(node('#ui').innerHTML,/Kantaro/);assert.doesNotMatch(node('#ui').innerHTML,/Sombrinha|Noturvo|Salto Sombrio/);
+  g.ACT.how();assert.match(node('#ui').innerHTML,/Kantaro/);assert.equal(g.VERSION,'0.9.2-beta');
+  begin(g,'sombra');assert.equal(g.run.st.maxhp,105);assert.equal(g.P.ess,438);assert.equal(g.P.coll.sombra,3);
+  const next=JSON.parse(store.get('nevoa-selvagem-v3'));assert.equal(next.P.chars.sombra,1);assert.equal(next.P.up.vida,2);
+});
+
+test('Kantaro não tem dash pelo teclado, botão, API ou ultimate',()=>{
+  const {game:g,node,events}=boot();g.P.chars.sombra=1;begin(g,'sombra');
+  assert.equal(node('#b-dash').hidden,true);assert.equal(node('#b-dash').disabled,true);assert.equal(node('#shift-hint').hidden,true);
+  events.keydown({key:'Shift',repeat:false,preventDefault(){}});g.secondaryAction();g.doDash();g.useSpecial();
+  assert.equal(g.run.pl.dash,null);assert.equal(g.run.pl.inv,0);assert.equal(g.run.dcd,undefined);
+  begin(g,'fogo');assert.equal(node('#b-dash').hidden,false);assert.equal(node('#b-dash').disabled,false);
+  g.doDash();assert.equal(g.run.pl.dash.nodmg,true);
+});
+
+test('ultimate de Kantaro não acelera com abates e respeita recarga mínima com melhorias',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.useSpecial();
+  for(let i=0;i<30;i++)g.hitEnemy(target(g,200,0,1),2,{canCrit:false});assert.equal(g.run.sp,28);
+  g.run.sp=0;g.run.pl.cast2=0;g.run.pk.cd=5;g.recompute();g.useSpecial();assert.equal(g.run.sp,20);
+  g.hitEnemy(target(g,200,0,1),2,{canCrit:false});assert.equal(g.run.sp,20);
+});
+
+test('veneno não soma nuvens nem permite que efeito fraco perpetue o mais forte',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');const e=target(g,100);g.run.st.crit=1;
+  g.poisonEnemy(e,2,3,'ally',{x:0,y:0});g.poisonEnemy(e,1,20,'p',{x:0,y:0});
+  assert.equal(e.psn,3);assert.equal(e.psnFrom,'ally');
+  for(let i=0;i<6;i++){g.poisonEnemy(e,2,Math.max(0,3-i*.5),'ally');g.tickPlague(e,.5);}
+  assert.equal(1000-e.hp,12);assert.equal(e.psn,0);g.poisonEnemy(e,1,1,'ally');g.tickPlague(e,1);assert.equal(1000-e.hp,14);
+  g.poisonEnemy(e,1,20,'ally');g.poisonEnemy(e,4,1,'p');assert.equal(e.psn,1);g.tickPlague(e,1);assert.equal(e.psn,0);
+});
+
+test('veneno usa defesas e não atinge inimigos nascendo ou Verme no subsolo',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');const e=target(g,100);
+  e.underground=true;assert.equal(g.poisonEnemy(e,5,3),false);e.underground=false;e.spawn=1;assert.equal(g.poisonEnemy(e,5,3),false);
+  e.spawn=0;g.poisonEnemy(e,5,3);e.underground=true;g.tickPlague(e,2);assert.equal(e.hp,1000);e.underground=false;g.tickPlague(e,1);assert.equal(e.hp,990);
+  e.kind='crab';e.heading=Math.PI;g.poisonEnemy(e,10,.5,'p',{x:0,y:0});g.tickPlague(e,.5);assert.equal(e.hp,984);
+});
+
+test('poção roxa causa um impacto único; veneno elimina todos os alvos sem pular a lista',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.crit=0;
+  const purple=target(g,100);g.plagueLand({pt:'plg',tx:100,ty:0,x0:0,y0:0,r:50,dmg:11,from:'p'});
+  assert.equal(purple.hp,989);assert.ok(!(purple.psn>0));g.tickPlague(purple,5);assert.equal(purple.hp,989);
+  g.enemies.length=0;for(let i=0;i<5;i++)target(g,100+i*2,0,1);
+  g.plagueLand({pt:'psn',tx:100,ty:0,r:60,dmg:2,from:'p'});g.updEnemies(.5);
+  assert.equal(g.enemies.length,0);assert.equal(g.run.kills,5);
+});
+
+test('corvos buscam apenas alvos válidos próximos e expiram onde realmente chegaram',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.crit=0;
+  const far=target(g,800),hidden=target(g,180);hidden.underground=true;g.useSpecial();
+  for(let i=0;i<120;i++)g.updKan(1/30);
+  assert.equal(far.hp,1000);assert.equal(hidden.hp,1000);assert.equal(g.run.crows.length,0);
+  assert.ok(g.run.psn.every(z=>Math.hypot(z.x,z.y)<530));
+});
+
+test('corvos retargetam após morte de alvo sem gerar valores inválidos',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.run.st.crit=0;const a=target(g,220),b=target(g,300,40);
+  g.useSpecial();g.updKan(1.2);g.killEnemy(a,true);
+  for(let i=0;i<80;i++){g.updKan(.05);g.tickPlague(b,.05);for(const c of g.run.crows)assert.ok(Number.isFinite(c.x)&&Number.isFinite(c.y));}
+  assert.ok(b.hp<1000);assert.equal(g.run.crows.length,0);
+});
+
+test('portais limpam nuvens e corvos mantendo a recarga; derrota não continua causando dano',()=>{
+  const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');g.useSpecial();
+  g.plagueLand({pt:'psn',tx:100,ty:0,r:60,dmg:2,from:'p'});defeatWorld(g);
+  const portal=g.run.portal;portal.t=1;g.run.pl.x=portal.x;g.run.pl.y=portal.y;const cd=g.run.sp;
+  assert.equal(g.enterPortal(),true);assert.equal(g.run.psn.length,0);assert.equal(g.run.crows.length,0);assert.equal(g.run.sp,cd);
+  const e=target(g,100);g.poisonEnemy(e,2,3);g.run.over=true;g.updKan(3);g.tickPlague(e,3);assert.equal(e.hp,1000);
+});
+
+test('nuvens têm teto e veneno mantém o dano em 30 e 60 FPS',()=>{
+  function simulate(fps){const {game:g}=boot();g.P.chars.sombra=1;begin(g,'sombra');const e=target(g,100);g.run.st.crit=0;
+    for(let i=0;i<40;i++)g.plagueLand({pt:'psn',tx:100,ty:0,r:60,dmg:2,from:'p'});assert.ok(g.run.psn.length<=24);
+    for(let i=0;i<5*fps;i++){g.tickPlague(e,1/fps);g.updKan(1/fps);}return 1000-e.hp;}
+  assert.equal(simulate(30),simulate(60));
 });
