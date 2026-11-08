@@ -4,9 +4,10 @@
 <style>body{margin:20px;background:#0b1411;color:#eee;font:15px system-ui}h1{font-size:22px;color:#f2b84b}button,select{padding:9px;margin:4px;background:#243b30;color:#fff;border:1px solid #61765e;border-radius:4px}iframe{display:block;width:min(960px,100%);height:600px;border:1px solid #61765e;margin-top:12px}p{color:#abbcaf}#status{color:#b6e4c4}</style>
 <h1>BaubLike · Beta 0.9.2 · Combate</h1>
 <p>Cenários reproduzíveis usando o código real, com progresso e áudio isolados. O jogo fica parado no quadro escolhido.</p>
-<label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Granito</option><option value="sombra">Sombrinha</option></select></label>
+<label>Personagem <select id="hero"><option value="eletrico">Capricorn</option><option value="planta">Sakura</option><option value="fogo">Salamandra</option><option value="agua">Frood</option><option value="pedra">Granito</option><option value="sombra">Kantaro</option></select></label>
 <label>Evolução <select id="stage"><option value="1">Inicial</option><option value="2">Evolução 2</option><option value="3">Evolução 3</option></select></label>
 <button data-scene="normal">Ataque normal</button><button data-scene="charge">Carga do especial</button><button data-scene="special">Especial completo</button><button data-scene="fury">Três golpes na Fúria</button>
+<button data-scene="kantaroidle">Kantaro · repouso</button><button data-scene="kantarowalk">Kantaro · passos</button><button data-scene="kantaropotion">Kantaro · poção da praga</button><button data-scene="kantaropoison">Kantaro · veneno</button><button data-scene="kantarocrows">Kantaro · corvos</button>
 <button data-scene="boss1">Cratos · Fase 1</button><button data-scene="boss2">Cratos · Fase 2</button><button data-scene="boss3">Cratos · Fase 3</button><button data-scene="defeat">Derrota</button>
 <button data-scene="forest">Floresta Sombria</button><button data-scene="forestwarnings">Avisos da floresta</button><button data-scene="colossus">Colosso · golpe de raiz</button><button data-scene="portal">Portal após vitória</button><button data-scene="cycle">Ciclo completo</button>
 <button data-scene="forestadds">Colosso + reforços</button><button data-scene="dragonadds">Cratos + reforços</button>
@@ -20,6 +21,7 @@
 <p id="status">Carregando…</p><iframe id="game" title="Cenário de combate isolado"></iframe>
 <script>
 (async()=>{
+  if(new URLSearchParams(location.search).get('focus')==='kantaro'){document.querySelector('#hero').value='sombra';document.querySelectorAll('[data-scene]').forEach(b=>b.hidden=!b.dataset.scene.startsWith('kantaro')&&!['normal','special','defeat'].includes(b.dataset.scene));}
   let src=await(await fetch('../index.html')).text();
   src=src.replace("const KEY='nevoa-selvagem-v3';","const KEY='nevoa-combat-test';")
     .replace('<script>','<style>#wasted b,#wasted small{animation:none;opacity:1;transform:none}#wasted .bt,#wasted .bb{animation:none;height:15%}</style><script>window.__NSDEBUG=true;')
@@ -30,6 +32,7 @@
     const g=frame.contentWindow.__NS;
     function show(scene){
       try{
+        if(scene.startsWith('kantaro'))document.querySelector('#hero').value='sombra';
         if(scene.startsWith('granite'))document.querySelector('#hero').value='pedra';
         const type=document.querySelector('#hero').value;g.P.chars[type]=1;g.P.start=[];g.S.aim='manual';
         g.startRun(type,'normal');g.run.stage=Number(document.querySelector('#stage').value);g.recompute();
@@ -38,7 +41,12 @@
         const es=[[110,0],[190,45],[260,85],[340,-80],[-170,40]].map(([x,y])=>{
           const e=g.mkEnemy('catador',1,x,y,{});e.hp=e.maxhp=1000;e.spd=0;g.enemies.push(e);return e;
         });
-        if(scene.startsWith('desert')||scene.startsWith('worm')||['scorpionimpact','vultureimpact','hyenasteal','hyenabite'].includes(scene)){
+        if(scene.startsWith('kantaro')){
+          if(scene==='kantarowalk'){g.run.pl.vx=215;g.run.pl.t=.22;}
+          if(scene==='kantaropotion'){g.run.pl.potionCount=1;g.basicAttack(0,180,0);g.run.pl.swing=.18;}
+          if(scene==='kantaropoison'){g.basicAttack(0,180,0);g.updLobs(1);g.updKan(.6);g.enemies.forEach(e=>g.tickPlague(e,.5));g.run.pl.swing=.14;}
+          if(scene==='kantarocrows'){g.useSpecial();g.updKan(1);g.run.pl.cast2=.35;g.enemies.forEach(e=>e.spawn=0);}
+        }else if(scene.startsWith('desert')||scene.startsWith('worm')||['scorpionimpact','vultureimpact','hyenasteal','hyenabite'].includes(scene)){
           g.run.world='desert';g.run.visit=3;g.run.lv=31;g.run.need=g.xpNeed(31);g.run.worldStartLv=31;g.enemies.length=0;
           if(scene.startsWith('worm')||['desertportal','desertadds'].includes(scene)){
             g.run.worldTime=g.bossTimeLimit();g.spawnBoss();const e=g.enemies[0];e.spawn=0;e.x=220;e.y=35;

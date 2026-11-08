@@ -1,16 +1,18 @@
 # BaubLike — Beta 0.9.2
 
-Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Granito e Sombrinha. Capricorn substitui Zero, preservando o desbloqueio e o progresso do elemento elétrico.
+Repositório privado: [bblike](https://github.com/Felpz0kkj/bblike). Elenco: Salamandra, Sakura, Frood, Capricorn, Granito e Kantaro. Capricorn preserva o progresso elétrico. Kantaro substitui Sombrinha e preserva seu desbloqueio, coleção e progresso sob o ID salvo `sombra`.
 
 Roguelike de sobrevivência em HTML, CSS e JavaScript, sem instalação ou etapa de build.
 
 ## Jogar
 
-Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial e Esc pausa. Shift usa Pedrada com Granito e faz esquiva com os demais personagens. No celular, especial e esquiva têm botões próprios.
+Abra `index.html` no navegador. Escolha a dificuldade e depois um personagem. WASD/setas movem, clique ataca, Espaço/botão direito usa o especial e Esc pausa. Shift usa Pedrada com Granito e faz esquiva com Salamandra, Frood, Sakura e Capricorn. Kantaro não tem dash nem ação no Shift. No celular, especial e esquiva têm botões próprios.
 
 A Equipe reúne atributos, desbloqueios, aliados iniciais e melhorias permanentes. O progresso fica no navegador, mantendo a chave da versão anterior. Ao mudar de arquivo local para um endereço publicado, o navegador usa um armazenamento separado; o progresso local não migra automaticamente.
 
 ## Novidades da beta 0.9.2
+
+**Kantaro, o médico da peste:** integrado do arquivo recebido em 8 de novembro, mantendo a beta **0.9.2** a pedido do autor. Alterna poções tóxicas e da praga, com alcance 300 e intervalo base de 0,95 s. Veneno não soma dano entre nuvens; a poção roxa causa apenas seu impacto. A Revoada Kamikaze tem três corvos, recarga base de **28 s**, mínimo de **20 s** com melhorias e nenhuma redução por abates. Kantaro não tem dash, teleporte, invulnerabilidade de esquiva ou drenagem. Mapas, ciclo, cronômetros, chefes e demais personagens usam a base atual.
 
 **Chefes com tempo por etapa:** o primeiro mapa da partida dura 4 minutos até o chefe. Todas as etapas seguintes duram 2min30, inclusive o retorno à Floresta em novos ciclos. Pausas e escolhas suspendem o relógio. A liberação dos tipos de inimigo acompanha proporcionalmente o prazo mais curto; XP, recargas e atributos não são acelerados.
 
@@ -43,10 +45,11 @@ Continuam o ciclo **Floresta → Dragão → Pântano → Deserto → Floresta**
 Use sempre o `index.html` da versão mais recente da branch `main` como base. Antes de editar, sincronize o repositório; envie mudanças em uma branch e pull request. Os HTMLs antigos servem como referência, não como base de novos patches.
 
 - Fonte principal: `index.html`.
-- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. Cada revisão publicada avança a numeração, respeitando a versão solicitada; esta é 0.9.2, e a próxima correção será 0.9.3. Um teste verifica a consistência das identificações ativas.
+- Versão: `VERSION`, título/menu/constante do HTML, README e prévias devem acompanhar cada revisão publicada. A numeração acompanha a versão solicitada pelo autor. O complemento de Kantaro foi mantido na 0.9.2 por pedido expresso; a próxima revisão numerada será 0.9.3. Um teste verifica a consistência das identificações ativas.
 - Testes: `node --test tests/game.test.cjs` (Node 24 ou superior).
 - Prévia: python -m http.server 4173 --bind 127.0.0.1; abra http://127.0.0.1:4173/.
-- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (63 cenários, incluindo ações de Granito, os quatro mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
+- Cenários de combate: http://127.0.0.1:4173/tests/combat.html (incluindo ações de Granito, os quatro mundos, cronômetro, avisos, divisões, chefes, reforços, portais e ciclo completo; progresso isolado).
+- Prévia de Kantaro: http://127.0.0.1:4173/tests/combat.html?focus=kantaro (repouso, passos, poções, veneno, corvos e derrota).
 - Prancha de Granito: http://127.0.0.1:4173/tests/granito.html (recortes originais e sequências usadas no jogo).
 - Teste da Serpente: `tests/serpente.html` explica como entrar na fase para conferir o chefe em combate.
 - Teste do Verme: `tests/deserto.html` explica como testar o chefe no jogo.

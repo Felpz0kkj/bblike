@@ -1,6 +1,8 @@
 # Comparação das versões recebidas
 
-Comparação mais recente: [versão 9 e beta 0.6.4](comparacao-versao-9.md). Histórico anterior: [versão 7](comparacao-versao-7.md).
+Integração mais recente: Kantaro, de `BaubLike · pers novo.html`, na beta 0.9.2. Somente personagem, poções e corvos, com rebalanceamento e sem dash; mapas e sistemas da ramificação 0.8.3 não foram importados.
+
+Comparação histórica: [versão 9 e beta 0.6.4](comparacao-versao-9.md). Histórico anterior: [versão 7](comparacao-versao-7.md).
 
 Base escolhida pelo autor: **Horda da Névoa (2).html**.
 

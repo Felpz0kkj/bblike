@@ -1,6 +1,19 @@
 # Histórico
 
-## 0.9.2-beta — tempos de etapa, Serpente anterior e efeitos visíveis — 2026-11-06
+## 0.9.2-beta — Kantaro, tempos de etapa e efeitos visíveis — 2026-11-08
+
+Complemento de Kantaro em 8 de novembro, mantendo a numeração por pedido do autor:
+
+- Kantaro substitui Sombrinha com arte, evoluções, poções e corvos do arquivo recebido. Mantido o ID `sombra`, desbloqueio de 200, coleção e save.
+- Poções alternadas, alcance 300, intervalo 0,95 s, veneno sem acúmulo e poção roxa de impacto único. Dano/base, área e duração recalibrados em relação à ramificação.
+- Revoada: três corvos fixos, alcance de busca 420, recarga 28 s (mínimo 20 s), sem redução por abates. Disparo Extra aumenta a potência dos corvos sem aumentar a quantidade.
+- Dash retirado de Kantaro no Shift, botão e API. Sem teleporte ou invulnerabilidade de esquiva. Mantidos os controles dos outros personagens.
+- Veneno usa as defesas e a origem de dano atuais; ignora inimigos surgindo e o Verme enterrado. Corvos procuram novos alvos válidos e explodem na posição real, sem dano remoto ao expirar.
+- Portais limpam nuvens/corvos, mantendo a recarga. Derrota interrompe os efeitos. Renderização dos novos efeitos não sorteia combate nem avança relógios.
+- Validação: 188 testes, arte/veneno/corvos conferidos no navegador sem erros. Preservados os quatro mundos, ambientação atual, modo de testes, chefes e demais personagens.
+
+Melhorias de 6 de novembro já presentes na mesma versão:
+
 
 - Serpente Branca volta aos mesmos sprites, pixels, âncoras e animações da beta 0.9.0; ataques, veneno, hitboxes e balanceamento mantidos. Nenhum PNG foi alterado.
 - Primeiro chefe aos 4 minutos; todas as etapas seguintes aos 2min30, inclusive novos ciclos e entradas de teste posteriores à Floresta. HUD, ajuda e desbloqueio temporal do elenco acompanham o prazo da etapa; XP e recargas permanecem no ritmo atual.

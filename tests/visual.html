@@ -27,7 +27,7 @@ h2{font:700 16px monospace;color:#f2b84b;margin:12px 0 6px}.card p{font-size:12p
   const frame=document.getElementById('game');
   frame.onload=()=>{
     const g=frame.contentWindow.__NS,d=frame.contentDocument;
-    const designs={fogo:['Salamandra','Guerreira das chamas'],planta:['Sakura','Arqueira de sakura'],agua:['Frood','Mestre da pescaria'],eletrico:['Capricorn','Condutor da tempestade'],pedra:['Granito','Escavador de Pedra · Terra'],sombra:['Sombrinha','Gato espectral']};
+    const designs={fogo:['Salamandra','Guerreira das chamas'],planta:['Sakura','Arqueira de sakura'],agua:['Frood','Mestre da pescaria'],eletrico:['Capricorn','Condutor da tempestade'],pedra:['Granito','Escavador de Pedra · Terra'],sombra:['Kantaro','Médico da peste · Corvo necromante']};
     for(const [type,[name,desc]]of Object.entries(designs)){
       const card=document.createElement('article');card.className='card';
       card.innerHTML=`<h2>${name}</h2><p>${desc}</p><div class="sprites">${[1,2,3].map(st=>`<div><img alt="${name}, evolução ${st}" src="${g.iconURL(type,st)}"><small>${st===1?'Inicial':'Evolução '+st}</small></div>`).join('')}</div>`;
